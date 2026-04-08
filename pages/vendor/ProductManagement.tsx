@@ -46,7 +46,7 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onNavigate }) => 
     categoryId: number;
     packageImageUrls: string[];
     primaryImageIndex: number;
-    variants: { variantName: string; description: string; price: number; imageUrls: string[]; primaryImageIndex?: number }[];
+    variants: { variantId?: string | number; variantName: string; description: string; price: number; imageUrls: string[]; primaryImageIndex?: number }[];
   } | null>(null);
 
   const [showAddForm, setShowAddForm] = useState(false);
@@ -59,7 +59,7 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onNavigate }) => 
     categoryId: number;
     packageImageUrls: string[];
     primaryImageIndex: number;
-    variants: { variantName: string; description: string; price: number; imageUrls: string[]; primaryImageIndex?: number }[];
+    variants: { variantId?: string | number; variantName: string; description: string; price: number; imageUrls: string[]; primaryImageIndex?: number }[];
   }>({
     packageName: '',
     description: '',
@@ -219,6 +219,7 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onNavigate }) => 
         const primary = typeof (v as any).primaryVariantImageIndex === 'number' ? Number((v as any).primaryVariantImageIndex) : 0;
         const safePrimary = primary >= 0 && primary < merged.length ? primary : 0;
         return {
+          variantId: v.variantId ?? v.id ?? v.packageVariantId,
           variantName: v.variantName || '',
           description: v.description || '',
           price: Number(v.price) || 0,
@@ -251,10 +252,12 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onNavigate }) => 
         action: normalizedAction,
         variants: editForm.variants.map(v => {
           const base = {
+            variantId: v.variantId,
             variantName: v.variantName,
             description: v.description,
             price: v.price,
           } as {
+            variantId?: string | number;
             variantName: string;
             description: string;
             price: number;

@@ -53,6 +53,9 @@ class PackageService {
       primaryImageIndex: number;
       action: string;
       variants: {
+        variantId?: string | number;
+        packageVariantId?: string | number;
+        id?: string | number;
         variantName: string;
         description: string;
         price: number;
@@ -85,9 +88,18 @@ class PackageService {
           ? variant.primaryVariantImageIndex
           : 0;
         const primaryImageUrl = cleanedVariantImages[safePrimaryIndex] || cleanedVariantImages[0] || '';
+        const variantId = variant.variantId ?? variant.packageVariantId ?? variant.id;
+        const identifierFields = variantId != null
+          ? {
+              variantId,
+              packageVariantId: variantId,
+              id: variantId,
+            }
+          : {};
 
         if (variantImageMode === 'legacy') {
           return {
+            ...identifierFields,
             variantName: variant.variantName,
             description: variant.description,
             price: variant.price,
@@ -97,6 +109,7 @@ class PackageService {
         }
 
         return {
+          ...identifierFields,
           variantName: variant.variantName,
           description: variant.description,
           price: variant.price,
@@ -119,6 +132,9 @@ class PackageService {
       primaryImageIndex: number;
       action: string;
       variants: {
+        variantId?: string | number;
+        packageVariantId?: string | number;
+        id?: string | number;
         variantName: string;
         description: string;
         price: number;
