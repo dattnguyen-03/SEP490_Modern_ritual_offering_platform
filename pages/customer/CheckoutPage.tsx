@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { checkoutService, CheckoutSummary } from '../../services/checkoutService';
+import { cartService } from '../../services/cartService';
 import { getCurrentUser, getProfile } from '../../services/auth';
 import { addressService, CustomerAddress } from '../../services/addressService';
 import toast from '../../services/toast';
@@ -88,10 +89,43 @@ const CheckoutPage: React.FC<{ onNavigate: (path: string) => void }> = ({ onNavi
         const addressList = await addressService.getAddresses();
         setAddresses(addressList);
 
+        let cartImageMap = new Map<number, string>();
+        try {
+          const cartData = await cartService.getCart();
+          if (cartData?.cartItems?.length) {
+            cartImageMap = new Map(
+              cartData.cartItems
+                .filter((item) => Boolean(item.imageUrl))
+                .map((item) => [item.cartItemId, item.imageUrl as string])
+            );
+          }
+        } catch (cartError) {
+          console.warn('⚠️ Could not load cart images for checkout:', cartError);
+        }
+
         const summaryData = await checkoutService.getSummary(cartItemIds);
 
         if (summaryData) {
-          setSummary(summaryData);
+          const enrichedItems = (summaryData.items || []).map((item: any) => ({
+            ...item,
+            imageUrl: item.imageUrl || cartImageMap.get(Number(item.cartItemId)) || item.packageAvatarUrl || item.packageImageUrl || item.productImageUrl || null,
+          }));
+
+          const enrichedVendorOrders = (summaryData.vendorOrders || []).map((vendorOrder: any) => ({
+            ...vendorOrder,
+            items: Array.isArray(vendorOrder.items)
+              ? vendorOrder.items.map((item: any) => ({
+                  ...item,
+                  imageUrl: item.imageUrl || cartImageMap.get(Number(item.cartItemId)) || item.packageAvatarUrl || item.packageImageUrl || item.productImageUrl || null,
+                }))
+              : vendorOrder.items,
+          }));
+
+          setSummary({
+            ...summaryData,
+            items: enrichedItems,
+            vendorOrders: enrichedVendorOrders,
+          });
           try {
             const profile = await getProfile();
             if (profile?.phoneNumber) {

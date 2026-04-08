@@ -243,14 +243,11 @@ const ProductListPage: React.FC<{ onNavigate: (route: AppRoute | string) => void
           )}
         </div>
 
-        <h3 className="text-base md:text-lg font-bold mb-2 group-hover:text-primary transition-colors leading-tight line-clamp-2 h-10 md:h-12">{p.name}</h3>
+        <h3 className="text-base md:text-lg font-bold mb-3 md:mb-4 group-hover:text-primary transition-colors leading-tight line-clamp-2 h-10 md:h-12">{p.name}</h3>
 
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center">
-              <span className="material-symbols-outlined text-[14px] text-primary">storefront</span>
-            </div>
-            <span className="font-bold text-slate-600 text-[11px] truncate max-w-[100px]">{p.vendorName}</span>
+        <div className="flex items-center justify-between mb-5 md:mb-6">
+          <div className="flex items-center gap-2 mt-3 md:mt-4">
+            <span className="font-bold text-slate-600 text-[11px] truncate max-w-[120px] leading-tight">{p.vendorName}</span>
           </div>
           {p.distanceKm !== undefined && (
             <div className="flex items-center gap-1 text-slate-400 bg-slate-50 px-2 py-1 rounded-lg">
@@ -260,7 +257,7 @@ const ProductListPage: React.FC<{ onNavigate: (route: AppRoute | string) => void
           )}
         </div>
 
-        <div className="pt-4 mt-auto border-t border-gold/5 flex items-center justify-between">
+        <div className="pt-5 mt-auto border-t border-gold/5 flex items-center justify-between">
           <div>
             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Giá từ</p>
             <p className="text-lg md:text-2xl font-black text-primary tracking-tight">{p.price.toLocaleString()}đ</p>

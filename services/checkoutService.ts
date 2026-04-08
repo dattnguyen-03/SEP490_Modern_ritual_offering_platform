@@ -150,7 +150,7 @@ class CheckoutService {
                   vendorProfileId: item.vendorProfileId || v.vendorId || v.id,
                   price: item.price || item.unitPrice,
                   totalPrice: item.lineTotal || (item.unitPrice * item.quantity),
-                  imageUrl: item.imageUrl || item.packageAvatarUrl || item.packageImageUrl || item.productImageUrl || null,
+                  imageUrl: item.imageUrl || item.packageAvatarUrl || item.packageImageUrl || item.productImageUrl || item.imageUrls?.[0] || null,
                 }));
                 allItems = [...allItems, ...itemsWithVendor];
               }
@@ -162,47 +162,94 @@ class CheckoutService {
         try {
           const itemsWithoutImage = (result.items || []).filter((it: any) => !it.imageUrl);
           if (itemsWithoutImage.length > 0) {
-            const apiPackages: ApiPackage[] = await packageService.getAllPackages();
+            const normalizeKey = (value: unknown) => String(value || '').trim().toLowerCase();
+            const packageImageById = new Map<number, string>();
+            const packageImageByName = new Map<string, string>();
+            const variantImageById = new Map<number, string>();
+            const variantImageByKey = new Map<string, string>();
 
-            const variantImageMap = new Map<number, string>();
+            const uniquePackageIds: number[] = Array.from(new Set(
+              itemsWithoutImage
+                .map((item: any) => Number(item.packageId ?? item.packageID ?? item.package?.packageId ?? item.package?.id))
+                .filter((id: number) => Number.isFinite(id) && id > 0)
+            ));
 
-            apiPackages.forEach((pkg) => {
-              const rawImages = (pkg as any).imageUrls as string[] | undefined;
-              const avatarUrl = (pkg as any).packageAvatarUrl as string | undefined;
-              
-              let primaryImage = avatarUrl;
-              if (!primaryImage && rawImages && rawImages.length > 0) {
-                const primaryIndexRaw = (pkg as any).primaryImageIndex;
-                const primaryIndex = typeof primaryIndexRaw === 'number' && primaryIndexRaw >= 0 && primaryIndexRaw < rawImages.length
-                  ? primaryIndexRaw
-                  : 0;
-                primaryImage = rawImages[primaryIndex] || rawImages[0];
+            const packageDetails = await Promise.all(
+              uniquePackageIds.map(async (packageId) => {
+                const detail = await packageService.getPackageById(packageId, false);
+                return detail ? { packageId, detail } : null;
+              })
+            );
+
+            packageDetails.forEach((entry) => {
+              if (!entry) return;
+              const pkg = entry.detail as any;
+              const rawImages = pkg.imageUrls || pkg.packageImages || [];
+              const avatarUrl = pkg.packageAvatarUrl || pkg.imageUrl || pkg.packageImageUrl || '';
+              const primaryIndexRaw = pkg.primaryImageIndex;
+              const primaryIndex = typeof primaryIndexRaw === 'number' && primaryIndexRaw >= 0 && primaryIndexRaw < rawImages.length
+                ? primaryIndexRaw
+                : 0;
+              const packageImage = avatarUrl || rawImages[primaryIndex] || rawImages[0] || '';
+
+              if (packageImage) {
+                packageImageById.set(Number(entry.packageId), packageImage);
+                const packageNameKey = normalizeKey(pkg.packageName || pkg.name);
+                if (packageNameKey && !packageImageByName.has(packageNameKey)) {
+                  packageImageByName.set(packageNameKey, packageImage);
+                }
               }
-              
-              if (!primaryImage) return;
 
-              const variants = (pkg as any).packageVariants as PackageVariant[] | undefined;
+              const variants = pkg.packageVariants || pkg.variants || [];
+              (Array.isArray(variants) ? variants : []).forEach((variant: any) => {
+                const rawVariantId = variant.variantId ?? variant.id ?? variant.packageVariantId;
+                const variantId = Number(rawVariantId);
+                const variantImages = variant.imageUrls || variant.variantImageUrls || variant.images || [];
+                const variantPrimaryIndexRaw = variant.primaryImageIndex ?? variant.primaryVariantImageIndex;
+                const variantPrimaryIndex = typeof variantPrimaryIndexRaw === 'number' && variantPrimaryIndexRaw >= 0 && variantPrimaryIndexRaw < variantImages.length
+                  ? variantPrimaryIndexRaw
+                  : 0;
+                const variantImage = variant.imageUrl || variant.image || variant.imageUrl || variantImages[variantPrimaryIndex] || variantImages[0] || packageImage || '';
 
-              (variants || []).forEach((variant) => {
-                const rawVariantId = (variant as any).variantId ?? (variant as any).id ?? (variant as any).packageVariantId;
-                const vid = Number(rawVariantId);
-                if (Number.isFinite(vid) && !variantImageMap.has(vid)) {
-                  variantImageMap.set(vid, primaryImage);
+                if (Number.isFinite(variantId) && variantImage) {
+                  variantImageById.set(variantId, variantImage);
+                }
+
+                const packageNameKey = normalizeKey(pkg.packageName || pkg.name);
+                const variantNameKey = normalizeKey(variant.variantName);
+                if (packageNameKey && variantNameKey && variantImage) {
+                  const combinedKey = `${packageNameKey}::${variantNameKey}`;
+                  if (!variantImageByKey.has(combinedKey)) {
+                    variantImageByKey.set(combinedKey, variantImage);
+                  }
                 }
               });
             });
 
-            if (variantImageMap.size > 0) {
-              result.items = (result.items || []).map((item: any) => {
-                if (item.imageUrl) return item;
-                const vid = Number(item.variantId);
-                const mappedImage = Number.isFinite(vid) ? variantImageMap.get(vid) : undefined;
-                return {
-                  ...item,
-                  imageUrl: mappedImage || null,
-                };
-              });
-            }
+            result.items = (result.items || []).map((item: any) => {
+              if (item.imageUrl) return item;
+
+              const itemPackageId = Number(item.packageId ?? item.packageID ?? item.package?.packageId ?? item.package?.id);
+              const itemVariantId = Number(item.variantId ?? item.packageVariantId);
+              const packageNameKey = normalizeKey(item.packageName || item.name || item.productName);
+              const variantNameKey = normalizeKey(item.variantName || item.tier);
+
+              const resolvedImage =
+                (Number.isFinite(itemVariantId) && variantImageById.get(itemVariantId)) ||
+                (packageNameKey && variantNameKey ? variantImageByKey.get(`${packageNameKey}::${variantNameKey}`) : undefined) ||
+                (Number.isFinite(itemPackageId) && packageImageById.get(itemPackageId)) ||
+                (packageNameKey ? packageImageByName.get(packageNameKey) : undefined) ||
+                item.packageAvatarUrl ||
+                item.packageImageUrl ||
+                item.productImageUrl ||
+                item.imageUrls?.[0] ||
+                null;
+
+              return {
+                ...item,
+                imageUrl: resolvedImage,
+              };
+            });
           }
         } catch (imageError) {
           console.warn('⚠️ Unable to map package images for checkout summary:', imageError);

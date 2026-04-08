@@ -429,7 +429,7 @@ const ChatPage: React.FC = () => {
   const handleViewShop = () => {
     if (!activeParty.id) return;
     setShopMenuOpen(false);
-    navigate(`/vendor/${activeParty.id}`);
+    navigate(`/vendor/${encodeURIComponent(activeParty.id)}`);
   };
 
   return (
@@ -526,7 +526,13 @@ const ChatPage: React.FC = () => {
                     <button
                       type="button"
                       style={styles.mhNameButton}
-                      onClick={() => setShopMenuOpen((v) => !v)}
+                      onClick={() => {
+                        if (canViewShop) {
+                          handleViewShop();
+                          return;
+                        }
+                        setShopMenuOpen((v) => !v);
+                      }}
                       onBlur={() => setTimeout(() => setShopMenuOpen(false), 120)}
                       title={canViewShop ? 'Xem shop' : ''}
                     >
@@ -540,7 +546,10 @@ const ChatPage: React.FC = () => {
                           style={styles.mhNameMenuItem}
                           onMouseEnter={(e) => { (e.currentTarget.style.background = '#F5F5F4'); }}
                           onMouseLeave={(e) => { (e.currentTarget.style.background = 'transparent'); }}
-                          onClick={handleViewShop}
+                          onMouseDown={(e) => {
+                            e.preventDefault();
+                            handleViewShop();
+                          }}
                         >
                           Xem shop
                         </button>

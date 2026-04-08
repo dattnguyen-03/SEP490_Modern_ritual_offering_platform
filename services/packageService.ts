@@ -185,25 +185,24 @@ class PackageService {
   /**
    * Lấy danh sách packages theo trạng thái từ endpoint by-status
    * @param status - Draft | Pending | Approved | Rejected | ''
+   * @param pageNumber - Số trang
+   * @param pageSize - Số lượng item mỗi trang
    * @returns Promise<ApiPackage[]>
    */
-  async getPackagesByStatus(status?: string): Promise<ApiPackage[]> {
+  async getPackagesByStatus(status?: string, pageNumber: number = 1, pageSize: number = 100): Promise<ApiPackage[]> {
     try {
       const token = getAuthToken();
       const normalizedStatus = String(status || '').trim();
 
-      // Nếu không có status và có token (Staff/Vendor), sử dụng endpoint management chung
-      // thay vì getAllPackages (Public) để lấy đúng list scoped theo role và đầy đủ variant.
-      if (!normalizedStatus && token) {
-        return this.getManagementPackages(1, 100);
+      const query = new URLSearchParams({
+        PageNumber: String(pageNumber),
+        PageSize: String(pageSize),
+      });
+      if (normalizedStatus) {
+        query.set('status', normalizedStatus);
       }
 
-      // Fallback cho khách (không token) hoặc nếu phía trên fail
-      if (!normalizedStatus) {
-        return this.getAllPackages(1, 50);
-      }
-
-      const endpoint = `${API_BASE_URL}/packages/management/by-status?PageNumber=1&PageSize=100&status=${normalizedStatus}`;
+      const endpoint = `${API_BASE_URL}/packages/management/by-status?${query.toString()}`;
 
       console.log(`📡 Fetching by-status: ${endpoint}`);
       const response = await fetch(endpoint, {
@@ -218,8 +217,8 @@ class PackageService {
         // Fallback cho endpoint by-status (nếu bị 404/403)
         if (response.status === 404 || response.status === 403) {
           console.warn(`⚠️ Management by-status endpoint failed (${response.status}). Falling back to management collection...`);
-          const allPackages = token ? await this.getManagementPackages() : await this.getAllPackages();
-          
+          const allPackages = token ? await this.getManagementPackages(pageNumber, pageSize) : await this.getAllPackages(pageNumber, pageSize);
+
           if (!normalizedStatus) return allPackages;
           return allPackages.filter(pkg =>
             (pkg as any).status === normalizedStatus ||
@@ -256,7 +255,7 @@ class PackageService {
       // Final fallback
       try {
         const token = getAuthToken();
-        const all = token ? await this.getManagementPackages() : await this.getAllPackages();
+        const all = token ? await this.getManagementPackages(pageNumber, pageSize) : await this.getAllPackages(pageNumber, pageSize);
         const normalizedStatus = String(status || '').trim();
         if (!normalizedStatus) return all;
         return all.filter(pkg =>

@@ -33,6 +33,7 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onNavigate }) => 
   const [loadingProducts, setLoadingProducts] = useState(true);
   const [productsError, setProductsError] = useState<string | null>(null);
   const [vendorProfileId, setVendorProfileId] = useState<string | null>(null);
+  const [vendorProfileResolved, setVendorProfileResolved] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [selectedStatus, setSelectedStatus] = useState<PackageStatusFilter>('');
@@ -96,10 +97,16 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onNavigate }) => 
           if (fullProfile?.profileId) {
             console.log('✅ Found Vendor Profile ID:', fullProfile.profileId);
             setVendorProfileId(fullProfile.profileId);
+          } else {
+            setProductsError('Không xác định được vendor hiện tại.');
           }
         }
       } catch (error) {
         console.error('Failed to initialize vendor data:', error);
+        setProductsError('Không thể tải dữ liệu vendor.');
+      } finally {
+        setVendorProfileResolved(true);
+        setLoadingProducts(false);
       }
     };
     initData();
@@ -296,7 +303,7 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onNavigate }) => 
 
     try {
       console.log('🔄 Loading packages for vendor...', { selectedStatus, vendorProfileId });
-      const packages = await packageService.getPackagesByStatus(selectedStatus);
+      const packages = await packageService.getPackagesByStatus(selectedStatus, 1, 100);
 
       // Lọc chỉ lấy sản phẩm của vendor hiện tại
       // Ưu tiên dùng vendorProfileId đã fetch từ profile
@@ -348,8 +355,9 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onNavigate }) => 
 
 
   useEffect(() => {
+    if (!vendorProfileResolved || !vendorProfileId) return;
     loadPackages();
-  }, [selectedStatus, vendorProfileId]);
+  }, [selectedStatus, vendorProfileId, vendorProfileResolved]);
 
   const totalPages = Math.max(1, Math.ceil(products.length / PRODUCTS_PER_PAGE));
   const categoryOptions = Array.from(new Set(products.map((product) => mapCategory(product.categoryId)))).sort((a, b) => a.localeCompare(b));
