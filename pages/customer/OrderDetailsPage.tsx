@@ -308,8 +308,14 @@ const OrderDetailsPage: React.FC = () => {
         return diffHours <= 2;
     })();
     const hasRefundRequest = Boolean(refundInfo?.refundId);
-    const isRefundRejected = refundInfo?.status === 'Rejected' || (order?.orderStatus || '').toUpperCase() === 'VENDORREJECTED';
-    const refundActionLabel = isRefundRejected ? 'Hoàn tiền bị từ chối' : 'Đã hoàn tiền';
+    const refundStatus = String(refundInfo?.status || '').toUpperCase();
+    const isRefundRejected = refundStatus === 'REJECTED' || (order?.orderStatus || '').toUpperCase() === 'VENDORREJECTED';
+    const isRefundApproved = refundStatus === 'APPROVED' || (order?.orderStatus || '').toUpperCase() === 'REFUNDED';
+    const refundActionLabel = isRefundRejected
+        ? 'Hoàn tiền bị từ chối'
+        : isRefundApproved
+            ? 'Đã hoàn tiền'
+            : 'Đang chờ duyệt hoàn tiền';
 
     if (loading) {
         return (
@@ -453,7 +459,12 @@ const OrderDetailsPage: React.FC = () => {
                                     <button
                                         type="button"
                                         disabled
-                                        className="bg-orange-50 text-orange-600 border border-orange-200 px-6 py-2 rounded-xl font-bold text-sm shadow-sm cursor-not-allowed"
+                                        className={`px-6 py-2 rounded-xl font-bold text-sm shadow-sm cursor-not-allowed border ${isRefundRejected
+                                            ? 'bg-rose-50 text-rose-600 border-rose-200'
+                                            : isRefundApproved
+                                                ? 'bg-emerald-50 text-emerald-600 border-emerald-200'
+                                                : 'bg-orange-50 text-orange-600 border-orange-200'
+                                            }`}
                                     >
                                         {refundActionLabel}
                                     </button>
@@ -469,7 +480,7 @@ const OrderDetailsPage: React.FC = () => {
                                         disabled={!canRequestRefund}
                                         className="bg-white text-orange-600 border border-orange-200 px-6 py-2 rounded-xl font-bold text-sm shadow-sm hover:bg-orange-50 transition"
                                     >
-                                        Đã hoàn tiền
+                                        Yêu cầu hoàn tiền
                                     </button>
                                 )}
                                 <button
@@ -799,11 +810,16 @@ const OrderDetailsPage: React.FC = () => {
                                                 <p className="text-xs text-gray-500 mt-1">Gói: <span className="text-gray-700 font-medium">{item.variantName}</span></p>
                                                 {item.isRequestRefund && (
                                                     <div className="mt-2 flex">
-                                                        <span className="px-2 py-0.5 bg-orange-50 text-orange-600 rounded-lg text-[10px] font-black uppercase tracking-widest border border-orange-100 flex items-center gap-1">
+                                                        <span className={`px-2 py-0.5 rounded-lg text-[10px] font-black uppercase tracking-widest border flex items-center gap-1 ${isRefundRejected
+                                                            ? 'bg-rose-50 text-rose-600 border-rose-100'
+                                                            : isRefundApproved
+                                                                ? 'bg-emerald-50 text-emerald-600 border-emerald-100'
+                                                                : 'bg-orange-50 text-orange-600 border-orange-100'
+                                                            }`}>
                                                             <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="4">
                                                                 <path strokeLinecap="round" strokeLinejoin="round" d="M16 15v-1a4 4 0 00-4-4H8m0 0l3 3m-3-3l3-3" />
                                                             </svg>
-                                                            Đã hoàn tiền
+                                                            {isRefundRejected ? 'Bị từ chối' : isRefundApproved ? 'Đã hoàn tiền' : 'Đang chờ duyệt'}
                                                         </span>
                                                     </div>
                                                 )}
