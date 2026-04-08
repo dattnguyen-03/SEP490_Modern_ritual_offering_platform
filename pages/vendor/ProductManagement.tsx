@@ -268,7 +268,6 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onNavigate }) => 
           const safePrimary = preferredPrimary >= 0 && preferredPrimary < cleaned.length ? preferredPrimary : 0;
           base.variantImageUrls = cleaned;
           base.primaryVariantImageIndex = safePrimary;
-          if (cleaned.length > 0) base.imageUrl = cleaned[safePrimary];
 
           return base;
         }),
@@ -415,7 +414,6 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onNavigate }) => 
           const cleaned = (v.imageUrls || []).filter(u => u.trim());
           base.variantImageUrls = cleaned;
           base.primaryVariantImageIndex = cleaned.length > 0 ? 0 : 0;
-          if (cleaned.length > 0) base.imageUrl = cleaned[0];
 
           return base;
         }),
