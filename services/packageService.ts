@@ -63,12 +63,19 @@ class PackageService {
     },
     variantImageMode: 'modern' | 'legacy',
   ) {
+    const cleanedPackageImages = (payload.packageImageUrls || []).filter((url) => String(url || '').trim());
+    const packagePrimaryIndex = typeof payload.primaryImageIndex === 'number' && payload.primaryImageIndex >= 0 && payload.primaryImageIndex < cleanedPackageImages.length
+      ? payload.primaryImageIndex
+      : 0;
+    const packagePrimaryImageUrl = cleanedPackageImages[packagePrimaryIndex] || cleanedPackageImages[0] || '';
+
     return {
       packageName: payload.packageName,
       description: payload.description,
       categoryId: payload.categoryId,
-      packageImageUrls: payload.packageImageUrls,
-      primaryImageIndex: payload.primaryImageIndex,
+      packageImageUrls: cleanedPackageImages,
+      primaryImageIndex: packagePrimaryIndex,
+      ...(packagePrimaryImageUrl ? { imageUrl: packagePrimaryImageUrl, ImageUrl: packagePrimaryImageUrl, packageAvatarUrl: packagePrimaryImageUrl, packageImageUrl: packagePrimaryImageUrl } : {}),
       action: payload.action,
       variants: payload.variants.map((variant) => {
         const cleanedVariantImages = (variant.variantImageUrls || []).filter((url) => String(url || '').trim());
@@ -85,6 +92,7 @@ class PackageService {
             description: variant.description,
             price: variant.price,
             ...(primaryImageUrl ? { imageUrl: primaryImageUrl } : {}),
+            ...(primaryImageUrl ? { ImageUrl: primaryImageUrl } : {}),
           };
         }
 
@@ -94,7 +102,7 @@ class PackageService {
           price: variant.price,
           variantImageUrls: cleanedVariantImages,
           primaryVariantImageIndex: safePrimaryIndex,
-          ...(primaryImageUrl ? { imageUrl: primaryImageUrl } : {}),
+          ...(primaryImageUrl ? { imageUrl: primaryImageUrl, ImageUrl: primaryImageUrl } : {}),
         };
       }),
     };
