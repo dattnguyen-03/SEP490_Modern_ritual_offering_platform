@@ -43,6 +43,121 @@ class PackageService {
       return null;
     }
   }
+
+  private buildPackageMutationPayload(
+    payload: {
+      packageName: string;
+      description: string;
+      categoryId: number;
+      packageImageUrls: string[];
+      primaryImageIndex: number;
+      action: string;
+      variants: {
+        variantName: string;
+        description: string;
+        price: number;
+        imageUrl?: string;
+        variantImageUrls?: string[];
+        primaryVariantImageIndex?: number;
+      }[];
+    },
+    variantImageMode: 'modern' | 'legacy',
+  ) {
+    return {
+      packageName: payload.packageName,
+      description: payload.description,
+      categoryId: payload.categoryId,
+      packageImageUrls: payload.packageImageUrls,
+      primaryImageIndex: payload.primaryImageIndex,
+      action: payload.action,
+      variants: payload.variants.map((variant) => {
+        const cleanedVariantImages = (variant.variantImageUrls || []).filter((url) => String(url || '').trim());
+        const safePrimaryIndex = typeof variant.primaryVariantImageIndex === 'number'
+          && variant.primaryVariantImageIndex >= 0
+          && variant.primaryVariantImageIndex < cleanedVariantImages.length
+          ? variant.primaryVariantImageIndex
+          : 0;
+        const primaryImageUrl = cleanedVariantImages[safePrimaryIndex] || cleanedVariantImages[0] || '';
+
+        if (variantImageMode === 'legacy') {
+          return {
+            variantName: variant.variantName,
+            description: variant.description,
+            price: variant.price,
+            ...(primaryImageUrl ? { imageUrl: primaryImageUrl } : {}),
+          };
+        }
+
+        return {
+          variantName: variant.variantName,
+          description: variant.description,
+          price: variant.price,
+          variantImageUrls: cleanedVariantImages,
+          primaryVariantImageIndex: safePrimaryIndex,
+          ...(primaryImageUrl ? { imageUrl: primaryImageUrl } : {}),
+        };
+      }),
+    };
+  }
+
+  private async sendPackageMutation(
+    method: 'POST' | 'PUT',
+    endpoint: string,
+    payload: {
+      packageName: string;
+      description: string;
+      categoryId: number;
+      packageImageUrls: string[];
+      primaryImageIndex: number;
+      action: string;
+      variants: {
+        variantName: string;
+        description: string;
+        price: number;
+        imageUrl?: string;
+        variantImageUrls?: string[];
+        primaryVariantImageIndex?: number;
+      }[];
+    },
+  ): Promise<any> {
+    const token = getAuthToken();
+    const send = async (body: any) => {
+      const response = await fetch(endpoint, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json, text/plain, */*',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify(body),
+      });
+
+      const responseText = await response.text().catch(() => '');
+      return { response, responseText };
+    };
+
+    const modernPayload = this.buildPackageMutationPayload(payload, 'modern');
+    let result = await send(modernPayload);
+
+    if (!result.response.ok && result.response.status === 400) {
+      const legacyPayload = this.buildPackageMutationPayload(payload, 'legacy');
+      const legacyResult = await send(legacyPayload);
+      if (legacyResult.response.ok) {
+        const data: any = legacyResult.responseText ? JSON.parse(legacyResult.responseText) : {};
+        return data;
+      }
+
+      const extractedLegacy = this.extractBackendErrorMessage(legacyResult.responseText);
+      throw new Error(extractedLegacy || legacyResult.responseText || `HTTP error! status: ${legacyResult.response.status}`);
+    }
+
+    if (!result.response.ok) {
+      const extracted = this.extractBackendErrorMessage(result.responseText);
+      throw new Error(extracted || result.responseText || `HTTP error! status: ${result.response.status}`);
+    }
+
+    return result.responseText ? JSON.parse(result.responseText) : {};
+  }
   /**
    * Lấy danh sách packages theo trạng thái từ endpoint by-status
    * @param status - Draft | Pending | Approved | Rejected | ''
@@ -744,24 +859,12 @@ class PackageService {
       }[];
     }
   ): Promise<any> {
-    const token = getAuthToken();
-    const response = await fetch(`${API_BASE_URL}/packages/management/${id}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json, text/plain, */*',
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      },
-      body: JSON.stringify(payload),
-    });
-    if (!response.ok) {
-      const errText = await response.text();
-      console.error('updatePackage failed', { status: response.status, url: response.url, payload, errText });
-      const extracted = this.extractBackendErrorMessage(errText);
-      throw new Error(extracted || errText || `HTTP error! status: ${response.status}`);
+    try {
+      return await this.sendPackageMutation('PUT', `${API_BASE_URL}/packages/management/${id}`, payload);
+    } catch (error) {
+      console.error('updatePackage failed', error);
+      throw error;
     }
-    const data: any = await response.json().catch(() => ({}));
-    return data;
   }
 
   /**
@@ -783,24 +886,12 @@ class PackageService {
       primaryVariantImageIndex?: number;
     }[];
   }): Promise<any> {
-    const token = getAuthToken();
-    const response = await fetch(`${API_BASE_URL}/packages`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json, text/plain, */*',
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      },
-      body: JSON.stringify(payload),
-    });
-    if (!response.ok) {
-      const errText = await response.text();
-      console.error('createPackage failed', { status: response.status, url: response.url, payload, errText });
-      const extracted = this.extractBackendErrorMessage(errText);
-      throw new Error(extracted || errText || `HTTP error! status: ${response.status}`);
+    try {
+      return await this.sendPackageMutation('POST', `${API_BASE_URL}/packages`, payload);
+    } catch (error) {
+      console.error('createPackage failed', error);
+      throw error;
     }
-    const data: any = await response.json().catch(() => ({}));
-    return data;
   }
 
   /**
