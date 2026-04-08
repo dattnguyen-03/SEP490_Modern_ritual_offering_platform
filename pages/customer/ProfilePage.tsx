@@ -13,6 +13,7 @@ import {
 } from '../../services/vietnamAddressApi';
 import { geocodingService, ReverseGeocodingAddress, AddressSuggestion } from '../../services/geocodingService';
 import AddressMapPicker from '../../components/AddressMapPicker';
+import ImageCropModal from '../../components/ImageCropModal';
 
 interface ProfilePageProps {
   onNavigate: (path: string) => void;
@@ -43,6 +44,7 @@ interface UpdateCustomerAddressRequest {
 
 const PROFILE_SETUP_REQUIRED_KEY = 'modern-ritual-profile-setup-required';
 const DEFAULT_MAP_POSITION = { latitude: 10.8231, longitude: 106.6297 };
+type AvatarCropTarget = 'profile' | 'vendor-register';
 
 const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigate }) => {
   const [searchParams] = useSearchParams();
@@ -74,6 +76,9 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigate }) => {
   const [customerAddresses, setCustomerAddresses] = useState<CustomerAddress[]>([]);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [cropSourceFile, setCropSourceFile] = useState<File | null>(null);
+  const [cropTarget, setCropTarget] = useState<AvatarCropTarget>('profile');
+  const [isCropModalOpen, setIsCropModalOpen] = useState(false);
 
   // Address API data states
   const [provinces, setProvinces] = useState<Province[]>([]);
@@ -1032,7 +1037,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigate }) => {
         }
 
         if (!isPinnedCoordinateLabel(address.detailedAddress)) {
-          setRegDetailedAddress(address.detailedAddress);
+          setRegDetailedAddress(address.detailedAddress || '');
         }
 
         setRegisterForm((prev) => ({
@@ -1336,17 +1341,41 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigate }) => {
     setIsResubmitting(true);
   };
 
-  // Handle avatar file selection
-  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setAvatarFile(file);
-      // Create preview URL
+  const openCropModal = (file: File, target: AvatarCropTarget) => {
+    setCropSourceFile(file);
+    setCropTarget(target);
+    setIsCropModalOpen(true);
+  };
+
+  const closeCropModal = () => {
+    setIsCropModalOpen(false);
+    setCropSourceFile(null);
+  };
+
+  const handleCropConfirm = (croppedFile: File) => {
+    if (cropTarget === 'profile') {
+      setAvatarFile(croppedFile);
       const reader = new FileReader();
       reader.onloadend = () => {
         setAvatarPreview(reader.result as string);
       };
-      reader.readAsDataURL(file);
+      reader.readAsDataURL(croppedFile);
+    } else {
+      setRegisterForm((prev) => ({
+        ...prev,
+        shopAvatarUrl: croppedFile,
+      }));
+    }
+
+    closeCropModal();
+  };
+
+  // Handle avatar file selection
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      openCropModal(file, 'profile');
+      e.target.value = '';
     }
   };
 
@@ -2200,7 +2229,13 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigate }) => {
                       type="file"
                       accept="image/*"
                       className="hidden"
-                      onChange={(e) => setRegisterForm({ ...registerForm, shopAvatarUrl: e.target.files?.[0] || null })}
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          openCropModal(file, 'vendor-register');
+                          e.target.value = '';
+                        }
+                      }}
                     />
                   </label>
                   <p className="text-xs text-slate-400 mt-4">Kích thước tối ưu 512x512px. JPG, PNG hoặc WEBP.</p>
@@ -3500,6 +3535,14 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigate }) => {
             </div>
           </>
         )}
+
+        <ImageCropModal
+          isOpen={isCropModalOpen}
+          file={cropSourceFile}
+          title="Cắt ảnh avatar"
+          onCancel={closeCropModal}
+          onConfirm={handleCropConfirm}
+        />
       </div>
     </div>
   );

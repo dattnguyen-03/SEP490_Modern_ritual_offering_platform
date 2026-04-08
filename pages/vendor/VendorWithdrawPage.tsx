@@ -155,7 +155,7 @@ const VendorWithdrawPage: React.FC<VendorWithdrawPageProps> = ({ onNavigate }) =
       case 'Failed':
         return '✕ Thất bại';
       case 'Pending':
-        return '⏳ Chờ xử lý';
+        return ' Chờ xử lý';
       case 'Cancelled':
         return '✕ Đã hủy';
       default:

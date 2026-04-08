@@ -21,6 +21,7 @@ import {
 } from '../../services/vietnamAddressApi';
 import { vendorService } from '../../services/vendorService';
 import AddressMapPicker from '../../components/AddressMapPicker';
+import ImageCropModal from '../../components/ImageCropModal';
 
 const DEFAULT_MAP_POSITION = { latitude: 10.8231, longitude: 106.6297 };
 
@@ -103,6 +104,8 @@ const VendorSettings: React.FC<VendorSettingsProps> = ({ onNavigate }) => {
   const [wardSearch, setWardSearch] = useState('');
 
   const [isEditing, setIsEditing] = useState(false);
+  const [cropSourceFile, setCropSourceFile] = useState<File | null>(null);
+  const [isCropModalOpen, setIsCropModalOpen] = useState(false);
   const [initialShopInfo, setInitialShopInfo] = useState<{
     shopName: string;
     address: string;
@@ -930,6 +933,24 @@ const VendorSettings: React.FC<VendorSettingsProps> = ({ onNavigate }) => {
     }
   };
 
+  const openCropModal = (file: File) => {
+    setCropSourceFile(file);
+    setIsCropModalOpen(true);
+  };
+
+  const closeCropModal = () => {
+    setIsCropModalOpen(false);
+    setCropSourceFile(null);
+  };
+
+  const handleCropConfirm = (croppedFile: File) => {
+    setShopInfo((prev) => ({
+      ...prev,
+      avatarFile: croppedFile,
+    }));
+    closeCropModal();
+  };
+
   return (
     <div className="min-h-screen bg-white p-6">
       <div className="max-w-5xl mx-auto">
@@ -1400,7 +1421,13 @@ const VendorSettings: React.FC<VendorSettingsProps> = ({ onNavigate }) => {
                         <input
                           type="file"
                           accept="image/*"
-                          onChange={(e) => setShopInfo({ ...shopInfo, avatarFile: e.target.files?.[0] || null })}
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              openCropModal(file);
+                              e.target.value = '';
+                            }
+                          }}
                           className="w-full text-sm text-gray-500
                           file:mr-4 file:py-2 file:px-4
                           file:rounded-full file:border-0
@@ -1579,6 +1606,14 @@ const VendorSettings: React.FC<VendorSettingsProps> = ({ onNavigate }) => {
                     <span className="font-semibold text-gray-700">{notif.label}</span>
                   </label>
                 ))}
+
+                <ImageCropModal
+                  isOpen={isCropModalOpen}
+                  file={cropSourceFile}
+                  title="Cắt ảnh đại diện cửa hàng"
+                  onCancel={closeCropModal}
+                  onConfirm={handleCropConfirm}
+                />
               </div>
 
               <button className="mt-6 w-full px-6 py-2.5 border-2 border-primary text-primary rounded-lg font-bold transition-all hover:bg-primary/5">
