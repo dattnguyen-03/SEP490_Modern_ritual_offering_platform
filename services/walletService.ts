@@ -706,8 +706,15 @@ export async function getTransactionById(id: string, role: string = 'Customer'):
   }
 
   const safeId = encodeURIComponent(id);
+  const resolvedRole = String(role || '').trim() || (() => {
+    const currentRole = String(getCurrentUser()?.role || '').trim().toLowerCase();
+    if (currentRole === 'admin') return 'Admin';
+    if (currentRole === 'staff') return 'Staff';
+    if (currentRole === 'vendor') return 'Vendor';
+    return 'Customer';
+  })();
 
-  const response = await fetch(`/api/transactions/${safeId}?ActiveRole=${encodeURIComponent(role)}`, {
+  const response = await fetch(`/api/transactions/${safeId}?ActiveRole=${encodeURIComponent(resolvedRole)}`, {
     method: 'GET',
     headers: {
       Accept: 'application/json',
@@ -759,8 +766,10 @@ export async function getRelatedTransactions(id: string): Promise<WalletTransact
   }
 
   const safeId = encodeURIComponent(id);
+  const currentRole = String(getCurrentUser()?.role || '').trim().toLowerCase();
+  const activeRole = currentRole === 'admin' ? 'Admin' : currentRole === 'staff' ? 'Staff' : currentRole === 'vendor' ? 'Vendor' : 'Customer';
 
-  const response = await fetch(`/api/transactions/${safeId}/related`, {
+  const response = await fetch(`/api/transactions/${safeId}/related?ActiveRole=${encodeURIComponent(activeRole)}`, {
     method: 'GET',
     headers: {
       Accept: 'application/json',
@@ -807,9 +816,14 @@ export async function getAllTransactions(filter: AllTransactionFilter = {}): Pro
   }
 
   const params = new URLSearchParams();
-  
-  // Swagger indicates ActiveRole=Admin is required for admins to view their/system transactions
-  params.append('ActiveRole', 'Admin');
+
+  const currentRole = String(getCurrentUser()?.role || '').trim().toLowerCase();
+  const activeRole = currentRole === 'staff' ? 'Staff' : currentRole === 'vendor' ? 'Vendor' : currentRole === 'customer' ? 'Customer' : 'Admin';
+  params.append('ActiveRole', activeRole);
+
+  if (filter.walletId && filter.walletId.trim()) {
+    params.append('walletId', filter.walletId.trim());
+  }
 
   if (filter.type && filter.type.trim()) {
     params.append('Type', filter.type.trim());
@@ -830,7 +844,7 @@ export async function getAllTransactions(filter: AllTransactionFilter = {}): Pro
 
   const queryString = params.toString();
 
-  const response = await fetch(`/api/transactions/me${queryString ? `?${queryString}` : ''}`, {
+  const response = await fetch(`/api/transactions${queryString ? `?${queryString}` : ''}`, {
     method: 'GET',
     headers: {
       Accept: 'application/json',

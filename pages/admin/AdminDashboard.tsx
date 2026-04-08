@@ -17,7 +17,7 @@ interface AdminDashboardProps {
 
 const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) => {
   const [searchParams, setSearchParams] = useSearchParams();
-  const validTabs = ['statistics', 'vendors', 'users', 'orders', 'disputes', 'content', 'withdrawals', 'transactions', 'audit', 'systemConfigs'];
+  const validTabs = ['statistics', 'vendors', 'users', 'orders', 'disputes', 'withdrawals', 'transactions', 'audit', 'systemConfigs'];
   const activeTab = (searchParams.get('tab') && validTabs.includes(searchParams.get('tab')!) ? searchParams.get('tab') : 'statistics') as any;
 
   const getConfigGroupLabel = (group?: string): string => {
@@ -853,6 +853,25 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) => {
     return status;
   };
 
+  const getDisplayUserRole = (role: string): string => {
+    const normalized = role.toLowerCase();
+
+    if (normalized === 'admin') return 'Quản trị viên';
+    if (normalized === 'staff') return 'Nhân viên';
+    if (normalized === 'vendor') return 'Nhà cung cấp';
+    if (normalized === 'customer') return 'Khách hàng';
+    return role;
+  };
+
+  const getDisplayUserStatus = (status: string): string => {
+    const normalized = status.toLowerCase();
+
+    if (normalized === 'active') return 'Đang hoạt động';
+    if (normalized === 'inactive') return 'Ngừng hoạt động';
+    if (normalized === 'banned') return 'Đã khóa';
+    return status;
+  };
+
   const formatDateTimeVN = (value: string): string => {
     if (!value || value === 'Chưa xác định') {
       return 'Chưa xác định';
@@ -1373,7 +1392,6 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) => {
                   { id: 'disputes', label: 'Khiếu nại', icon: 'warning' },
                   { id: 'withdrawals', label: 'Quản lý rút tiền', icon: 'payments' },
                   { id: 'systemConfigs', label: 'Cấu hình hệ thống', icon: 'settings' },
-                  { id: 'content', label: 'Cài đặt tài chính', icon: 'article' },
                   { id: 'transactions', label: 'Giao dịch', icon: 'account_balance_wallet' },
                   { id: 'audit', label: 'Nhật ký', icon: 'history_edu' },
                 ].map((item) => (
@@ -1464,7 +1482,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) => {
                             <td className="px-6 py-4 text-slate-600 font-medium">{tier.minRevenueAmount} triệu</td>
                             <td className="px-6 py-4 text-slate-600 font-medium">{tier.minRatingAvg}</td>
                             <td className="px-6 py-4">
-                              <span className={`px-2 py-1 rounded-md text-[10px] font-bold uppercase ${tier.isActive ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                              <span className={`inline-flex items-center justify-center whitespace-nowrap px-2 py-1 rounded-md text-[10px] font-bold uppercase leading-none ${tier.isActive ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
                                 }`}>
                                 {tier.isActive ? 'Hoạt động' : 'Tạm dừng'}
                               </span>
@@ -1547,10 +1565,10 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) => {
                       className="w-full px-4 py-2 rounded-lg border border-gold/10 bg-white"
                     >
                       <option value="">Tất cả vai trò</option>
-                      <option value="Admin">Quản trị viên (Admin)</option>
-                      <option value="Staff">Nhân viên (Staff)</option>
-                      <option value="Customer">Khách hàng (Customer)</option>
-                      <option value="Vendor">Nhà cung cấp (Vendor)</option>
+                      <option value="Admin">Quản trị viên</option>
+                      <option value="Staff">Nhân viên</option>
+                      <option value="Customer">Khách hàng</option>
+                      <option value="Vendor">Nhà cung cấp</option>
                     </select>
                   </div>
                   <div className="flex-1 min-w-[200px]">
@@ -1561,8 +1579,8 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) => {
                       className="w-full px-4 py-2 rounded-lg border border-gold/10 bg-white"
                     >
                       <option value="">Tất cả trạng thái</option>
-                      <option value="Active">Đang hoạt động (Active)</option>
-                      <option value="Inactive">Ngừng hoạt động (Inactive)</option>
+                      <option value="Active">Đang hoạt động</option>
+                      <option value="Inactive">Ngừng hoạt động</option>
                     </select>
                   </div>
                 </div>
@@ -1599,9 +1617,9 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) => {
                                 )}
                               </div>
                             </td>
-                            <td className="px-6 py-4 font-bold text-primary">{user.fullName || 'N/A'}</td>
+                            <td className="px-6 py-4 font-bold text-primary">{user.fullName || 'Chưa có'}</td>
                             <td className="px-6 py-4 text-slate-600">{user.email}</td>
-                            <td className="px-6 py-4 text-slate-600">{user.phoneNumber || 'N/A'}</td>
+                            <td className="px-6 py-4 text-slate-600">{user.phoneNumber || 'Chưa có'}</td>
                             <td className="px-6 py-4">
                               <div className="flex flex-wrap gap-1">
                                 {user.roles.map(role => (
@@ -1610,15 +1628,15 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) => {
                                       role === 'Vendor' ? 'bg-orange-100 text-orange-700' :
                                         'bg-slate-100 text-slate-700'
                                     }`}>
-                                    {role}
+                                    {getDisplayUserRole(role)}
                                   </span>
                                 ))}
                               </div>
                             </td>
                             <td className="px-6 py-4">
-                              <span className={`px-3 py-1 rounded-lg text-xs font-bold ${user.status === 'Active' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                              <span className={`inline-flex items-center justify-center whitespace-nowrap px-3 py-1 rounded-lg text-xs font-bold leading-none ${user.status === 'Active' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
                                 }`}>
-                                {user.status}
+                                {getDisplayUserStatus(user.status)}
                               </span>
                             </td>
                             <td className="px-6 py-4">
@@ -1806,48 +1824,6 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) => {
                     </div>
                   </div>
                 )}
-              </div>
-            )}
-
-            {activeTab === 'content' && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                {/* <div className="bg-white rounded-[2rem] border border-gold/10 shadow-sm p-8">
-                  <h3 className="text-2xl font-bold text-primary mb-8 flex items-center gap-2">
-                    <span className="material-symbols-outlined">image</span>
-                    Cài đặt tài chính
-                  </h3>
-                  <div className="space-y-4">
-                    <button className="w-full px-6 py-2.5 border-2 border-primary text-primary rounded-lg font-bold uppercase hover:bg-primary/5 transition-all">
-                      + Tạo biểu ngữ mới
-                    </button>
-                    <button className="w-full px-6 py-2.5 border-2 border-primary text-primary rounded-lg font-bold uppercase hover:bg-primary/5 transition-all">
-                      + Thêm sản phẩm nổi bật
-                    </button>
-                    <button className="w-full px-6 py-2.5 border-2 border-primary text-primary rounded-lg font-bold uppercase hover:bg-primary/5 transition-all">
-                      + Quản lý danh mục
-                    </button>
-                  </div>
-                </div> */}
-
-                <div className="bg-white rounded-[2rem] border border-gold/10 shadow-sm p-8">
-                  <h3 className="text-2xl font-bold text-primary mb-8 flex items-center gap-2">
-                    <span className="material-symbols-outlined">tune</span>
-                    Cài đặt tài chính
-                  </h3>
-                  <div className="space-y-4">
-                    <div>
-                      <label className="text-xs font-bold uppercase text-slate-400 block mb-2">Hoa hồng sàn (%)</label>
-                      <input type="number" defaultValue="10" className="w-full px-4 py-2 rounded-lg border border-gold/10 bg-ritual-bg" />
-                    </div>
-                    <div>
-                      <label className="text-xs font-bold uppercase text-slate-400 block mb-2">Phí giao dịch (%)</label>
-                      <input type="number" defaultValue="2.5" className="w-full px-4 py-2 rounded-lg border border-gold/10 bg-ritual-bg" />
-                    </div>
-                    <button className="w-full px-6 py-2.5 border-2 border-primary text-primary rounded-lg font-bold uppercase hover:bg-primary/5 transition-all">
-                      Lưu thay đổi
-                    </button>
-                  </div>
-                </div>
               </div>
             )}
 

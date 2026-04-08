@@ -136,7 +136,7 @@ const TransactionManagement: React.FC<TransactionManagementProps> = ({ onNavigat
     setRelatedTxs([]);
     try {
       const [detail, related] = await Promise.all([
-        getTransactionById(tx.id),
+        getTransactionById(tx.id, userRole === 'staff' ? 'Staff' : 'Admin'),
         getRelatedTransactions(tx.id)
       ]);
       setDetailTx(detail);
