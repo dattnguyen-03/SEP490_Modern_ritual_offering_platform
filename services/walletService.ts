@@ -883,3 +883,18 @@ export async function getAllTransactions(filter: AllTransactionFilter = {}): Pro
   const items = unwrapResultArray(payload);
   return items.map((item, index) => normalizeTransactionItem(item, index));
 }
+
+export const walletService = {
+  getMyWallet,
+  createTopupLink,
+  cancelPayosTopup,
+  createWithdrawal,
+  getWithdrawalRequests,
+  getMyWithdrawalRequests,
+  approveWithdrawal,
+  rejectWithdrawal,
+  getMyTransactions,
+  getTransactionById,
+  getRelatedTransactions,
+  getAllTransactions
+};

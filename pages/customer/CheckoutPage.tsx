@@ -5,6 +5,7 @@ import { checkoutService, CheckoutSummary } from '../../services/checkoutService
 import { cartService } from '../../services/cartService';
 import { getCurrentUser, getProfile } from '../../services/auth';
 import { addressService, CustomerAddress } from '../../services/addressService';
+import { walletService } from '../../services/walletService';
 import toast from '../../services/toast';
 
 const PENDING_CHECKOUT_KEY = 'pendingCheckoutRequest';
@@ -275,6 +276,55 @@ const CheckoutPage: React.FC<{ onNavigate: (path: string) => void }> = ({ onNavi
 
     setProcessing(true);
     try {
+      // 1. Proactively check wallet balance if paying with Wallet (PayOS method in UI)
+      if (paymentMethod === 'PayOS') {
+        try {
+          const wallet = await walletService.getMyWallet('Customer');
+          const balance = wallet.balance || 0;
+          
+          if (balance < summary.totalAmount) {
+            const needed = summary.totalAmount - balance;
+            
+            const result = await toast.confirm({
+              title: 'Số dư không đủ',
+              text: `Số dư ví của bạn ( ${balance.toLocaleString()}đ ) không đủ để thanh toán đơn hàng này. Bạn cần nạp thêm ít nhất ${needed.toLocaleString()}đ. Bạn có muốn nạp tiền ngay không?`,
+              icon: 'warning',
+              confirmButtonText: 'Nạp tiền ngay',
+              cancelButtonText: 'Để sau'
+            });
+
+            if (result.isConfirmed) {
+              // Initiate top-up link for the total order amount
+              const payosResult = await checkoutService.initiatePayOSPayment(summary.totalAmount);
+              const redirectUrl = payosResult?.paymentUrl || payosResult?.checkoutUrl;
+
+              if (redirectUrl) {
+                // Store checkout request to resume later if needed
+                sessionStorage.setItem(PENDING_CHECKOUT_KEY, JSON.stringify({
+                  request: checkoutRequest,
+                  createdAt: Date.now(),
+                  returnPath: `${window.location.pathname}${window.location.search}`
+                }));
+                
+                // Set a flag to show success toast after returning from top-up
+                sessionStorage.setItem(TOPUP_SUCCESS_TOAST_KEY, '1');
+                
+                window.location.href = redirectUrl;
+                return;
+              } else {
+                toast.error('Không thể tạo liên kết nạp tiền. Vui lòng thử lại sau.');
+              }
+            }
+            
+            setProcessing(false);
+            return;
+          }
+        } catch (walletError: any) {
+          console.error('⚠️ Failed to check wallet balance:', walletError);
+          // Continue with checkout anyway, the backend will catch it if balance is truly low
+        }
+      }
+
       console.log(' Checkout request data:', JSON.stringify(checkoutRequest, null, 2));
 
       const result = await checkoutService.processCheckout(checkoutRequest);

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { cartService, CartApi } from '../../services/cartService';
 import { checkoutService, CheckoutSummary } from '../../services/checkoutService';
 import { getCurrentUser } from '../../services/auth';
+import { walletService } from '../../services/walletService';
 import toast from '../../services/toast';
 
 const MAX_CART_ITEM_QUANTITY = 50;
@@ -446,10 +447,38 @@ const CartPage: React.FC<{ onNavigate: (path: string) => void }> = ({ onNavigate
             </div>
 
             <button
-              onClick={() => {
+              onClick={async () => {
                 if (selectedItemIds.length === 0) {
                   toast.warning('Vui lòng chọn ít nhất một sản phẩm để thanh toán');
                   return;
+                }
+
+                // Check wallet balance early
+                try {
+                  const wallet = await walletService.getMyWallet('Customer');
+                  const balance = wallet.balance || 0;
+                  
+                  if (balance < total) {
+                    const needed = total - balance;
+                    const result = await toast.confirm({
+                      title: 'Số dư ví không đủ',
+                      text: `Số dư ví ( ${balance.toLocaleString()}đ ) không đủ để thanh toán các sản phẩm đã chọn. Bạn cần thêm ${needed.toLocaleString()}đ. Bạn có muốn nạp tiền ngay không?`,
+                      icon: 'warning',
+                      confirmButtonText: 'Nạp ngay',
+                      cancelButtonText: 'Kiểm tra sau'
+                    });
+
+                    if (result.isConfirmed) {
+                      const payosResult = await checkoutService.initiatePayOSPayment(total);
+                      const redirectUrl = payosResult?.paymentUrl || payosResult?.checkoutUrl;
+                      if (redirectUrl) {
+                        window.location.href = redirectUrl;
+                        return;
+                      }
+                    }
+                  }
+                } catch (err) {
+                  console.warn('Early balance check failed:', err);
                 }
 
                 const idsParam = selectedItemIds.join(',');
@@ -468,12 +497,12 @@ const CartPage: React.FC<{ onNavigate: (path: string) => void }> = ({ onNavigate
               Tiếp tục mua sắm
             </button>
 
-            <div className="mt-6 p-4 bg-gold/10 rounded-lg text-sm text-slate-600 space-y-2">
+            {/* <div className="mt-6 p-4 bg-gold/10 rounded-lg text-sm text-slate-600 space-y-2">
               <p className="font-bold text-primary">Thông tin đơn hàng</p>
               <p>✓ Giao hàng trong 24 giờ</p>
               <p>✓ Miễn phí đổi trả trong 7 ngày</p>
               <p>✓ Hỗ trợ 24/7</p>
-            </div>
+            </div> */}
           </div>
         )}
       </div>
