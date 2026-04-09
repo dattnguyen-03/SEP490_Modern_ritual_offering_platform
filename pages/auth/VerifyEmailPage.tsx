@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { confirmEmail } from '../../services/auth';
+import logoImage from '../../assets/logo.png';
 
 const VerifyEmailPage: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -129,12 +130,17 @@ const VerifyEmailPage: React.FC = () => {
           <div className="text-center mb-8">
             <div className="relative inline-block mb-6">
               <div className="absolute inset-0 bg-gradient-to-br from-gray-900/20 via-gray-700/20 to-gray-500/20 rounded-full blur-2xl animate-pulse"></div>
-              <div className="relative w-20 h-20 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-700 rounded-full flex items-center justify-center shadow-[0_10px_40px_-10px_rgba(0,0,0,0.4)]">
-                <span className="text-3xl text-white font-playfair font-bold">M</span>
+              <div className="relative w-[106px] h-[106px] bg-gradient-to-br from-gray-900 via-gray-800 to-gray-700 rounded-full flex items-center justify-center shadow-[0_10px_40px_-10px_rgba(0,0,0,0.4)] transition-all duration-500 group overflow-hidden mx-auto">
+                <img
+                  src={logoImage}
+                  alt="Modern Ritual Logo"
+                  className="w-full h-full object-cover object-center"
+                />
+                <div className="absolute inset-0 rounded-full border-2 border-white/20"></div>
               </div>
             </div>
             <h1 className="text-3xl font-playfair font-bold bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 bg-clip-text text-transparent mb-2">
-              Modern Ritual
+              Modern Ritual Offering
             </h1>
             <p className="text-sm text-gray-600 font-semibold tracking-wide">
               Nền tảng mâm cúng hiện đại
