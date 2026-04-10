@@ -1025,6 +1025,31 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) => {
 
   const formatCurrencyVN = (value: number): string => `${value.toLocaleString('vi-VN')}đ`;
 
+  const parseDateToTimestamp = (value?: string): number => {
+    if (!value) return 0;
+    const timestamp = Date.parse(value);
+    return Number.isNaN(timestamp) ? 0 : timestamp;
+  };
+
+  const sortedWithdrawalRequests = [...withdrawalRequests].sort((a, b) => {
+    const rawA = a.raw || {};
+    const rawB = b.raw || {};
+
+    const dateA =
+      String(rawA.createdAt || rawA.CreatedAt || rawA.createdDate || rawA.CreatedDate || '') ||
+      a.createdDate ||
+      a.requestedAt;
+
+    const dateB =
+      String(rawB.createdAt || rawB.CreatedAt || rawB.createdDate || rawB.CreatedDate || '') ||
+      b.createdDate ||
+      b.requestedAt;
+
+    return parseDateToTimestamp(dateB) - parseDateToTimestamp(dateA);
+  });
+
+  const withdrawalTotalPages = Math.max(1, Math.ceil(sortedWithdrawalRequests.length / ITEMS_PER_PAGE));
+
   const escapeHtml = (value: unknown): string => {
     return String(value ?? '')
       .replace(/&/g, '&amp;')
@@ -1864,11 +1889,11 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) => {
                     </div>
                   )}
 
-                  {!isLoadingWithdrawals && !withdrawalsError && withdrawalRequests.length === 0 && (
+                  {!isLoadingWithdrawals && !withdrawalsError && sortedWithdrawalRequests.length === 0 && (
                     <div className="px-8 py-10 text-center text-slate-500 font-semibold">Chưa có yêu cầu rút tiền nào.</div>
                   )}
 
-                  {!isLoadingWithdrawals && !withdrawalsError && withdrawalRequests.length > 0 && (
+                  {!isLoadingWithdrawals && !withdrawalsError && sortedWithdrawalRequests.length > 0 && (
                     <table className="w-full">
                       <thead>
                         <tr className="bg-ritual-bg border-b border-gold/10">
@@ -1882,7 +1907,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) => {
                         </tr>
                       </thead>
                       <tbody>
-                        {withdrawalRequests.slice((withdrawalsPage - 1) * ITEMS_PER_PAGE, withdrawalsPage * ITEMS_PER_PAGE).map((request) => {
+                        {sortedWithdrawalRequests.slice((withdrawalsPage - 1) * ITEMS_PER_PAGE, withdrawalsPage * ITEMS_PER_PAGE).map((request) => {
                           const isFinalStatus = isFinalWithdrawalStatus(request.status);
                           return (
                           <tr key={request.id} className="border-b border-gold/10 hover:bg-ritual-bg transition-all">
@@ -1932,10 +1957,10 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) => {
                 </div>
 
                 {/* Pagination for Withdrawals */}
-                {!isLoadingWithdrawals && withdrawalRequests.length > ITEMS_PER_PAGE && (
+                {!isLoadingWithdrawals && sortedWithdrawalRequests.length > ITEMS_PER_PAGE && (
                   <div className="px-8 py-4 bg-ritual-bg/30 border-t border-gold/10 flex items-center justify-between">
                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                      Trang {withdrawalsPage} / {Math.ceil(withdrawalRequests.length / ITEMS_PER_PAGE)}
+                      Trang {withdrawalsPage} / {withdrawalTotalPages}
                     </p>
                     <div className="flex gap-2">
                       <button
@@ -1946,8 +1971,8 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) => {
                         <span className="material-symbols-outlined text-sm">chevron_left</span>
                       </button>
                       <button
-                        onClick={() => setWithdrawalsPage(p => Math.min(Math.ceil(withdrawalRequests.length / ITEMS_PER_PAGE), p + 1))}
-                        disabled={withdrawalsPage >= Math.ceil(withdrawalRequests.length / ITEMS_PER_PAGE)}
+                        onClick={() => setWithdrawalsPage(p => Math.min(withdrawalTotalPages, p + 1))}
+                        disabled={withdrawalsPage >= withdrawalTotalPages}
                         className="p-2 rounded-lg border border-gold/10 bg-white text-primary disabled:opacity-30 disabled:cursor-not-allowed hover:bg-primary hover:text-white transition-all flex items-center justify-center shadow-sm"
                       >
                         <span className="material-symbols-outlined text-sm">chevron_right</span>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { forgotPassword, resetPassword } from '../../services/auth';
+import logoImage from '../../assets/logo.png';
 
 interface ForgotPasswordPageProps {
   onNavigate: (path: string) => void;
@@ -96,10 +97,18 @@ const ForgotPasswordPage: React.FC<ForgotPasswordPageProps> = ({ onNavigate }) =
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 flex items-center justify-center px-4 py-12">
       <div className="relative max-w-md w-full">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-900 text-white rounded-full text-2xl font-bold mb-4 shadow-lg">
-            M
+          <div className="relative inline-block mb-4">
+            <div className="absolute inset-0 bg-gradient-to-br from-gray-900/20 to-gray-700/20 rounded-full blur-2xl animate-pulse"></div>
+            <div className="relative w-[106px] h-[106px] bg-gradient-to-br from-gray-900 via-gray-800 to-gray-700 rounded-full flex items-center justify-center shadow-[0_10px_40px_-10px_rgba(0,0,0,0.4)] transition-all duration-500 group overflow-hidden mx-auto">
+              <img
+                src={logoImage}
+                alt="Modern Ritual Logo"
+                className="w-full h-full object-cover object-center"
+              />
+              <div className="absolute inset-0 rounded-full border-2 border-white/20"></div>
+            </div>
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Modern Ritual</h1>
+          <h1 className="text-3xl font-playfair font-bold bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 bg-clip-text text-transparent mb-2">Modern Ritual Offering</h1>
           <p className="text-gray-600">
             {step === 'request' ? 'Khôi phục mật khẩu' : 'Đặt lại mật khẩu'}
           </p>

@@ -202,7 +202,7 @@ const AuditLogPage: React.FC<AuditLogPageProps> = ({ onNavigate, userRole }) => 
   }, [currentPage, logs]); // Removed resolvedNames and currentLogs to avoid infinite loops
 
   return (
-    <div className="bg-slate-50 min-h-screen py-12 px-4 md:px-8 font-sans">
+    <div className="bg-white min-h-screen py-12 px-4 md:px-8 font-sans">
       <div className="max-w-[1800px] mx-auto">
 
         {/* Header Section */}
@@ -239,7 +239,7 @@ const AuditLogPage: React.FC<AuditLogPageProps> = ({ onNavigate, userRole }) => 
             <div className="space-y-2">
               <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">Hành động</label>
               <select
-                className="w-full bg-slate-50 border-none rounded-xl px-4 py-3 text-sm font-bold text-slate-700 focus:ring-2 focus:ring-black transition-all cursor-pointer"
+                className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 focus:ring-2 focus:ring-black transition-all cursor-pointer"
                 value={filter.action || ''}
                 onChange={(e) => {
                   setFilter({ ...filter, action: e.target.value });
@@ -255,7 +255,7 @@ const AuditLogPage: React.FC<AuditLogPageProps> = ({ onNavigate, userRole }) => 
             <div className="space-y-2">
               <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">Đối tượng</label>
               <select
-                className="w-full bg-slate-50 border-none rounded-xl px-4 py-3 text-sm font-bold text-slate-700 focus:ring-2 focus:ring-black transition-all cursor-pointer"
+                className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 focus:ring-2 focus:ring-black transition-all cursor-pointer"
                 value={filter.entityType || ''}
                 onChange={(e) => {
                   setFilter({ ...filter, entityType: e.target.value });
@@ -271,7 +271,7 @@ const AuditLogPage: React.FC<AuditLogPageProps> = ({ onNavigate, userRole }) => 
             <div className="space-y-2">
               <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">Vai trò</label>
               <select
-                className="w-full bg-slate-50 border-none rounded-xl px-4 py-3 text-sm font-bold text-slate-700 focus:ring-2 focus:ring-black transition-all cursor-pointer"
+                className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 focus:ring-2 focus:ring-black transition-all cursor-pointer"
                 value={roleFilter}
                 onChange={(e) => {
                   setRoleFilter(e.target.value);
@@ -289,7 +289,7 @@ const AuditLogPage: React.FC<AuditLogPageProps> = ({ onNavigate, userRole }) => 
             {/* <div className="space-y-2">
               <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">Người thực hiện</label>
               <select
-                className="w-full bg-slate-50 border-none rounded-xl px-4 py-3 text-sm font-bold text-slate-700 focus:ring-2 focus:ring-black transition-all cursor-pointer"
+                className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 focus:ring-2 focus:ring-black transition-all cursor-pointer"
                 value={filter.performedBy || ''}
                 onChange={(e) => {
                   setFilter({ ...filter, performedBy: e.target.value });
@@ -306,7 +306,7 @@ const AuditLogPage: React.FC<AuditLogPageProps> = ({ onNavigate, userRole }) => 
               <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">Từ ngày</label>
               <input
                 type="date"
-                className="w-full bg-slate-50 border-none rounded-xl px-4 py-3 text-sm font-bold text-slate-700 focus:ring-2 focus:ring-black transition-all cursor-pointer"
+                className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 focus:ring-2 focus:ring-black transition-all cursor-pointer"
                 value={filter.from || ''}
                 onChange={(e) => setFilter({ ...filter, from: e.target.value })}
               />
@@ -340,7 +340,7 @@ const AuditLogPage: React.FC<AuditLogPageProps> = ({ onNavigate, userRole }) => 
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="bg-slate-50/50">
+                <tr className="bg-white">
                   <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400">Thời gian</th>
                   <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400">Hành động</th>
                   <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400">Đối tượng</th>
@@ -364,7 +364,7 @@ const AuditLogPage: React.FC<AuditLogPageProps> = ({ onNavigate, userRole }) => 
                   </tr>
                 ) : (
                   currentLogs.map((log) => (
-                    <tr key={log.auditId} className="hover:bg-slate-50/50 transition-colors group">
+                    <tr key={log.auditId} className="hover:bg-white transition-colors group">
                       <td className="px-8 py-6 whitespace-nowrap">
                         <p className="text-sm font-bold text-slate-900">{new Date(log.timestamp).toLocaleDateString('vi-VN')}</p>
                         <p className="text-[10px] text-slate-400 font-black tabular-nums">{new Date(log.timestamp).toLocaleTimeString('vi-VN')}</p>
@@ -409,7 +409,7 @@ const AuditLogPage: React.FC<AuditLogPageProps> = ({ onNavigate, userRole }) => 
 
           {/* Pagination Controls */}
           {!loading && logs.length > 0 && (
-            <div className="bg-slate-50/50 px-8 py-4 flex items-center justify-between border-t border-slate-100">
+            <div className="bg-white px-8 py-4 flex items-center justify-between border-t border-slate-100">
               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
                 Hiển thị <span className="text-slate-900">{Math.min(logs.length, (currentPage - 1) * ITEMS_PER_PAGE + 1)}</span>
                 - <span className="text-slate-900">{Math.min(logs.length, currentPage * ITEMS_PER_PAGE)}</span>
@@ -504,7 +504,7 @@ const AuditLogPage: React.FC<AuditLogPageProps> = ({ onNavigate, userRole }) => 
                     </div>
                   </div>
 
-                  <div className="bg-slate-50 rounded-[2rem] p-8">
+                  <div className="bg-white rounded-[2rem] p-8 border border-slate-100">
                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Nội dung thay đổi</p>
                     <div className="space-y-6">
                       <div>
