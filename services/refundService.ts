@@ -22,9 +22,12 @@ export interface RefundItem {
     orderItemId: string;
     packageName: string;
     variantName: string;
+    packageId?: string | number;
+    imageUrl?: string;
     quantity: number;
     refundAmount: number;
     lineTotal?: number;
+    price?: number;
 }
 
 export interface RefundRecord {
@@ -35,6 +38,10 @@ export interface RefundRecord {
     customerName: string;
     customerEmail: string;
     customerPhone: string;
+    vendorId?: string;
+    shopName?: string;
+    vendorPreparationImages?: string[];
+    vendorDeliveryImages?: string[];
     reason: string;
     proofImages: string[];
     status: 'Pending' | 'Approved' | 'Rejected';
@@ -109,7 +116,7 @@ class RefundService {
 
         return rawItems.map((item: any, index: number) => {
             const quantity = Number(item.quantity) || 1;
-            const unitPrice = Number(item.unitPrice ?? item.price) || 0;
+            const unitPrice = Number(item.price ?? item.unitPrice ?? 0);
             const inferredAmount =
                 Number(item.refundAmount)
                 || Number(item.lineTotal)
@@ -121,10 +128,13 @@ class RefundService {
             return {
                 refundItemId: item.refundItemId || item.id || `${refundId || 'refund'}-order-${index}`,
                 orderItemId: item.orderItemId || item.itemId || '',
-                packageName: item.packageName || item.package?.packageName || item.productName || item.name || 'N/A',
+                packageName: item.packageName || item.packageDetail?.packageName || item.package?.packageName || item.productName || item.name || 'N/A',
                 variantName: item.variantName || item.variant?.variantName || item.optionName || 'N/A',
+                packageId: item.packageId || item.packageDetail?.packageId,
+                imageUrl: item.imageUrl || item.packageDetail?.imageUrl,
                 quantity,
                 refundAmount: inferredAmount || unitPrice,
+                price: unitPrice,
             };
         });
     }
@@ -427,11 +437,11 @@ class RefundService {
     private mapRefundRecord(raw: any): RefundRecord {
         const refundId = raw.refundId || raw.id || '';
 
-        const rawItemsSource = raw.refundItems
+        const rawItemsSource = raw.orderItems
+            || raw.refundItems
             || raw.items
             || raw.refundItemDtos
             || raw.refundDetails
-            || raw.orderItems
             || raw.createRefundItems
             || [];
 
@@ -445,7 +455,7 @@ class RefundService {
                     packageName: raw.packageName || raw.productName || raw.itemName || 'N/A',
                     variantName: raw.variantName || raw.optionName || 'N/A',
                     quantity: Number(raw.quantity) || 1,
-                    refundAmount: Number(raw.refundAmount || raw.amount) || 0,
+                    refundAmount: Number(raw.refundAmount || raw.totalAmount || raw.amount) || 0,
                 }]
                 : [];
 
@@ -467,6 +477,10 @@ class RefundService {
                 || raw.customer?.phone
                 || raw.customer?.mobile
                 || '',
+            vendorId: raw.vendorId || '',
+            shopName: raw.shopName || '',
+            vendorPreparationImages: Array.isArray(raw.vendorPreparationImages) ? raw.vendorPreparationImages : [],
+            vendorDeliveryImages: Array.isArray(raw.vendorDeliveryImages) ? raw.vendorDeliveryImages : [],
             reason: raw.reason || '',
             proofImages: Array.isArray(raw.proofImages) ? raw.proofImages : [],
             status: this.normalizeRefundStatus(raw.status),
@@ -480,7 +494,7 @@ class RefundService {
                 ?? raw.totalAmount
             ) || 0,
             createdAt: raw.createdAt || new Date().toISOString(),
-            processedAt: raw.processedAt || null,
+            processedAt: raw.resolvedAt || raw.processedAt || null,
             processedBy: raw.processedBy || null,
             adminNote: raw.adminNote || null,
             items: normalizedItems.length > 0 ? normalizedItems : fallbackItem,

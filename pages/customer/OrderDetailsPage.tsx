@@ -77,16 +77,29 @@ const OrderDetailsPage: React.FC = () => {
 
     const loadRefundInfo = async (orderId: string) => {
         try {
+            // Priority 1: Check query parameters for refundId
+            const urlRefundId = searchParams.get('refundId');
+            if (urlRefundId) {
+                const data = await refundService.getRefundById(urlRefundId);
+                if (data) {
+                    setRefundInfo(data);
+                    setRefundDismissed(Boolean(localStorage.getItem(`refundEscalateDismissed:${data.refundId}`)));
+                    return;
+                }
+            }
+
+            // Priority 2: Check localStorage for refundId
             const refundId = localStorage.getItem(`refundId:${orderId}`);
             if (refundId) {
                 const data = await refundService.getRefundById(refundId);
-                setRefundInfo(data);
-                if (data?.refundId) {
+                if (data) {
+                    setRefundInfo(data);
                     setRefundDismissed(Boolean(localStorage.getItem(`refundEscalateDismissed:${data.refundId}`)));
+                    return;
                 }
-                return;
             }
 
+            // Priority 3: Fallback to searching by orderId
             const fallback = await refundService.getRefundByOrderId(orderId);
             if (fallback?.refundId) {
                 localStorage.setItem(`refundId:${orderId}`, fallback.refundId);
