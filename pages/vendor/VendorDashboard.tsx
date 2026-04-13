@@ -304,7 +304,7 @@ const VendorDashboard: React.FC<VendorDashboardProps> = ({ onNavigate }) => {
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
           {(dashboardStats?.topProducts || []).length > 0 ? (
             dashboardStats!.topProducts!.map((product, index) => (
-              <div key={String(product.productId)} className="rounded-2xl border border-slate-100 shadow-sm overflow-hidden bg-white hover:shadow-md transition-all">
+              <div key={String(product.productId)} onClick={() => onNavigate('/vendor/products')} className="rounded-2xl border border-slate-100 shadow-sm overflow-hidden bg-white hover:shadow-md hover:border-gold/30 transition-all cursor-pointer">
                 <div className="h-44 bg-slate-50 overflow-hidden">
                   {product.imageUrl ? (
                     <img src={product.imageUrl} alt={product.productName} className="w-full h-full object-cover" />
