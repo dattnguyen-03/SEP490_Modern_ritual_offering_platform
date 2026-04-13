@@ -12,7 +12,18 @@
     <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;900&family=Playfair+Display:ital,wght@0,700;0,900;1,700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
     <script>
+        // Prevent flash of wrong theme on initial load
+        (function() {
+            const saved = localStorage.getItem('vietritual-theme');
+            if (saved === 'dark') {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        })();
+
         tailwind.config = {
+            darkMode: 'class',
             theme: {
                 extend: {
                     colors: {
@@ -33,57 +44,167 @@
         .material-symbols-outlined {
             font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
         }
+
         body {
             background-color: #FFFFFF;
         }
+
+        /* ══════════════════════════════════════════
+           DARK MODE SYSTEM - Comprehensive Neutral Dark
+           ══════════════════════════════════════════ */
+
+        /* 1. Global Background & Reset */
+        html.dark .min-h-screen {
+            background-color: #09090b !important;
+            color: #fafafa !important;
+        }
+
+        /* 2. Layout Elements */
+        html.dark header,
+        html.dark aside,
+        html.dark [class*="sidebar"],
+        html.dark .bg-white {
+            background-color: #18181b !important;
+            border-color: rgba(255,255,255,0.1) !important;
+        }
+
+        html.dark .bg-slate-50,
+        html.dark .bg-gray-50,
+        html.dark .bg-gray-100,
+        html.dark .bg-slate-100,
+        html.dark .bg-gray-200,
+        html.dark .bg-slate-200,
+        html.dark .bg-zinc-100,
+        html.dark .bg-zinc-200,
+        html.dark .bg-ritual-bg,
+        html.dark .bg-ritual-bg\/50 {
+            background-color: #27272a !important;
+            color: #ffffff !important;
+        }
+
+        /* Kill Light Gradients & Surfaces */
+        html.dark .from-ritual-bg,
+        html.dark .via-white,
+        html.dark .from-white,
+        html.dark .to-white,
+        html.dark .via-slate-50,
+        html.dark .from-slate-50,
+        html.dark .to-gold\/5 {
+            background-image: none !important;
+            background-color: #09090b !important;
+        }
+
+        /* Preserve images but ensure contrast */
+        html.dark [style*="background-image"] {
+            background-color: #09090b !important;
+            background-blend-mode: multiply !important;
+        }
+
+        /* 3. Text & Typography - High Contrast */
+        html.dark .text-primary,
+        html.dark .text-black,
+        html.dark .text-gray-900,
+        html.dark .text-slate-900,
+        html.dark .text-slate-800,
+        html.dark .text-gray-800,
+        html.dark h1:not([class*="bg-clip-text"]), 
+        html.dark h2:not([class*="bg-clip-text"]), 
+        html.dark h3:not([class*="bg-clip-text"]), 
+        html.dark h4:not([class*="bg-clip-text"]) {
+            color: #ffffff !important;
+        }
+
+        /* Exception for Gradient Text */
+        html.dark [class*="bg-clip-text"] {
+            color: transparent !important;
+            -webkit-background-clip: text !important;
+            background-clip: text !important;
+        }
+
+        html.dark .text-slate-700,
+        html.dark .text-gray-700,
+        html.dark .text-slate-600,
+        html.dark .text-gray-600,
+        html.dark th {
+            color: #e4e4e7 !important;
+        }
+
+        html.dark .text-slate-500,
+        html.dark .text-gray-500,
+        html.dark .text-slate-400,
+        html.dark .text-gray-400 {
+            color: #a1a1aa !important;
+        }
+
+        html.dark .text-gold {
+            color: #eab308 !important; /* Brighter gold for visibility */
+        }
+
+        /* 4. UI Components */
         
-        /* Cart Dropdown Animation */
-        @keyframes slideDown {
-            from {
-                opacity: 0;
-                transform: translateY(-10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+        /* Table Headers specifically */
+        html.dark thead tr {
+            background-color: #27272a !important;
+            border-bottom: 2px solid rgba(255,255,255,0.1) !important;
         }
+
+        /* Badges / Chips */
+        html.dark .bg-slate-100 { background-color: #3f3f46 !important; color: #f4f4f5 !important; }
+        html.dark .bg-gray-100  { background-color: #3f3f46 !important; color: #f4f4f5 !important; }
         
-        .animate-slideDown {
-            animation: slideDown 0.2s ease-out;
+        /* Status Badges */
+        html.dark .bg-green-100, html.dark .bg-green-50 { background-color: rgba(34,197,94,0.15) !important; color: #4ade80 !important; }
+        html.dark .bg-red-100, html.dark .bg-red-50     { background-color: rgba(239,68,68,0.15) !important; color: #f87171 !important; }
+        html.dark .bg-amber-100, html.dark .bg-amber-50 { background-color: rgba(245,158,11,0.15) !important; color: #fbbf24 !important; }
+        html.dark .bg-blue-100, html.dark .bg-blue-50   { background-color: rgba(59,130,246,0.15) !important; color: #60a5fa !important; }
+        html.dark .bg-purple-100, html.dark .bg-purple-50 { background-color: rgba(147,51,234,0.15) !important; color: #c084fc !important; }
+        html.dark .bg-orange-100, html.dark .bg-orange-50 { background-color: rgba(249,115,22,0.15) !important; color: #fb923c !important; }
+
+        /* Inputs */
+        html.dark input:not([type="checkbox"]):not([type="radio"]),
+        html.dark textarea,
+        html.dark select {
+            background-color: #18181b !important;
+            color: #ffffff !important;
+            border-color: #3f3f46 !important;
         }
-        .no-scrollbar::-webkit-scrollbar {
-            display: none;
+        html.dark input::placeholder { color: #52525b !important; }
+
+        /* Borders & Dividers */
+        html.dark .border,
+        html.dark [class*="border-"],
+        html.dark .divide-y > *,
+        html.dark .divide-x > * {
+            border-color: rgba(255,255,255,0.1) !important;
         }
-        .no-scrollbar {
-            -ms-overflow-style: none;
-            scrollbar-width: none;
+
+        /* Hover states */
+        html.dark .hover\:bg-slate-50:hover,
+        html.dark .hover\:bg-ritual-bg:hover,
+        html.dark tr:hover td {
+            background-color: #27272a !important;
         }
+
+        /* 5. Misc & Animation */
         
-        /* Global scrollbar hiding for cleaner dashboard */
-        .overflow-x-auto::-webkit-scrollbar {
-            display: none;
+        /* Modals */
+        html.dark .swal2-popup {
+            background-color: #18181b !important;
+            color: #fafafa !important;
+            border: 1px solid #3f3f46 !important;
         }
-        .overflow-x-auto {
-            -ms-overflow-style: none;
-            scrollbar-width: none;
+
+        /* Theme switching transition */
+        *, *::before, *::after {
+            transition: background-color 0.15s ease, border-color 0.15s ease, color 0.1s ease;
         }
 
         @keyframes logoJumpSide {
-            0%, 100% {
-                transform: translateX(0) translateY(0) rotate(0deg) scale(1.34);
-            }
-            25% {
-                transform: translateX(-15px) translateY(-5px) rotate(-5deg) scale(1.38);
-            }
-            75% {
-                transform: translateX(15px) translateY(-5px) rotate(5deg) scale(1.38);
-            }
+            0%, 100% { transform: translateX(0) translateY(0) rotate(0deg) scale(1.34); }
+            25%       { transform: translateX(-15px) translateY(-5px) rotate(-5deg) scale(1.38); }
+            75%       { transform: translateX(15px) translateY(-5px) rotate(5deg) scale(1.38); }
         }
-        .animate-logo-bounce {
-            animation: logoJumpSide 2s ease-in-out infinite;
-            display: inline-block;
-        }
+        .animate-logo-bounce { animation: logoJumpSide 2s ease-in-out infinite; display: inline-block; }
     </style>
 <script type="importmap">
 {

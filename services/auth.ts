@@ -415,12 +415,21 @@ export async function logoutApi(): Promise<void> {
 }
 
 /**
- * Logout - Clear ALL local storage data
+ * Logout - Clear local storage but preserve theme preference
  */
 export function logout(): void {
-  // Xóa tất cả dữ liệu trong localStorage
+  // Save theme before clearing
+  const currentTheme = localStorage.getItem('vietritual-theme');
+  
+  // Clear all data
   localStorage.clear();
-  console.log('✅ Logged out successfully - All localStorage cleared');
+  
+  // Restore theme
+  if (currentTheme) {
+    localStorage.setItem('vietritual-theme', currentTheme);
+  }
+  
+  console.log('✅ Logged out successfully - Authentication data cleared, theme preserved');
 }
 
 /**

@@ -99,10 +99,13 @@ export interface VendorDashboardResult {
 export interface StatisticsOverviewResult {
   totalRevenue: number;
   totalOrders: number;
+  totalCustomers?: number;
+  totalVendors?: number;
   averageOrderValue: number;
   totalProducts: number;
   revenueGrowthRate?: number;
   orderGrowthRate?: number;
+  customerGrowthRate?: number;
   revenueChart?: VendorDashboardRevenueByTime[];
   orderStatusChart?: Array<{
     status: string;
@@ -117,6 +120,9 @@ export interface StatisticsOverviewResult {
     revenue: number;
     orderCount: number;
   }>;
+  /** API trả về field này */
+  topVendors?: TopVendorItem[];
+  /** alias cũ – giữ lại để tương thích */
   topPerformingVendors?: TopVendorItem[];
   vendorStats?: VendorStatResult;
   productStats?: ProductStatResult;

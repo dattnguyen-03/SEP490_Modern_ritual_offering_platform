@@ -13,11 +13,11 @@ import {
   Filler,
 } from 'chart.js';
 import { Line, Bar, Doughnut } from 'react-chartjs-2';
-import { 
-  statisticsService, 
-  RevenueResult, 
-  OrderStatResult, 
-  ProductStatResult, 
+import {
+  statisticsService,
+  RevenueResult,
+  OrderStatResult,
+  ProductStatResult,
   VendorStatResult,
   StatisticsOverviewResult,
 } from '../services/statisticsService';
@@ -56,15 +56,15 @@ const EmptyState: React.FC<{ message?: string; icon?: string }> = ({ message = "
   </div>
 );
 
-const StatisticsView: React.FC<StatisticsViewProps> = ({ 
-  isStaff = true, 
-  vendorId, 
-  title = "Thống kê hệ thống", 
+const StatisticsView: React.FC<StatisticsViewProps> = ({
+  isStaff = true,
+  vendorId,
+  title = "Thống kê hệ thống",
   subtitle = "Dữ liệu kinh doanh chi tiết",
   hideHeader = false
 }) => {
   const [loading, setLoading] = useState(true);
-  
+
   const [revenueData, setRevenueData] = useState<RevenueResult | null>(null);
   const [orderData, setOrderData] = useState<OrderStatResult | null>(null);
   const [productData, setProductData] = useState<ProductStatResult | null>(null);
@@ -82,11 +82,11 @@ const StatisticsView: React.FC<StatisticsViewProps> = ({
     })),
   });
 
-  const mapOverviewOrders = (items: NonNullable<StatisticsOverviewResult['orderStatusChart']>): OrderStatResult => ({
-    totalOrders: items.reduce((sum, item) => sum + item.count, 0),
+  const mapOverviewOrders = (items: NonNullable<StatisticsOverviewResult['orderStatusChart']>, overview: StatisticsOverviewResult): OrderStatResult => ({
+    totalOrders: overview.totalOrders ?? items.reduce((sum, item) => sum + item.count, 0),
     previousPeriodOrders: 0,
-    growthRate: overviewData?.orderGrowthRate || 0,
-    averageOrderValue: overviewData?.averageOrderValue || 0,
+    growthRate: overview.orderGrowthRate || 0,
+    averageOrderValue: overview.averageOrderValue || 0,
     ordersByStatus: items.map((item) => ({ label: item.status, value: item.count })),
     ordersByTime: [],
     ordersByCategory: [],
@@ -113,9 +113,28 @@ const StatisticsView: React.FC<StatisticsViewProps> = ({
         const overviewProducts = overview.topProducts || [];
 
         setRevenueData(mapOverviewRevenue(overviewRevenue));
-        setOrderData(mapOverviewOrders(overviewOrders));
+        setOrderData(mapOverviewOrders(overviewOrders, overview));
         setProductData(mapOverviewProducts(overviewProducts));
-        setVendorStatData(overview.vendorStats || null);
+
+        // Build vendorStatData from overview fields (API trả topVendors + totalVendors)
+        const topVendors = overview.topVendors || overview.topPerformingVendors || [];
+        setVendorStatData(
+          overview.vendorStats || (
+            (overview.totalVendors !== undefined || topVendors.length > 0)
+              ? {
+                totalVendors: overview.totalVendors ?? topVendors.length,
+                activeVendors: 0,
+                inactiveVendors: 0,
+                suspendedVendors: 0,
+                bannedVendors: 0,
+                vendorsByTier: [],
+                vendorsByStatus: [],
+                vendorRegistrationsByTime: [],
+                topPerformingVendors: topVendors,
+              }
+              : null
+          )
+        );
         return;
       }
 
@@ -211,7 +230,7 @@ const StatisticsView: React.FC<StatisticsViewProps> = ({
       vendorStatData.suspendedVendors || 0,
       vendorStatData.bannedVendors || 0
     ];
-    
+
     // Filter out zeros to keep chart clean
     const filteredLabels = labels.filter((_, i) => data[i] > 0);
     const filteredData = data.filter(v => v > 0);
@@ -264,7 +283,7 @@ const StatisticsView: React.FC<StatisticsViewProps> = ({
       {/* Header with filters */}
       {!hideHeader && (
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-white p-6 rounded-[2rem] border border-gold/10 shadow-sm gap-4">
-           <div>
+          <div>
             <h2 className="text-2xl font-black text-primary uppercase tracking-tight">{title}</h2>
             <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">{subtitle}</p>
           </div>
@@ -274,33 +293,33 @@ const StatisticsView: React.FC<StatisticsViewProps> = ({
       {/* Top Highlight Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {[
-          { 
-            label: 'Doanh thu', 
-            value: formatCurrency(revenueData?.totalRevenue || overviewData?.totalRevenue || 0), 
-            icon: 'payments', 
+          {
+            label: 'Doanh thu',
+            value: formatCurrency(revenueData?.totalRevenue || overviewData?.totalRevenue || 0),
+            icon: 'payments',
             color: 'text-gold',
-            growth: revenueData?.growthRate ?? overviewData?.revenueGrowthRate 
+            growth: revenueData?.growthRate ?? overviewData?.revenueGrowthRate
           },
-          { 
-            label: 'Đơn hàng', 
-            value: orderData?.totalOrders?.toString() || overviewData?.totalOrders?.toString() || '0', 
-            icon: 'shopping_cart', 
+          {
+            label: 'Đơn hàng',
+            value: orderData?.totalOrders?.toString() || overviewData?.totalOrders?.toString() || '0',
+            icon: 'shopping_cart',
             color: 'text-green-600',
             growth: orderData?.growthRate ?? overviewData?.orderGrowthRate
           },
-          { 
-            label: (isStaff && !vendorId) ? 'Nhà cung cấp' : 'Sản phẩm kinh doanh', 
+          {
+            label: (isStaff && !vendorId) ? 'Nhà cung cấp' : 'Sản phẩm kinh doanh',
             value: (isStaff && !vendorId)
-              ? (vendorStatData?.totalVendors?.toString() || overviewData?.topPerformingVendors?.length?.toString() || '0')
-              : (productData?.totalProducts?.toString() || overviewData?.totalProducts?.toString() || '0'), 
-            icon: (isStaff && !vendorId) ? 'store' : 'inventory_2', 
-            color: 'text-blue-600' 
+              ? (vendorStatData?.totalVendors?.toString() || overviewData?.totalVendors?.toString() || '0')
+              : (productData?.totalProducts?.toString() || overviewData?.totalProducts?.toString() || '0'),
+            icon: (isStaff && !vendorId) ? 'store' : 'inventory_2',
+            color: 'text-blue-600'
           },
-          { 
-            label: 'Giá trị trung bình', 
-            value: formatCurrency(orderData?.averageOrderValue || overviewData?.averageOrderValue || 0), 
-            icon: 'trending_up', 
-            color: 'text-purple-600' 
+          {
+            label: 'Giá trị trung bình',
+            value: formatCurrency(orderData?.averageOrderValue || overviewData?.averageOrderValue || 0),
+            icon: 'trending_up',
+            color: 'text-purple-600'
           },
         ].map((stat, i) => (
           <div key={i} className="bg-white rounded-[2rem] p-6 border border-gold/10 shadow-sm hover:shadow-lg transition-all">
@@ -341,7 +360,7 @@ const StatisticsView: React.FC<StatisticsViewProps> = ({
           </h3>
           <div className="h-[320px] w-full">
             {categoryChartData.labels.length > 0 ? (
-              <Doughnut data={categoryChartData} options={{...chartOptions, cutout: '58%'}} />
+              <Doughnut data={categoryChartData} options={{ ...chartOptions, cutout: '58%' }} />
             ) : <EmptyState message={isStaff && !vendorId ? 'Chưa có dữ liệu sản phẩm' : 'Chưa có dữ liệu danh mục'} icon="pie_chart" />}
           </div>
         </div>
@@ -366,8 +385,8 @@ const StatisticsView: React.FC<StatisticsViewProps> = ({
           </h3>
           {isStaff && !vendorId ? (
             <div className="space-y-4">
-              {(overviewData?.topPerformingVendors || vendorStatData?.topPerformingVendors || []).slice(0, 5).length > 0 ? (
-                (overviewData?.topPerformingVendors || vendorStatData?.topPerformingVendors || []).slice(0, 5).map((vendor, i) => (
+              {(overviewData?.topVendors || overviewData?.topPerformingVendors || vendorStatData?.topPerformingVendors || []).slice(0, 5).length > 0 ? (
+                (overviewData?.topVendors || overviewData?.topPerformingVendors || vendorStatData?.topPerformingVendors || []).slice(0, 5).map((vendor, i) => (
                   <div key={vendor.vendorId} className="flex items-center justify-between p-4 bg-ritual-bg/30 rounded-[1.25rem] border border-gold/5">
                     <div className="flex items-center gap-4 min-w-0">
                       <div className="w-10 h-10 rounded-xl bg-white border border-gold/10 flex items-center justify-center text-gold font-black text-sm shrink-0">

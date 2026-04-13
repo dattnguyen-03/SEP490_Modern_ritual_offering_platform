@@ -10,7 +10,9 @@ import CartDropdown from './CartDropdown';
 import { guidelineService } from '../services/guidelineService';
 import toast from '../services/toast';
 import headerLogo from '../assets/logo1.png';
+import darkLogo from '../assets/image.png';
 import { CulturalGuideline } from '../services/guidelineService';
+import { useTheme } from '../hooks/useTheme';
 
 const PENDING_CHECKOUT_KEY = 'pendingCheckoutRequest';
 const TOPUP_SUCCESS_TOAST_KEY = 'checkoutTopupSuccessToast';
@@ -32,6 +34,7 @@ interface LayoutProps {
 }
 
 const Layout: React.FC<LayoutProps> = ({ children, activeRoute, onNavigate, onLogout, userRole, hideHeader = false }) => {
+  const [theme, toggleTheme] = useTheme();
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [cartCount, setCartCount] = useState<number>(0);
   const [isCartDropdownOpen, setIsCartDropdownOpen] = useState<boolean>(false);
@@ -517,7 +520,7 @@ const Layout: React.FC<LayoutProps> = ({ children, activeRoute, onNavigate, onLo
             ])
         ]
       },
-      { path: '/about', label: 'Về chúng tôi' },
+
       {
         path: '/cultural-guideline',
         label: 'Cẩm nang văn hóa',
@@ -531,8 +534,10 @@ const Layout: React.FC<LayoutProps> = ({ children, activeRoute, onNavigate, onLo
           ]
           : undefined
       },
+      { path: '/about', label: 'Về chúng tôi' },
     ];
   };
+
 
   const handleLogoutClick = async () => {
     const result = await toast.confirm({
@@ -802,9 +807,9 @@ const Layout: React.FC<LayoutProps> = ({ children, activeRoute, onNavigate, onLo
   };
 
   return (
-    <div className="min-h-screen flex flex-col font-sans">
+    <div className="min-h-screen flex flex-col font-sans bg-white dark:bg-[#111113]">
       {!hideHeader && (
-        <header className="sticky top-0 z-50 bg-white border-b border-gray-200">
+        <header className="sticky top-0 z-50 bg-white dark:bg-[#1c1c1e] border-b border-gray-200 dark:border-white/10">
           <div className="max-w-[92rem] mx-auto px-6 md:px-10 py-4 flex items-center justify-between">
             <div className="flex items-center gap-4 lg:gap-12">
               <button
@@ -820,9 +825,9 @@ const Layout: React.FC<LayoutProps> = ({ children, activeRoute, onNavigate, onLo
               >
                 <div className="w-[240px] h-[72px] md:w-[288px] md:h-[84px] lg:w-[312px] lg:h-[96px] -ml-16">
                   <img
-                    src={headerLogo}
+                    src={theme === 'dark' ? darkLogo : headerLogo}
                     alt="Modern Ritual Offering"
-                    className="w-full h-full object-contain object-left origin-left scale-[1.34]"
+                    className={`w-full h-full object-contain object-left origin-left ${theme === 'dark' ? 'scale-110' : 'scale-[1.34]'}`}
                   />
                 </div>
               </div>
@@ -832,7 +837,7 @@ const Layout: React.FC<LayoutProps> = ({ children, activeRoute, onNavigate, onLo
                   Trang ban hang */}
                 </div>
               ) : !isBackofficeRole && (
-                <nav className="hidden lg:flex items-center gap-8">
+                <nav className="hidden lg:flex items-center gap-10 mr-12">
                   {getNavItems().map((item) => (
                     <div
                       key={item.label}
@@ -878,7 +883,25 @@ const Layout: React.FC<LayoutProps> = ({ children, activeRoute, onNavigate, onLo
                 </nav>
               )}
             </div>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-6">
+              {/* Dark/Light Mode Toggle */}
+              <button
+                id="theme-toggle-btn"
+                onClick={toggleTheme}
+                className="flex items-center justify-center w-10 h-10 rounded-full border border-gray-200 dark:border-white/10 text-slate-600 dark:text-slate-300 hover:border-primary hover:text-primary dark:hover:text-yellow-400 dark:hover:border-yellow-400/50 transition-all bg-white dark:bg-white/5 shadow-sm"
+                title={theme === 'dark' ? 'Chuyển sang sáng' : 'Chuyển sang tối'}
+                aria-label="Toggle dark mode"
+              >
+                {theme === 'dark' ? (
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 7C9.24 7 7 9.24 7 12s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zM11 2v2c0 .55.45 1 1 1s1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1zm0 18v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1zM5.99 4.58c-.39-.39-1.03-.39-1.41 0-.39.39-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41L5.99 4.58zm12.37 12.37c-.39-.39-1.03-.39-1.41 0-.39.39-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0 .39-.39.39-1.03 0-1.41l-1.06-1.06zm1.06-12.37l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06c.39-.39.39-1.03 0-1.41s-1.03-.39-1.41 0zM7.05 18.36l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06c.39-.39.39-1.03 0-1.41s-1.03-.39-1.41 0z" />
+                  </svg>
+                ) : (
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9c0-.46-.04-.92-.1-1.36-.98 1.37-2.58 2.26-4.4 2.26-2.98 0-5.4-2.42-5.4-5.4 0-1.81.89-3.42 2.26-4.4-.44-.06-.9-.1-1.36-.1z" />
+                  </svg>
+                )}
+              </button>
               {/* {!isVendorArea && !isBackofficeRole && (
                 <div className="hidden md:flex items-center gap-2 text-primary font-bold">
                 <span className="text-sm">1900 8888</span>
@@ -905,147 +928,147 @@ const Layout: React.FC<LayoutProps> = ({ children, activeRoute, onNavigate, onLo
                   )}
 
                   <div
-                  className="relative hidden md:block"
-                  onMouseEnter={() => {
-                    if (notificationDropdownTimeout.current) {
-                      clearTimeout(notificationDropdownTimeout.current);
-                    }
-                    setIsNotificationDropdownOpen(true);
-                    if (filteredNotifications.length === 0 && !notificationLoading) {
-                      loadNotifications();
-                    }
-                  }}
-                  onMouseLeave={() => {
-                    notificationDropdownTimeout.current = setTimeout(() => {
-                      setIsNotificationDropdownOpen(false);
-                    }, 200);
-                  }}
-                  ref={notificationRef}
-                >
-                  <button
-                    onClick={() => {
-                      const next = !isNotificationDropdownOpen;
-                      setIsNotificationDropdownOpen(next);
-                      if (next && filteredNotifications.length === 0 && !notificationLoading) {
+                    className="relative hidden md:block"
+                    onMouseEnter={() => {
+                      if (notificationDropdownTimeout.current) {
+                        clearTimeout(notificationDropdownTimeout.current);
+                      }
+                      setIsNotificationDropdownOpen(true);
+                      if (filteredNotifications.length === 0 && !notificationLoading) {
                         loadNotifications();
                       }
                     }}
-                    className="relative flex items-center justify-center w-10 h-10 rounded-full border border-gray-200 text-slate-600 hover:border-primary hover:text-primary transition-all bg-white shadow-sm"
-                    title="Thông báo"
+                    onMouseLeave={() => {
+                      notificationDropdownTimeout.current = setTimeout(() => {
+                        setIsNotificationDropdownOpen(false);
+                      }, 200);
+                    }}
+                    ref={notificationRef}
                   >
-                    <svg
-                      className="w-5 h-5"
-                      viewBox="0 0 24 24"
-                      fill="currentColor"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path d="M12 2C10.3431 2 9 3.34315 9 5V5.34196C6.71873 6.16519 5.125 8.33675 5.125 10.75V15L4 16.75V17.5H20V16.75L18.875 15V10.75C18.875 8.33675 17.2813 6.16519 15 5.34196V5C15 3.34315 13.6569 2 12 2ZM10.75 19C10.75 20.2426 11.7574 21.25 13 21.25C14.2426 21.25 15.25 20.2426 15.25 19H10.75Z" />
-                    </svg>
-
-                    {displayUnreadCount > 0 && (
-                      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-black rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-0.5">
-                        {displayUnreadCount > 9 ? '9+' : displayUnreadCount}
-                      </span>
-                    )}
-                  </button>
-
-                  {isNotificationDropdownOpen && (
-                    <div
-                      className="absolute right-0 mt-3 w-96 bg-white rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.12)] border border-gray-100 z-50 overflow-hidden"
-                      onMouseEnter={() => {
-                        if (notificationDropdownTimeout.current) {
-                          clearTimeout(notificationDropdownTimeout.current);
+                    <button
+                      onClick={() => {
+                        const next = !isNotificationDropdownOpen;
+                        setIsNotificationDropdownOpen(next);
+                        if (next && filteredNotifications.length === 0 && !notificationLoading) {
+                          loadNotifications();
                         }
                       }}
+                      className="relative flex items-center justify-center w-10 h-10 rounded-full border border-gray-200 text-slate-600 hover:border-primary hover:text-primary transition-all bg-white shadow-sm"
+                      title="Thông báo"
                     >
-                      <div className="px-5 pt-4 pb-3 border-b border-gray-100 flex items-center justify-between bg-gradient-to-r from-amber-50 via-white to-amber-50">
-                        <div>
-                          <p className="text-[11px] font-black uppercase tracking-[0.2em] text-amber-700">Thông báo</p>
-                          <p className="text-xs text-slate-500 mt-0.5">Cập nhật mới nhất về đơn hàng và đánh giá</p>
-                        </div>
-                        <button
-                          onClick={() => {
-                            markAllNotificationsAsRead();
-                            markAllNotificationsAsReadApi();
-                          }}
-                          className="text-[11px] font-semibold text-primary hover:text-primary/80 underline-offset-2 hover:underline"
-                        >
-                          Đánh dấu đã đọc
-                        </button>
-                      </div>
+                      <svg
+                        className="w-5 h-5"
+                        viewBox="0 0 24 24"
+                        fill="currentColor"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path d="M12 2C10.3431 2 9 3.34315 9 5V5.34196C6.71873 6.16519 5.125 8.33675 5.125 10.75V15L4 16.75V17.5H20V16.75L18.875 15V10.75C18.875 8.33675 17.2813 6.16519 15 5.34196V5C15 3.34315 13.6569 2 12 2ZM10.75 19C10.75 20.2426 11.7574 21.25 13 21.25C14.2426 21.25 15.25 20.2426 15.25 19H10.75Z" />
+                      </svg>
 
-                      <div className="max-h-80 overflow-y-auto divide-y divide-gray-100 scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent">
-                        {notificationLoading && filteredNotifications.length === 0 && (
-                          <div className="px-5 py-6 text-sm text-slate-500">Đang tải thông báo...</div>
-                        )}
+                      {displayUnreadCount > 0 && (
+                        <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-black rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-0.5">
+                          {displayUnreadCount > 9 ? '9+' : displayUnreadCount}
+                        </span>
+                      )}
+                    </button>
 
-                        {!notificationLoading && filteredNotifications.length === 0 && (
-                          <div className="px-5 py-6 text-sm text-slate-500">Hiện chưa có thông báo nào.</div>
-                        )}
-
-                        {filteredNotifications.map((item) => (
-                          <div
-                            key={String(item.notificationId)}
-                            className={`px-5 py-4 flex gap-3 hover:bg-slate-50 transition-colors cursor-pointer ${!item.isRead ? 'bg-amber-50/60' : ''}`}
-                            onClick={async () => {
-                              if (!item.isRead) {
-                                setNotifications((prev) => prev.map((n) => n.notificationId === item.notificationId ? { ...n, isRead: true } : n));
-                                setUnreadNotificationCount((prev) => Math.max(0, prev - 1));
-                                markNotificationAsRead(item.notificationId);
-                              }
-
-                              const targetUrl = resolveNotificationRedirectPath(item);
-                              if (targetUrl) {
-                                if (targetUrl.startsWith('http://') || targetUrl.startsWith('https://')) {
-                                  window.location.href = targetUrl;
-                                } else {
-                                  onNavigate(targetUrl);
-                                }
-                              }
+                    {isNotificationDropdownOpen && (
+                      <div
+                        className="absolute right-0 mt-3 w-96 bg-white rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.12)] border border-gray-100 z-50 overflow-hidden"
+                        onMouseEnter={() => {
+                          if (notificationDropdownTimeout.current) {
+                            clearTimeout(notificationDropdownTimeout.current);
+                          }
+                        }}
+                      >
+                        <div className="px-5 pt-4 pb-3 border-b border-gray-100 flex items-center justify-between bg-gradient-to-r from-amber-50 via-white to-amber-50">
+                          <div>
+                            <p className="text-[11px] font-black uppercase tracking-[0.2em] text-amber-700">Thông báo</p>
+                            <p className="text-xs text-slate-500 mt-0.5">Cập nhật mới nhất về đơn hàng và đánh giá</p>
+                          </div>
+                          <button
+                            onClick={() => {
+                              markAllNotificationsAsRead();
+                              markAllNotificationsAsReadApi();
                             }}
+                            className="text-[11px] font-semibold text-primary hover:text-primary/80 underline-offset-2 hover:underline"
                           >
+                            Đánh dấu đã đọc
+                          </button>
+                        </div>
+
+                        <div className="max-h-80 overflow-y-auto divide-y divide-gray-100 scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent">
+                          {notificationLoading && filteredNotifications.length === 0 && (
+                            <div className="px-5 py-6 text-sm text-slate-500">Đang tải thông báo...</div>
+                          )}
+
+                          {!notificationLoading && filteredNotifications.length === 0 && (
+                            <div className="px-5 py-6 text-sm text-slate-500">Hiện chưa có thông báo nào.</div>
+                          )}
+
+                          {filteredNotifications.map((item) => (
                             <div
-                              className={`mt-1 size-2.5 rounded-full flex-shrink-0 ${item.type === 'orderplaced' || item.type === 'order'
-                                ? 'bg-emerald-500'
-                                : item.type === 'review' || item.type === 'rating'
-                                  ? 'bg-sky-500'
-                                  : 'bg-amber-500'
-                                }`}
-                            ></div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-xs font-bold text-slate-800 mb-1 truncate">
-                                {item.title}
-                              </p>
-                              <p className="text-xs text-slate-500 leading-snug line-clamp-2">
-                                {item.message}
-                              </p>
-                              <div className="mt-2 flex items-center justify-between text-[11px] text-slate-400">
-                                <span>{new Date(item.createdAt).toLocaleString('vi-VN')}</span>
-                                {(item.type === 'orderplaced' || item.type === 'order') && (
-                                  <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 font-semibold">
-                                    Đơn hàng
-                                  </span>
-                                )}
-                                {(item.type === 'review' || item.type === 'rating') && (
-                                  <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-sky-50 text-sky-700 font-semibold">
-                                    Đánh giá
-                                  </span>
-                                )}
-                                {item.type === 'system' && (
-                                  <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 font-semibold">
-                                    Hệ thống
-                                  </span>
-                                )}
+                              key={String(item.notificationId)}
+                              className={`px-5 py-4 flex gap-3 hover:bg-slate-50 transition-colors cursor-pointer ${!item.isRead ? 'bg-amber-50/60' : ''}`}
+                              onClick={async () => {
+                                if (!item.isRead) {
+                                  setNotifications((prev) => prev.map((n) => n.notificationId === item.notificationId ? { ...n, isRead: true } : n));
+                                  setUnreadNotificationCount((prev) => Math.max(0, prev - 1));
+                                  markNotificationAsRead(item.notificationId);
+                                }
+
+                                const targetUrl = resolveNotificationRedirectPath(item);
+                                if (targetUrl) {
+                                  if (targetUrl.startsWith('http://') || targetUrl.startsWith('https://')) {
+                                    window.location.href = targetUrl;
+                                  } else {
+                                    onNavigate(targetUrl);
+                                  }
+                                }
+                              }}
+                            >
+                              <div
+                                className={`mt-1 size-2.5 rounded-full flex-shrink-0 ${item.type === 'orderplaced' || item.type === 'order'
+                                  ? 'bg-emerald-500'
+                                  : item.type === 'review' || item.type === 'rating'
+                                    ? 'bg-sky-500'
+                                    : 'bg-amber-500'
+                                  }`}
+                              ></div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-xs font-bold text-slate-800 mb-1 truncate">
+                                  {item.title}
+                                </p>
+                                <p className="text-xs text-slate-500 leading-snug line-clamp-2">
+                                  {item.message}
+                                </p>
+                                <div className="mt-2 flex items-center justify-between text-[11px] text-slate-400">
+                                  <span>{new Date(item.createdAt).toLocaleString('vi-VN')}</span>
+                                  {(item.type === 'orderplaced' || item.type === 'order') && (
+                                    <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 font-semibold">
+                                      Đơn hàng
+                                    </span>
+                                  )}
+                                  {(item.type === 'review' || item.type === 'rating') && (
+                                    <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-sky-50 text-sky-700 font-semibold">
+                                      Đánh giá
+                                    </span>
+                                  )}
+                                  {item.type === 'system' && (
+                                    <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 font-semibold">
+                                      Hệ thống
+                                    </span>
+                                  )}
+                                </div>
                               </div>
                             </div>
-                          </div>
-                        ))}
+                          ))}
+                        </div>
                       </div>
-                    </div>
-                  )}
-                </div>
-              </>
-            )}
+                    )}
+                  </div>
+                </>
+              )}
 
               {(userName || onLogout) && !isVendorArea && !isStaffContext && (
                 <div
@@ -1492,20 +1515,20 @@ const Layout: React.FC<LayoutProps> = ({ children, activeRoute, onNavigate, onLo
         </div>
       </div>
 
-      <main className="flex-grow w-full">
+      <main className="flex-grow w-full bg-white dark:bg-[#111113]">
         <div className="mx-auto w-full max-w-[1600px] px-4 sm:px-6 md:px-8 lg:px-10">
           {children}
         </div>
       </main>
 
       {!hideHeader && (
-        <footer className="bg-white border-t border-gray-200 pt-16 pb-8">
+        <footer className="bg-white dark:bg-[#1c1c1e] border-t border-gray-200 dark:border-white/10 pt-16 pb-8">
           <div className="max-w-7xl mx-auto px-6 md:px-10">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
               <div className="flex flex-col gap-6">
                 <div className="w-[312px] h-[96px] md:w-[360px] md:h-[120px]">
                   <img
-                    src={headerLogo}
+                    src={theme === 'dark' ? darkLogo : headerLogo}
                     alt="Modern Ritual Offering"
                     className="w-full h-full object-contain object-left"
                   />

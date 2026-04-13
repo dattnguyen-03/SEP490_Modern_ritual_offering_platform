@@ -341,23 +341,23 @@ const AuthPage: React.FC<AuthPageProps> = ({ onNavigate, onLogin }) => {
   // Registration form
   if (!isLogin) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-slate-50 to-zinc-50 flex items-center justify-center p-4 relative overflow-hidden">
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-slate-50 to-zinc-50 dark:from-[#09090b] dark:via-[#111113] dark:to-[#09090b] flex items-center justify-center p-4 relative overflow-hidden transition-colors duration-500">
         {/* Animated background elements */}
         <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
-          <div className="absolute top-10 left-10 w-72 h-72 bg-gradient-to-br from-gray-900/5 via-gray-700/5 to-gray-500/5 rounded-full blur-3xl animate-float"></div>
-          <div className="absolute bottom-10 right-10 w-96 h-96 bg-gradient-to-br from-black/5 via-gray-800/5 to-gray-600/5 rounded-full blur-3xl animate-float-delayed"></div>
-          <div className="absolute top-1/3 right-1/4 w-64 h-64 bg-gradient-to-br from-gray-400/5 to-gray-600/5 rounded-full blur-3xl animate-float" style={{ animationDelay: '1s' }}></div>
-          <div className="absolute bottom-1/3 left-1/4 w-80 h-80 bg-gradient-to-br from-slate-900/5 to-zinc-900/5 rounded-full blur-3xl animate-float-delayed" style={{ animationDelay: '2s' }}></div>
-          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[32rem] h-[32rem] bg-gradient-to-br from-gray-200/10 to-gray-400/10 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute top-10 left-10 w-72 h-72 bg-gradient-to-br from-gray-900/5 via-gray-700/5 to-gray-500/5 dark:from-white/5 dark:to-white/0 rounded-full blur-3xl animate-float"></div>
+          <div className="absolute bottom-10 right-10 w-96 h-96 bg-gradient-to-br from-black/5 via-gray-800/5 to-gray-600/5 dark:from-white/5 dark:to-white/0 rounded-full blur-3xl animate-float-delayed"></div>
+          <div className="absolute top-1/3 right-1/4 w-64 h-64 bg-gradient-to-br from-gray-400/5 to-gray-600/5 dark:from-white/5 dark:to-white/0 rounded-full blur-3xl animate-float" style={{ animationDelay: '1s' }}></div>
+          <div className="absolute bottom-1/3 left-1/4 w-80 h-80 bg-gradient-to-br from-slate-900/5 to-zinc-900/5 dark:from-white/5 dark:to-white/0 rounded-full blur-3xl animate-float-delayed" style={{ animationDelay: '2s' }}></div>
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[32rem] h-[32rem] bg-gradient-to-br from-gray-200/10 to-gray-400/10 dark:from-white/5 dark:to-white/0 rounded-full blur-3xl animate-pulse"></div>
         </div>
 
         <div className="max-w-xl w-full relative z-10 animate-fade-in">
-          <div className="bg-white/80 backdrop-blur-2xl rounded-[2rem] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.15)] p-10 border border-gray-200/60 hover:shadow-[0_25px_70px_-15px_rgba(0,0,0,0.2)] transition-all duration-500">
+          <div className="bg-white/80 dark:bg-[#18181b]/90 backdrop-blur-2xl rounded-[2rem] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.15)] p-10 border border-gray-200/60 dark:border-white/10 hover:shadow-[0_25px_70px_-15px_rgba(0,0,0,0.2)] dark:hover:shadow-[0_25px_70px_-15px_rgba(0,0,0,0.4)] transition-all duration-500">
             {/* Header */}
             <div className="text-center mb-8 animate-scale-in">
               <div className="relative inline-block mb-6">
-                <div className="absolute inset-0 bg-gradient-to-br from-gray-900/20 via-gray-700/20 to-gray-500/20 rounded-full blur-2xl animate-pulse"></div>
-                <div className="relative w-[106px] h-[106px] bg-gradient-to-br from-gray-900 via-gray-800 to-gray-700 rounded-full flex items-center justify-center mx-auto shadow-[0_10px_40px_-10px_rgba(0,0,0,0.4)] hover:shadow-[0_15px_50px_-10px_rgba(0,0,0,0.5)] transition-all duration-500 hover:scale-110 group overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-br from-gray-900/20 via-gray-700/20 to-gray-500/20 dark:from-white/20 dark:to-transparent rounded-full blur-2xl animate-pulse"></div>
+                <div className="relative w-[106px] h-[106px] bg-gradient-to-br from-gray-900 via-gray-800 to-gray-700 dark:from-zinc-800 dark:to-zinc-900 rounded-full flex items-center justify-center mx-auto shadow-[0_10px_40px_-10px_rgba(0,0,0,0.4)] hover:shadow-[0_15px_50px_-10px_rgba(0,0,0,0.5)] transition-all duration-500 hover:scale-110 group overflow-hidden">
                   <img
                     src={logoImage}
                     alt="Modern Ritual Logo"
@@ -367,17 +367,17 @@ const AuthPage: React.FC<AuthPageProps> = ({ onNavigate, onLogin }) => {
                 </div>
               </div>
               <div className="text-center mb-8">
-                <h1 className="text-3xl font-playfair font-bold bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 bg-clip-text text-transparent mb-2">Modern Ritual Offering</h1>
-                <p className="text-sm text-gray-600 font-semibold tracking-wide">Nền tảng mâm cúng hiện đại</p>
+                <h1 className="text-3xl font-playfair font-bold bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 dark:from-white dark:via-zinc-200 dark:to-white bg-clip-text text-transparent mb-2">Modern Ritual Offering</h1>
+                <p className="text-sm text-gray-600 dark:text-zinc-400 font-semibold tracking-wide">Nền tảng mâm cúng hiện đại</p>
               </div>
-              <h2 className="text-3xl font-playfair font-bold text-gray-900 mb-2">
+              <h2 className="text-3xl font-playfair font-bold text-gray-900 dark:text-white mb-2">
                 Tạo tài khoản mới
               </h2>
-              <p className="text-gray-600 text-sm max-w-md mx-auto">
+              <p className="text-gray-600 dark:text-zinc-400 text-sm max-w-md mx-auto">
                 Đăng ký để trải nghiệm nền tảng mâm cúng hiện đại
               </p>
-
             </div>
+
 
             {/* Registration Form */}
             <form onSubmit={handleSubmit} className="space-y-5" autoComplete="off">
@@ -395,7 +395,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ onNavigate, onLogin }) => {
               )}
 
               <div className="space-y-2">
-                <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
+                <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-zinc-300">
                   <span>Email</span>
                 </label>
                 <input
@@ -406,7 +406,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ onNavigate, onLogin }) => {
                   placeholder="example@email.com"
                   required
                   autoComplete="email"
-                  className="w-full px-5 py-4 border-2 border-gray-200 rounded-xl focus:border-gray-900 focus:ring-4 focus:ring-gray-100 focus:outline-none bg-white transition-all shadow-sm hover:shadow-md"
+                  className="w-full px-5 py-4 border-2 border-gray-200 dark:border-white/10 rounded-xl focus:border-gray-900 dark:focus:border-white focus:ring-4 focus:ring-gray-100 dark:focus:ring-white/5 focus:outline-none bg-white dark:bg-[#27272a] dark:text-white transition-all shadow-sm hover:shadow-md"
                 />
               </div>
 
@@ -427,7 +427,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ onNavigate, onLogin }) => {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
+                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-zinc-300">
                     <span>Mật khẩu</span>
                   </label>
                   <div className="relative">
@@ -440,7 +440,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ onNavigate, onLogin }) => {
                       required
                       minLength={6}
                       autoComplete="new-password"
-                      className="w-full px-5 py-4 pr-12 border-2 border-gray-200 rounded-xl focus:border-gray-900 focus:ring-4 focus:ring-gray-100 focus:outline-none bg-white transition-all shadow-sm hover:shadow-md"
+                      className="w-full px-5 py-4 pr-12 border-2 border-gray-200 dark:border-white/10 rounded-xl focus:border-gray-900 dark:focus:border-white focus:ring-4 focus:ring-gray-100 dark:focus:ring-white/5 focus:outline-none bg-white dark:bg-[#27272a] dark:text-white transition-all shadow-sm hover:shadow-md"
                     />
                     <button
                       type="button"
@@ -466,7 +466,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ onNavigate, onLogin }) => {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
+                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-zinc-300">
                     <span>Xác nhận</span>
                   </label>
                   <div className="relative">
@@ -478,7 +478,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ onNavigate, onLogin }) => {
                       placeholder="••••••••"
                       required
                       autoComplete="new-password"
-                      className="w-full px-5 py-4 pr-12 border-2 border-gray-200 rounded-xl focus:border-gray-900 focus:ring-4 focus:ring-gray-100 focus:outline-none bg-white transition-all shadow-sm hover:shadow-md"
+                      className="w-full px-5 py-4 pr-12 border-2 border-gray-200 dark:border-white/10 rounded-xl focus:border-gray-900 dark:focus:border-white focus:ring-4 focus:ring-gray-100 dark:focus:ring-white/5 focus:outline-none bg-white dark:bg-[#27272a] dark:text-white transition-all shadow-sm hover:shadow-md"
                     />
                     <button
                       type="button"
@@ -534,17 +534,17 @@ const AuthPage: React.FC<AuthPageProps> = ({ onNavigate, onLogin }) => {
                 </div>
               </div>
 
-              <label className="flex items-start gap-3 cursor-pointer p-4 rounded-xl hover:bg-gray-50 transition-all duration-300 border-2 border-transparent hover:border-gray-300 hover:shadow-sm group">
+              <label className="flex items-start gap-3 cursor-pointer p-4 rounded-xl hover:bg-gray-50 dark:hover:bg-white/5 transition-all duration-300 border-2 border-transparent hover:border-gray-300 dark:hover:border-white/20 hover:shadow-sm group">
                 <input
                   type="checkbox"
                   name="agreeTerms"
                   checked={formData.agreeTerms}
                   onChange={handleInputChange}
                   required
-                  className="w-5 h-5 text-gray-900 rounded-md mt-0.5 cursor-pointer accent-gray-900"
+                  className="w-5 h-5 text-gray-900 dark:text-white rounded-md mt-0.5 cursor-pointer accent-gray-900 dark:accent-white"
                 />
-                <span className="text-sm text-gray-600 leading-relaxed">
-                  Tôi đồng ý với <a href="#" className="text-gray-900 font-semibold hover:underline decoration-2">điều khoản sử dụng</a> và <a href="#" className="text-gray-900 font-semibold hover:underline decoration-2">chính sách bảo mật</a> của Modern Ritual Offering
+                <span className="text-sm text-gray-600 dark:text-zinc-400 leading-relaxed">
+                  Tôi đồng ý với <a href="#" className="text-gray-900 dark:text-white font-semibold hover:underline decoration-2">điều khoản sử dụng</a> và <a href="#" className="text-gray-900 dark:text-white font-semibold hover:underline decoration-2">chính sách bảo mật</a> của Modern Ritual Offering
                 </span>
               </label>
 
@@ -645,20 +645,20 @@ const AuthPage: React.FC<AuthPageProps> = ({ onNavigate, onLogin }) => {
 
   // Login view
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-slate-50 to-zinc-50 flex items-center justify-center p-4 relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-slate-50 to-zinc-50 dark:from-[#09090b] dark:via-[#111113] dark:to-[#09090b] flex items-center justify-center p-4 relative overflow-hidden transition-colors duration-500">
       {/* Animated background for login */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -left-40 w-96 h-96 bg-gradient-to-br from-gray-900/5 to-gray-700/5 rounded-full blur-3xl animate-float"></div>
-        <div className="absolute -bottom-40 -right-40 w-[32rem] h-[32rem] bg-gradient-to-br from-black/5 to-gray-800/5 rounded-full blur-3xl animate-float-delayed"></div>
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[40rem] h-[40rem] bg-gradient-to-br from-gray-400/5 to-gray-600/5 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute -top-40 -left-40 w-96 h-96 bg-gradient-to-br from-gray-900/5 to-gray-700/5 dark:from-white/5 dark:to-transparent rounded-full blur-3xl animate-float"></div>
+        <div className="absolute -bottom-40 -right-40 w-[32rem] h-[32rem] bg-gradient-to-br from-black/5 to-gray-800/5 dark:from-white/5 dark:to-transparent rounded-full blur-3xl animate-float-delayed"></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[40rem] h-[40rem] bg-gradient-to-br from-gray-400/5 to-gray-600/5 dark:from-white/5 dark:to-transparent rounded-full blur-3xl animate-pulse"></div>
       </div>
       <div className="max-w-2xl w-full relative z-10 animate-fade-in">
-        <div className="bg-white/80 backdrop-blur-2xl rounded-[2rem] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.15)] p-8 border border-gray-200/60 hover:shadow-[0_25px_70px_-15px_rgba(0,0,0,0.2)] transition-all duration-500">
+        <div className="bg-white/80 dark:bg-[#18181b]/90 backdrop-blur-2xl rounded-[2rem] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.15)] p-8 border border-gray-200/60 dark:border-white/10 hover:shadow-[0_25px_70px_-15px_rgba(0,0,0,0.2)] dark:hover:shadow-[0_25px_70px_-15px_rgba(0,0,0,0.4)] transition-all duration-500">
           {/* Logo */}
           <div className="text-center mb-8">
             <div className="relative inline-block mb-4">
-              <div className="absolute inset-0 bg-gradient-to-br from-gray-900/20 to-gray-700/20 rounded-full blur-2xl animate-pulse"></div>
-              <div className="relative w-[106px] h-[106px] bg-gradient-to-br from-gray-900 via-gray-800 to-gray-700 rounded-full flex items-center justify-center shadow-[0_10px_40px_-10px_rgba(0,0,0,0.4)] hover:shadow-[0_15px_50px_-10px_rgba(0,0,0,0.5)] transition-all duration-500 hover:scale-110 group cursor-pointer overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-br from-gray-900/20 to-gray-700/20 dark:from-white/20 dark:to-transparent rounded-full blur-2xl animate-pulse"></div>
+              <div className="relative w-[106px] h-[106px] bg-gradient-to-br from-gray-900 via-gray-800 to-gray-700 dark:from-zinc-800 dark:to-zinc-900 rounded-full flex items-center justify-center shadow-[0_10px_40px_-10px_rgba(0,0,0,0.4)] hover:shadow-[0_15px_50px_-10px_rgba(0,0,0,0.5)] transition-all duration-500 hover:scale-110 group cursor-pointer overflow-hidden">
                 <img
                   src={logoImage}
                   alt="Modern Ritual Logo"
@@ -667,17 +667,17 @@ const AuthPage: React.FC<AuthPageProps> = ({ onNavigate, onLogin }) => {
                 <div className="absolute inset-0 rounded-full border-2 border-white/20 group-hover:border-white/40 transition-colors duration-300"></div>
               </div>
             </div>
-            <h1 className="text-3xl font-playfair font-bold bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 bg-clip-text text-transparent mb-2">Modern Ritual Offering</h1>
-            <p className="text-sm text-gray-600 font-semibold tracking-wide">Nền tảng mâm cúng hiện đại</p>
+            <h1 className="text-3xl font-playfair font-bold bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 dark:from-white dark:via-zinc-200 dark:to-white bg-clip-text text-transparent mb-2">Modern Ritual Offering</h1>
+            <p className="text-sm text-gray-600 dark:text-zinc-400 font-semibold tracking-wide">Nền tảng mâm cúng hiện đại</p>
           </div>
 
           {/* Tabs */}
-          <div className="flex gap-2 mb-8 bg-gray-100/80 backdrop-blur-sm p-1.5 rounded-xl shadow-inner">
+          <div className="flex gap-2 mb-8 bg-gray-100/80 dark:bg-white/5 backdrop-blur-sm p-1.5 rounded-xl shadow-inner">
             <button
               onClick={switchToLogin}
               className={`flex-1 py-3 px-4 rounded-lg font-semibold transition-all duration-300 ${isLogin
-                ? 'bg-white text-gray-900 shadow-lg scale-105'
-                : 'text-gray-600 hover:text-gray-900 hover:bg-white/50'
+                ? 'bg-white dark:bg-zinc-800 text-gray-900 dark:text-white shadow-lg scale-105'
+                : 'text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white hover:bg-white/50 dark:hover:bg-white/5'
                 }`}
             >
               Đăng Nhập
@@ -685,8 +685,8 @@ const AuthPage: React.FC<AuthPageProps> = ({ onNavigate, onLogin }) => {
             <button
               onClick={switchToRegister}
               className={`flex-1 py-3 px-4 rounded-lg font-semibold transition-all duration-300 ${!isLogin
-                ? 'bg-white text-gray-900 shadow-lg scale-105'
-                : 'text-gray-600 hover:text-gray-900 hover:bg-white/50'
+                ? 'bg-white dark:bg-zinc-800 text-gray-900 dark:text-white shadow-lg scale-105'
+                : 'text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white hover:bg-white/50 dark:hover:bg-white/5'
                 }`}
             >
               Đăng Ký
@@ -709,7 +709,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ onNavigate, onLogin }) => {
             )}
 
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Email</label>
+              <label className="block text-sm font-semibold text-gray-700 dark:text-zinc-300 mb-2">Email</label>
               <input
                 type="email"
                 name="email"
@@ -718,12 +718,12 @@ const AuthPage: React.FC<AuthPageProps> = ({ onNavigate, onLogin }) => {
                 placeholder="example@email.com"
                 required
                 autoComplete="username"
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-gray-900 focus:ring-4 focus:ring-gray-900/10 focus:outline-none bg-white/50 backdrop-blur-sm transition-all duration-300 shadow-sm hover:shadow-md hover:border-gray-400 hover:bg-white"
+                className="w-full px-4 py-3 border-2 border-gray-200 dark:border-white/10 rounded-lg focus:border-gray-900 dark:focus:border-white focus:ring-4 focus:ring-gray-900/10 dark:focus:ring-white/5 focus:outline-none bg-white/50 dark:bg-zinc-800/50 backdrop-blur-sm transition-all duration-300 shadow-sm hover:shadow-md hover:border-gray-400 dark:hover:border-white/20 hover:bg-white dark:hover:bg-zinc-800 dark:text-white"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Mật khẩu</label>
+              <label className="block text-sm font-semibold text-gray-700 dark:text-zinc-300 mb-2">Mật khẩu</label>
               <div className="relative">
                 <input
                   type={showLoginPassword ? 'text' : 'password'}
@@ -733,7 +733,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ onNavigate, onLogin }) => {
                   placeholder="••••••••"
                   required
                   autoComplete="current-password"
-                  className="w-full px-4 py-3 pr-12 border-2 border-gray-200 rounded-lg focus:border-gray-900 focus:ring-4 focus:ring-gray-900/10 focus:outline-none bg-white/50 backdrop-blur-sm transition-all duration-300 shadow-sm hover:shadow-md hover:border-gray-400 hover:bg-white"
+                  className="w-full px-4 py-3 pr-12 border-2 border-gray-200 dark:border-white/10 rounded-lg focus:border-gray-900 dark:focus:border-white focus:ring-4 focus:ring-gray-900/10 dark:focus:ring-white/5 focus:outline-none bg-white/50 dark:bg-zinc-800/50 backdrop-blur-sm transition-all duration-300 shadow-sm hover:shadow-md hover:border-gray-400 dark:hover:border-white/20 hover:bg-white dark:hover:bg-zinc-800 dark:text-white"
                 />
                 <button
                   type="button"
@@ -834,7 +834,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ onNavigate, onLogin }) => {
           </div>
         </div>
 
-        <p className="text-center text-gray-700 text-sm mt-6">
+        <p className="text-center text-gray-700 dark:text-zinc-500 text-sm mt-6">
           © 2026 Modern Ritual Offering . Thành tâm - Tín trực.
         </p>
       </div>
