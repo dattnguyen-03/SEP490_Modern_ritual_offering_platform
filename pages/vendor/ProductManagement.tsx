@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import Swal from 'sweetalert2';
+import { useLocation } from 'react-router-dom';
 import toast from '../../services/toast';
 import { packageService } from '../../services/packageService';
 import { getCurrentUser } from '../../services/auth';
@@ -27,6 +28,7 @@ interface Product {
 type PackageStatusFilter = '' | 'Draft' | 'Pending' | 'Approved' | 'Rejected';
 
 const ProductManagement: React.FC<ProductManagementProps> = ({ onNavigate }) => {
+  const location = useLocation();
   const PRODUCTS_PER_PAGE = 5;
 
   const [products, setProducts] = useState<Product[]>([]);
@@ -38,6 +40,10 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onNavigate }) => 
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [selectedStatus, setSelectedStatus] = useState<PackageStatusFilter>('');
   const [viewProductDetails, setViewProductDetails] = useState<any | null>(null);
+  const [aiScreeningLoading, setAiScreeningLoading] = useState<boolean>(false);
+  const [aiScreeningError, setAiScreeningError] = useState<string | null>(null);
+  const [aiScreeningResult, setAiScreeningResult] = useState<any | null>(null);
+  const [aiReasonExpanded, setAiReasonExpanded] = useState(false);
   const [viewDisplayImageIndex, setViewDisplayImageIndex] = useState<number>(0);
   const [editProductOpen, setEditProductOpen] = useState(false);
   const [editSaving, setEditSaving] = useState(false);
@@ -76,6 +82,7 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onNavigate }) => 
   const [imageModalImages, setImageModalImages] = useState<string[]>([]);
   const [imageModalInitialIndex, setImageModalInitialIndex] = useState(0);
   const [imageModalAltText, setImageModalAltText] = useState('');
+  const [handledAutoOpenKey, setHandledAutoOpenKey] = useState<string>('');
 
   useEffect(() => {
     const initData = async () => {
@@ -146,19 +153,44 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onNavigate }) => 
     return entry ? parseInt(entry[0]) : 5;
   };
 
-  const handleViewDetails = async (product: Product) => {
+  const clearNotificationFocusParams = () => {
+    const params = new URLSearchParams(location.search);
+    if (!params.has('productId') && !params.has('productName')) return;
+
+    params.delete('productId');
+    params.delete('productName');
+    const nextQuery = params.toString();
+    const nextUrl = `${window.location.pathname}${nextQuery ? `?${nextQuery}` : ''}${window.location.hash || ''}`;
+    window.history.replaceState({}, document.title, nextUrl);
+  };
+
+  const handleViewDetails = async (
+    product: Pick<Product, 'id'>,
+    options?: { silent?: boolean },
+  ) => {
+    const silent = Boolean(options?.silent);
+
     try {
-      Swal.fire({
-        title: 'Đang tải...',
-        allowOutsideClick: false,
-        didOpen: () => {
-          Swal.showLoading();
-        }
-      });
+      setAiScreeningLoading(true);
+      setAiScreeningError(null);
+      setAiScreeningResult(null);
+      setAiReasonExpanded(false);
+
+      if (!silent) {
+        Swal.fire({
+          title: 'Đang tải...',
+          allowOutsideClick: false,
+          didOpen: () => {
+            Swal.showLoading();
+          }
+        });
+      }
 
       const pkgDetails: any = await packageService.getPackageById(product.id, true);
 
-      Swal.close();
+      if (!silent) {
+        Swal.close();
+      }
 
       if (!pkgDetails) {
         throw new Error('Không tìm thấy thông tin chi tiết sản phẩm');
@@ -181,12 +213,89 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onNavigate }) => 
       setViewDisplayImageIndex(pkgDetails.primaryImageIndex || 0);
       setViewProductDetails(pkgDetails);
 
+      try {
+        const screening = await packageService.getPackageAIScreening(String(pkgDetails.packageId || pkgDetails.id || product.id));
+        setAiScreeningResult(screening);
+      } catch (screeningError) {
+        const message = screeningError instanceof Error ? screeningError.message : 'Không thể tải kết quả AI screening.';
+        setAiScreeningError(message);
+      } finally {
+        setAiScreeningLoading(false);
+      }
+
       setEditProductOpen(false);
     } catch (error) {
-      Swal.close();
+      setAiScreeningLoading(false);
+
+      if (!silent) {
+        Swal.close();
+      }
+
       const message = error instanceof Error ? error.message : 'Lỗi khi lấy thông tin sản phẩm';
-      Swal.fire({ icon: 'error', title: 'Lỗi', text: message });
+      if (silent) {
+        toast.error(message);
+      } else {
+        Swal.fire({ icon: 'error', title: 'Lỗi', text: message });
+      }
     }
+  };
+
+  const reloadAIScreening = async () => {
+    if (!viewProductDetails) return;
+
+    setAiScreeningLoading(true);
+    setAiScreeningError(null);
+    setAiScreeningResult(null);
+    setAiReasonExpanded(false);
+
+    try {
+      const screening = await packageService.getPackageAIScreening(String(viewProductDetails.packageId || viewProductDetails.id));
+      setAiScreeningResult(screening);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Không thể tải kết quả AI screening.';
+      setAiScreeningError(message);
+    } finally {
+      setAiScreeningLoading(false);
+    }
+  };
+
+  const mapAiDecisionLabel = (decision: string) => {
+    switch (decision) {
+      case 'Approved':
+        return { text: 'AI đánh giá tốt', className: 'bg-green-100 text-green-700 border border-green-200' };
+      case 'VendorActionRequired':
+        return { text: 'Cần bạn chỉnh sửa', className: 'bg-amber-100 text-amber-700 border border-amber-200' };
+      case 'StaffActionRequired':
+        return { text: 'Chờ nhân viên kiểm duyệt', className: 'bg-blue-100 text-blue-700 border border-blue-200' };
+      case 'AdminActionRequired':
+        return { text: 'Chờ quản trị phê duyệt', className: 'bg-indigo-100 text-indigo-700 border border-indigo-200' };
+      case 'Rejected':
+        return { text: 'Không đạt kiểm duyệt', className: 'bg-red-100 text-red-700 border border-red-200' };
+      default:
+        return { text: 'Đang chờ kết quả', className: 'bg-gray-100 text-gray-700 border border-gray-200' };
+    }
+  };
+
+  const getAISummary = (raw: any) => {
+    const source = raw?.fullAiResponse && typeof raw.fullAiResponse === 'object' ? { ...raw, ...raw.fullAiResponse } : raw;
+
+    return {
+      decision: String(source?.decision || '').trim(),
+      reasoning: String(source?.reasoning || '').trim(),
+      issues: Array.isArray(source?.issuesDetected) ? source.issuesDetected.filter((x: any) => String(x || '').trim()) : [],
+      recommendations: Array.isArray(source?.recommendations) ? source.recommendations.filter((x: any) => String(x || '').trim()) : [],
+      confidenceScore: typeof source?.confidenceScore === 'number' ? source.confidenceScore : (typeof source?.confidence === 'number' ? source.confidence : null),
+      requiresManualReview: typeof source?.requiresManualReview === 'boolean' ? source.requiresManualReview : null,
+      screenedAt: source?.screenedAt ? String(source.screenedAt) : '',
+    };
+  };
+
+  const closeViewProductModal = () => {
+    setViewProductDetails(null);
+    setAiScreeningLoading(false);
+    setAiScreeningError(null);
+    setAiScreeningResult(null);
+    setAiReasonExpanded(false);
   };
 
   const openEditForm = () => {
@@ -358,6 +467,52 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onNavigate }) => 
     if (!vendorProfileResolved || !vendorProfileId) return;
     loadPackages();
   }, [selectedStatus, vendorProfileId, vendorProfileResolved]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const statusFromQuery = String(params.get('status') || '').trim();
+    const allowedStatuses: PackageStatusFilter[] = ['', 'Draft', 'Pending', 'Approved', 'Rejected'];
+
+    if (statusFromQuery && allowedStatuses.includes(statusFromQuery as PackageStatusFilter) && selectedStatus !== statusFromQuery) {
+      setSelectedStatus(statusFromQuery as PackageStatusFilter);
+    }
+  }, [location.search, selectedStatus]);
+
+  useEffect(() => {
+    if (!vendorProfileResolved) return;
+
+    const params = new URLSearchParams(location.search);
+    const productId = String(params.get('productId') || '').trim();
+    if (!productId) return;
+
+    const autoOpenKey = `direct:${productId}|${selectedStatus}`;
+    if (handledAutoOpenKey === autoOpenKey) return;
+
+    setHandledAutoOpenKey(autoOpenKey);
+    handleViewDetails({ id: productId }, { silent: true });
+    clearNotificationFocusParams();
+  }, [vendorProfileResolved, location.search, selectedStatus, handledAutoOpenKey]);
+
+  useEffect(() => {
+    if (loadingProducts || products.length === 0) return;
+
+    const params = new URLSearchParams(location.search);
+    const productId = String(params.get('productId') || '').trim();
+    const productName = String(params.get('productName') || '').trim().toLowerCase();
+
+    if (productId || !productName) return;
+
+    const autoOpenKey = `name:${productName}|${selectedStatus}`;
+    if (handledAutoOpenKey === autoOpenKey) return;
+
+    const targetProduct = products.find((p) => String(p.name || '').trim().toLowerCase() === productName);
+
+    if (!targetProduct) return;
+
+    setHandledAutoOpenKey(autoOpenKey);
+    handleViewDetails(targetProduct, { silent: true });
+    clearNotificationFocusParams();
+  }, [loadingProducts, products, location.search, selectedStatus, handledAutoOpenKey]);
 
   const totalPages = Math.max(1, Math.ceil(products.length / PRODUCTS_PER_PAGE));
   const categoryOptions = Array.from(new Set(products.map((product) => mapCategory(product.categoryId)))).sort((a, b) => a.localeCompare(b));
@@ -993,7 +1148,7 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onNavigate }) => 
         {viewProductDetails && (
           <div
             className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm"
-            onClick={() => setViewProductDetails(null)}
+            onClick={closeViewProductModal}
           >
             <div
               className="bg-gray-50 w-full max-w-5xl my-4 rounded-[2rem] shadow-2xl overflow-hidden max-h-[calc(100vh-2rem)] flex flex-col"
@@ -1002,7 +1157,7 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onNavigate }) => 
               {/* Header */}
               <div className="bg-white px-6 md:px-8 py-5 flex flex-wrap items-center gap-4 border-b border-gray-100">
                 <button
-                  onClick={() => setViewProductDetails(null)}
+                  onClick={closeViewProductModal}
                   className="px-5 py-2.5 bg-white rounded-xl flex items-center justify-center shadow-sm border border-gray-200 hover:bg-gray-50 transition flex-shrink-0 font-bold text-xs uppercase tracking-widest text-gray-600"
                 >
                   Đóng
@@ -1607,6 +1762,122 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onNavigate }) => 
                       <p className="text-[11px] text-gray-400 mt-4 italic">Vui lòng điều chỉnh thông tin sản phẩm và gửi yêu cầu phê duyệt lại.</p>
                     </div>
                   )}
+
+                  {/* AI Screening Result */}
+                  <div className="bg-white rounded-[2rem] border border-gray-200 p-6 shadow-sm">
+                    <div className="flex items-center justify-between gap-3 mb-4 pb-3 border-b border-gray-100">
+                      <h3 className="text-sm font-bold uppercase tracking-widest text-gray-400 flex items-center gap-2">
+                        <i className="fas fa-robot text-primary"></i>
+                        Gợi ý từ AI
+                      </h3>
+                      <button
+                        type="button"
+                        onClick={reloadAIScreening}
+                        disabled={aiScreeningLoading}
+                        className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-60"
+                      >
+                        {aiScreeningLoading ? 'Đang tải...' : 'Tải lại'}
+                      </button>
+                    </div>
+
+                    {aiScreeningLoading ? (
+                      <div className="text-sm text-gray-500">Đang tải đánh giá AI...</div>
+                    ) : aiScreeningError ? (
+                      <div className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-xl p-3">
+                        {aiScreeningError}
+                      </div>
+                    ) : aiScreeningResult ? (
+                      (() => {
+                        const summary = getAISummary(aiScreeningResult);
+                        const decisionInfo = mapAiDecisionLabel(summary.decision);
+                        const reasoningTooLong = summary.reasoning.length > 260;
+                        const visibleReasoning = aiReasonExpanded || !reasoningTooLong
+                          ? summary.reasoning
+                          : `${summary.reasoning.slice(0, 260)}...`;
+
+                        return (
+                          <div className="space-y-4 text-sm">
+                            <div className="flex items-center justify-between gap-2 bg-slate-50 border border-slate-200 rounded-xl p-3">
+                              <span className="text-slate-500 font-semibold">Kết luận</span>
+                              <span className={`px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-widest ${decisionInfo.className}`}>
+                                {decisionInfo.text}
+                              </span>
+                            </div>
+
+                            <div className="bg-slate-50 border border-slate-200 rounded-xl p-3">
+                              <p className="text-slate-500 text-[11px] font-bold uppercase tracking-widest mb-2">Nhận xét chính</p>
+                              <p className="text-slate-700 leading-relaxed break-words">
+                                {visibleReasoning || 'Hiện chưa có mô tả từ AI.'}
+                              </p>
+                              {reasoningTooLong && (
+                                <button
+                                  type="button"
+                                  onClick={() => setAiReasonExpanded((prev) => !prev)}
+                                  className="mt-2 text-xs font-bold text-primary hover:underline"
+                                >
+                                  {aiReasonExpanded ? 'Thu gọn' : 'Xem thêm'}
+                                </button>
+                              )}
+                            </div>
+
+                            {summary.issues.length > 0 && (
+                              <div className="bg-amber-50 border border-amber-100 rounded-xl p-3">
+                                <p className="text-amber-700 text-[11px] font-bold uppercase tracking-widest mb-2">Vấn đề cần sửa</p>
+                                <ul className="space-y-1.5 text-slate-700">
+                                  {summary.issues.slice(0, 3).map((issue: string, index: number) => (
+                                    <li key={`issue-${index}`} className="flex items-start gap-2">
+                                      <span className="mt-1 h-1.5 w-1.5 rounded-full bg-amber-500 flex-shrink-0"></span>
+                                      <span>{issue}</span>
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
+
+                            {summary.recommendations.length > 0 && (
+                              <div className="bg-blue-50 border border-blue-100 rounded-xl p-3">
+                                <p className="text-blue-700 text-[11px] font-bold uppercase tracking-widest mb-2">Đề xuất cho bạn</p>
+                                <ul className="space-y-1.5 text-slate-700">
+                                  {summary.recommendations.slice(0, 3).map((recommendation: string, index: number) => (
+                                    <li key={`recommendation-${index}`} className="flex items-start gap-2">
+                                      <span className="mt-1 h-1.5 w-1.5 rounded-full bg-blue-500 flex-shrink-0"></span>
+                                      <span>{recommendation}</span>
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                              <div className="bg-slate-50 border border-slate-200 rounded-xl p-3">
+                                <p className="text-slate-500 text-[11px] font-bold uppercase tracking-widest">Cần duyệt thủ công</p>
+                                <p className="font-bold text-slate-800 mt-1">
+                                  {summary.requiresManualReview === null ? 'Chưa rõ' : summary.requiresManualReview ? 'Có' : 'Không'}
+                                </p>
+                              </div>
+
+                              <div className="bg-slate-50 border border-slate-200 rounded-xl p-3">
+                                <p className="text-slate-500 text-[11px] font-bold uppercase tracking-widest">Độ tin cậy</p>
+                                <p className="font-bold text-slate-800 mt-1">
+                                  {summary.confidenceScore === null ? 'Chưa có' : `${summary.confidenceScore}`}
+                                </p>
+                              </div>
+
+                              {summary.screenedAt && (
+                                <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 sm:col-span-2">
+                                  <p className="text-slate-500 text-[11px] font-bold uppercase tracking-widest">Thời điểm AI quét</p>
+                                  <p className="font-semibold text-slate-800 mt-1">{new Date(summary.screenedAt).toLocaleString('vi-VN')}</p>
+                                </div>
+                              )}
+
+                            </div>
+                          </div>
+                        );
+                      })()
+                    ) : (
+                      <div className="text-sm text-gray-500">Gói này chưa có kết quả đánh giá AI.</div>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>

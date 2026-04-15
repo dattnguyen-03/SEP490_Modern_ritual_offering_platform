@@ -187,7 +187,7 @@ class PackageService {
   }
   /**
    * Lấy danh sách packages theo trạng thái từ endpoint by-status
-   * @param status - Draft | Pending | Approved | Rejected | ''
+   * @param status - Trạng thái lọc hoặc rỗng để lấy tất cả trạng thái (bao gồm role-specific như VendorActionRequired)
    * @param pageNumber - Số trang
    * @param pageSize - Số lượng item mỗi trang
    * @returns Promise<ApiPackage[]>
@@ -197,12 +197,16 @@ class PackageService {
       const token = getAuthToken();
       const normalizedStatus = String(status || '').trim();
 
-      const fetchByStatusFromManagement = async (statusValue: string): Promise<ApiPackage[]> => {
+      const fetchByStatusFromManagement = async (statusValue?: string): Promise<ApiPackage[]> => {
         const query = new URLSearchParams({
           PageNumber: String(pageNumber),
           PageSize: String(pageSize),
-          status: statusValue,
         });
+
+        const normalizedStatusValue = String(statusValue || '').trim();
+        if (normalizedStatusValue) {
+          query.set('status', normalizedStatusValue);
+        }
 
         const endpoint = `${API_BASE_URL}/packages/management/by-status?${query.toString()}`;
         console.log(`📡 Fetching by-status: ${endpoint}`);
@@ -237,10 +241,21 @@ class PackageService {
         return [];
       };
 
-      // Khi không filter, vẫn dùng management by-status để dữ liệu đồng nhất với các tab trạng thái cụ thể.
+      // Khi không filter, gọi trực tiếp by-status không truyền status để backend tự trả về tất cả trạng thái.
+      // Cách này tránh bỏ sót các trạng thái theo role (ví dụ: VendorActionRequired, StaffActionRequired).
       if (!normalizedStatus) {
         if (!token) return await this.getAllPackages(pageNumber, pageSize);
 
+        try {
+          const allByStatus = await fetchByStatusFromManagement();
+          if (allByStatus.length > 0) {
+            return allByStatus;
+          }
+        } catch (error) {
+          console.warn('⚠️ Direct by-status without status filter failed, trying legacy aggregation fallback...', error);
+        }
+
+        // Legacy fallback: thử gom các trạng thái phổ biến để tương thích backend cũ.
         const statuses: Array<'Draft' | 'Pending' | 'Approved' | 'Rejected'> = ['Draft', 'Pending', 'Approved', 'Rejected'];
         const results = await Promise.allSettled(statuses.map((s) => fetchByStatusFromManagement(s)));
 
@@ -258,7 +273,7 @@ class PackageService {
           return Array.from(merged.values());
         }
 
-        console.warn('⚠️ Failed to aggregate all statuses from management endpoint. Falling back to public API...');
+        console.warn('⚠️ Failed to load packages from management by-status endpoint. Falling back to public API...');
         return await this.getAllPackages(pageNumber, pageSize);
       }
 

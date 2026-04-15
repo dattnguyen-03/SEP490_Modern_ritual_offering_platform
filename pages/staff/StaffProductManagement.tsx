@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import toast from '../../services/toast';
 import { packageService } from '../../services/packageService';
 import { CeremonyCategory } from '../../types';
@@ -25,9 +26,10 @@ interface StaffProduct {
   vendorName?: string;
 }
 
-type PackageStatusFilter = '' | 'Draft' | 'Pending' | 'Approved' | 'Rejected';
+type PackageStatusFilter = '' | 'Draft' | 'Pending' | 'Approved' | 'Rejected' | 'StaffActionRequired' | 'VendorActionRequired' | 'AdminActionRequired';
 
 const StaffProductManagement: React.FC<StaffProductManagementProps> = ({ onNavigate }) => {
+  const location = useLocation();
   const PRODUCTS_PER_PAGE = 5;
 
   const [products, setProducts] = useState<StaffProduct[]>([]);
@@ -46,6 +48,8 @@ const StaffProductManagement: React.FC<StaffProductManagementProps> = ({ onNavig
   const [aiScreeningLoading, setAiScreeningLoading] = useState<boolean>(false);
   const [aiScreeningError, setAiScreeningError] = useState<string | null>(null);
   const [aiScreeningResult, setAiScreeningResult] = useState<any | null>(null);
+  const [aiReasonExpanded, setAiReasonExpanded] = useState<boolean>(false);
+  const latestLoadRequestRef = useRef(0);
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -98,16 +102,70 @@ const StaffProductManagement: React.FC<StaffProductManagementProps> = ({ onNavig
     return categoryLabelMap[categoryId] || 'Khác';
   };
 
+  const normalizeApprovalStatus = (raw: unknown): string => {
+    const value = String(raw || '').trim();
+    if (!value) return 'Pending';
+    if (value === 'Pending') return 'StaffActionRequired';
+    return value;
+  };
+
+  const normalizePackageDetails = (details: any): any => {
+    if (!details || typeof details !== 'object') return details;
+
+    const normalized = { ...details };
+
+    if (!Array.isArray(normalized.packageVariants) && Array.isArray(normalized.variants)) {
+      normalized.packageVariants = normalized.variants;
+    }
+
+    const rawPackageImages = Array.isArray(normalized.imageUrls)
+      ? normalized.imageUrls
+      : (Array.isArray(normalized.packageImages) ? normalized.packageImages : []);
+
+    const normalizedImageUrls = rawPackageImages
+      .map((it: any) => String((it && typeof it === 'object') ? (it.imageUrl || it.url || '') : it).trim())
+      .filter((u: string) => u.length > 0);
+
+    if (!normalized.imageUrls || !Array.isArray(normalized.imageUrls) || normalized.imageUrls.length === 0) {
+      normalized.imageUrls = normalizedImageUrls;
+    }
+
+    if (!normalized.imageUrl && normalizedImageUrls.length > 0) {
+      const primaryIndex = typeof normalized.primaryImageIndex === 'number' ? normalized.primaryImageIndex : 0;
+      const safePrimaryIndex = primaryIndex >= 0 && primaryIndex < normalizedImageUrls.length ? primaryIndex : 0;
+      normalized.imageUrl = normalizedImageUrls[safePrimaryIndex] || normalizedImageUrls[0];
+    }
+
+    normalized.approvalStatus = normalizeApprovalStatus(
+      normalized.approvalStatus || normalized.packageStatus || normalized.status
+    );
+
+    return normalized;
+  };
+
   const loadPackages = async () => {
+    const requestId = ++latestLoadRequestRef.current;
     setLoadingProducts(true);
     setProductsError(null);
     setCurrentPage(1);
 
     try {
-      const packages = await packageService.getPackagesByStatus(selectedStatus);
+      const apiStatus = selectedStatus === 'Pending' ? 'StaffActionRequired' : selectedStatus;
+      const packages = await packageService.getPackagesByStatus(apiStatus);
+      if (requestId !== latestLoadRequestRef.current) return;
+
       setRawPackages(packages);
 
-      const mapped: StaffProduct[] = packages.map((item: any) => {
+      // Defensive filtering: some backend responses may ignore status query and return all packages.
+      const expectedStatus = normalizeApprovalStatus(selectedStatus);
+      const packagesBySelectedStatus = apiStatus
+        ? packages.filter((item: any) => {
+            const itemStatus = normalizeApprovalStatus(item?.approvalStatus || item?.packageStatus || item?.status);
+            return itemStatus === expectedStatus;
+          })
+        : packages;
+
+      const mapped: StaffProduct[] = packagesBySelectedStatus.map((item: any) => {
         const variants = Array.isArray(item.packageVariants) ? item.packageVariants : (Array.isArray(item.variants) ? item.variants : []);
         const activeVariants = variants.filter((variant: any) => Boolean(variant?.isActive));
         const selectedVariant = activeVariants[0] || variants[0];
@@ -128,19 +186,22 @@ const StaffProductManagement: React.FC<StaffProductManagementProps> = ({ onNavig
           image: String(imageUrl),
           rating: Number(item.ratingAvg || 0),
           orders: Number(item.totalSold || 0),
-          status: String(item.approvalStatus || 'Pending'),
+          status: normalizeApprovalStatus(item.approvalStatus || item.packageStatus || item.status),
           isActive: Boolean(item.isActive),
           created: String(item.createdAt || ''),
           vendorName: String(item.vendorProfileId || item.vendorId || ''),
         };
       });
 
+      if (requestId !== latestLoadRequestRef.current) return;
       setProducts(mapped);
     } catch (error) {
+      if (requestId !== latestLoadRequestRef.current) return;
       const message = error instanceof Error ? error.message : 'Không thể tải danh sách sản phẩm.';
       setProductsError(message);
       setProducts([]);
     } finally {
+      if (requestId !== latestLoadRequestRef.current) return;
       setLoadingProducts(false);
     }
   };
@@ -152,9 +213,13 @@ const StaffProductManagement: React.FC<StaffProductManagementProps> = ({ onNavig
   const totalPages = Math.max(1, Math.ceil(products.length / PRODUCTS_PER_PAGE));
   const categoryOptions = Array.from(new Set(products.map((product) => mapCategory(product.categoryId)))).sort((a, b) => a.localeCompare(b));
 
+  const productsByStatus = selectedStatus
+    ? products.filter((product) => normalizeApprovalStatus(product.status) === normalizeApprovalStatus(selectedStatus))
+    : products;
+
   const filteredProducts = selectedCategory === 'all'
-    ? products
-    : products.filter((product) => mapCategory(product.categoryId) === selectedCategory);
+    ? productsByStatus
+    : productsByStatus.filter((product) => mapCategory(product.categoryId) === selectedCategory);
 
   const filteredTotalPages = Math.max(1, Math.ceil(filteredProducts.length / PRODUCTS_PER_PAGE));
   const safeCurrentPage = Math.min(currentPage, filteredTotalPages);
@@ -232,6 +297,7 @@ const StaffProductManagement: React.FC<StaffProductManagementProps> = ({ onNavig
     setAiScreeningLoading(true);
     setAiScreeningError(null);
     setAiScreeningResult(null);
+    setAiReasonExpanded(false);
 
     try {
       const result = await packageService.getPackageAIScreening(id);
@@ -249,10 +315,12 @@ const StaffProductManagement: React.FC<StaffProductManagementProps> = ({ onNavig
       let details: any = await packageService.getPackageById(id, true);
 
       if (details) {
-        // Normalize approvalStatus từ nhiều field khả dĩ của API
-        // Fallback về selectedStatus vì product đang ở filter đó (e.g. "Approved")
-        const rawApproval = details.approvalStatus || details.packageStatus || details.status || selectedStatus || '';
-        details.approvalStatus = rawApproval;
+        details = normalizePackageDetails(details);
+
+        if (!details.approvalStatus) {
+          const rawApproval = details.approvalStatus || details.packageStatus || details.status || selectedStatus || '';
+          details.approvalStatus = normalizeApprovalStatus(rawApproval);
+        }
 
         // Khi package isActive=true, force variant isActive=true
         // Vì API thường trả isActive=false cho variant dù package đang hoạt động
@@ -274,78 +342,99 @@ const StaffProductManagement: React.FC<StaffProductManagementProps> = ({ onNavig
     }
   };
 
-  const formatAIScreeningLabel = (key: string): string => {
-    // Bản đồ dịch các key từ API sang tiếng Việt
-    const translationMap: Record<string, string> = {
-      'statusCode': 'Mã trạng thái',
-      'isSuccess': 'Trạng thái duyệt',
-      'message': 'Thông báo',
-      'description': 'Mô tả',
-      'result': 'Kết quả',
-      'score': 'Điểm số',
-      'label': 'Nhãn',
-      'violations': 'Các vi phạm',
-      'violationRecords': 'Lịch sử vi phạm'
+  const clearNotificationFocusParams = () => {
+    const params = new URLSearchParams(location.search);
+    if (!params.has('productId') && !params.has('productName')) return;
+
+    params.delete('productId');
+    params.delete('productName');
+    const nextQuery = params.toString();
+    const nextUrl = `${window.location.pathname}${nextQuery ? `?${nextQuery}` : ''}${window.location.hash || ''}`;
+    window.history.replaceState({}, document.title, nextUrl);
+  };
+
+  const mapAiDecisionLabel = (decision: string) => {
+    switch (decision) {
+      case 'Approved':
+        return { text: 'Đạt kiểm duyệt', className: 'bg-green-100 text-green-700 border border-green-200' };
+      case 'VendorActionRequired':
+        return { text: 'Yêu cầu vendor chỉnh sửa', className: 'bg-amber-100 text-amber-700 border border-amber-200' };
+      case 'StaffActionRequired':
+        return { text: 'Cần staff xử lý', className: 'bg-blue-100 text-blue-700 border border-blue-200' };
+      case 'AdminActionRequired':
+        return { text: 'Chờ admin quyết định', className: 'bg-indigo-100 text-indigo-700 border border-indigo-200' };
+      case 'Rejected':
+        return { text: 'Không đạt kiểm duyệt', className: 'bg-red-100 text-red-700 border border-red-200' };
+      default:
+        return { text: 'Chưa có kết luận', className: 'bg-gray-100 text-gray-700 border border-gray-200' };
+    }
+  };
+
+  const getAISummary = (raw: any) => {
+    const source = raw?.fullAiResponse && typeof raw.fullAiResponse === 'object'
+      ? { ...raw, ...raw.fullAiResponse }
+      : raw;
+
+    return {
+      decision: String(source?.decision || '').trim(),
+      reasoning: String(source?.reasoning || '').trim(),
+      issues: Array.isArray(source?.issuesDetected)
+        ? source.issuesDetected.filter((x: any) => String(x || '').trim())
+        : [],
+      recommendations: Array.isArray(source?.recommendations)
+        ? source.recommendations.filter((x: any) => String(x || '').trim())
+        : [],
+      confidenceScore: typeof source?.confidenceScore === 'number'
+        ? source.confidenceScore
+        : (typeof source?.confidence === 'number' ? source.confidence : null),
+      requiresManualReview: typeof source?.requiresManualReview === 'boolean' ? source.requiresManualReview : null,
+      screenedAt: source?.screenedAt ? String(source.screenedAt) : '',
+      screeningResultId: source?.screeningResultId != null ? String(source.screeningResultId) : '',
+      packageId: source?.packageId != null ? String(source.packageId) : '',
     };
-
-    if (translationMap[key]) return translationMap[key];
-
-    const withSpace = key.replace(/([a-z])([A-Z])/g, '$1 $2').replace(/[_-]+/g, ' ').trim();
-    if (!withSpace) return 'Thông tin';
-    return withSpace.charAt(0).toUpperCase() + withSpace.slice(1);
   };
 
-  const renderAIScreeningValue = (value: any, depth: number = 0): React.ReactNode => {
-    if (value === null || value === undefined || value === '') {
-      return <span className="text-gray-400 italic">Không có dữ liệu</span>;
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const statusFromQuery = String(params.get('status') || '').trim();
+    const allowedStatuses: PackageStatusFilter[] = ['', 'Draft', 'Pending', 'Approved', 'Rejected', 'StaffActionRequired', 'VendorActionRequired', 'AdminActionRequired'];
+
+    if (!statusFromQuery) return;
+
+    if (allowedStatuses.includes(statusFromQuery as PackageStatusFilter) && selectedStatus !== statusFromQuery) {
+      setSelectedStatus(statusFromQuery as PackageStatusFilter);
     }
 
-    if (typeof value === 'boolean') {
-      return (
-        <span className={`px-2 py-1 rounded-md text-[11px] font-bold ${value ? 'bg-green-100 text-green-700 border border-green-200' : 'bg-red-100 text-red-700 border border-red-200'}`}>
-          {value ? 'Đạt' : 'Không đạt'}
-        </span>
-      );
-    }
+    // Apply status from notification once, then clear it to avoid locking the dropdown.
+    params.delete('status');
+    const nextQuery = params.toString();
+    const nextUrl = `${window.location.pathname}${nextQuery ? `?${nextQuery}` : ''}${window.location.hash || ''}`;
+    window.history.replaceState({}, document.title, nextUrl);
+  }, [location.search]);
 
-    if (typeof value === 'number') {
-      return <span className="font-semibold text-gray-800">{Number(value).toLocaleString('vi-VN')}</span>;
-    }
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const productId = String(params.get('productId') || '').trim();
+    if (!productId) return;
 
-    if (typeof value === 'string') {
-      return <span className="text-gray-700 break-words">{value}</span>;
-    }
+    handleViewDetails(productId);
+    clearNotificationFocusParams();
+  }, [location.search, selectedStatus]);
 
-    if (Array.isArray(value)) {
-      if (value.length === 0) return <span className="text-gray-400 italic">Danh sách rỗng</span>;
-      return (
-        <div className="space-y-2">
-          {value.map((item, index) => (
-            <div key={`${depth}-arr-${index}`} className="bg-gray-50 border border-gray-100 rounded-xl p-3 text-sm">
-              {renderAIScreeningValue(item, depth + 1)}
-            </div>
-          ))}
-        </div>
-      );
-    }
+  useEffect(() => {
+    if (loadingProducts || products.length === 0) return;
 
-    if (typeof value === 'object') {
-      const entries = Object.entries(value as Record<string, any>);
-      if (entries.length === 0) return <span className="text-gray-400 italic">Không có dữ liệu</span>;
-      return (
-        <div className="space-y-2">
-          {entries.map(([key, val]) => (
-            <div key={`${depth}-${key}`} className="grid grid-cols-12 gap-2 text-sm bg-gray-50 border border-gray-100 rounded-xl p-3">
-              <span className="col-span-4 text-gray-500 font-semibold">{formatAIScreeningLabel(key)}</span>
-              <div className="col-span-8">{renderAIScreeningValue(val, depth + 1)}</div>
-            </div>
-          ))}
-        </div>
-      );
-    }
+    const params = new URLSearchParams(location.search);
+    const productId = String(params.get('productId') || '').trim();
+    const productName = String(params.get('productName') || '').trim().toLowerCase();
+    if (productId || !productName) return;
 
-    return <span className="text-gray-700">{String(value)}</span>;
-  };
+    const targetProduct = products.find((p) => String(p.name || '').trim().toLowerCase() === productName);
+    if (!targetProduct) return;
+
+    handleViewDetails(targetProduct.id);
+    clearNotificationFocusParams();
+  }, [loadingProducts, products, location.search, selectedStatus]);
 
   return (
     <div className="min-h-screen bg-white p-6 font-sans text-slate-800">
@@ -370,7 +459,10 @@ const StaffProductManagement: React.FC<StaffProductManagementProps> = ({ onNavig
                 className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
               >
                 <option value="">Tất cả</option>
-                <option value="Pending">Chờ duyệt</option>
+                <option value="StaffActionRequired">Chờ duyệt (Staff)</option>
+                <option value="VendorActionRequired">Chờ vendor chỉnh sửa</option>
+                <option value="AdminActionRequired">Chờ quản trị duyệt</option>
+                <option value="Pending">Pending (legacy)</option>
                 <option value="Approved">Đã duyệt</option>
                 <option value="Rejected">Bị từ chối</option>
                 <option value="Draft">Bản nháp</option>
@@ -516,6 +608,7 @@ const StaffProductManagement: React.FC<StaffProductManagementProps> = ({ onNavig
                   setViewProductDetails(null);
                   setAiScreeningResult(null);
                   setAiScreeningError(null);
+                  setAiReasonExpanded(false);
                 }}
                 className="px-5 py-2.5 bg-white rounded-xl flex items-center justify-center shadow-sm border border-gray-200 hover:bg-gray-50 transition flex-shrink-0 font-bold text-xs uppercase tracking-widest text-gray-600"
               >
@@ -523,9 +616,12 @@ const StaffProductManagement: React.FC<StaffProductManagementProps> = ({ onNavig
               </button>
               <div className="flex gap-2 items-center flex-1">
                 {(() => {
-                  const approval = viewProductDetails.approvalStatus || viewProductDetails.packageStatus || viewProductDetails.status || '';
+                  const approval = normalizeApprovalStatus(viewProductDetails.approvalStatus || viewProductDetails.packageStatus || viewProductDetails.status || '');
                   const isApproved = approval === 'Approved';
                   const isRejected = approval === 'Rejected';
+                  const isVendorActionRequired = approval === 'VendorActionRequired';
+                  const isStaffActionRequired = approval === 'StaffActionRequired' || approval === 'Pending';
+                  const isAdminActionRequired = approval === 'AdminActionRequired';
                   return (
                     <>
                       <span className={`px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest flex-shrink-0 ${
@@ -533,7 +629,7 @@ const StaffProductManagement: React.FC<StaffProductManagementProps> = ({ onNavig
                         isRejected ? 'bg-red-100 text-red-700 border border-red-200' :
                         'bg-yellow-100 text-yellow-700 border border-yellow-200'
                       }`}>
-                        {isApproved ? 'Đã Duyệt' : isRejected ? 'Từ Chối' : 'Chờ Duyệt'}
+                        {isApproved ? 'Đã Duyệt' : isRejected ? 'Từ Chối' : isVendorActionRequired ? 'Chờ Vendor Sửa' : isAdminActionRequired ? 'Chờ Quản Trị' : isStaffActionRequired ? 'Chờ Staff Duyệt' : 'Chờ Duyệt'}
                       </span>
                       {!isApproved && (
                         <span className={`px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest flex-shrink-0 ${viewProductDetails.isActive ? 'bg-blue-100 text-blue-700 border border-blue-200' : 'bg-gray-100 text-gray-700 border border-gray-200'}`}>
@@ -545,7 +641,10 @@ const StaffProductManagement: React.FC<StaffProductManagementProps> = ({ onNavig
                 })()}
               </div>
               {/* Actions for Staff - Only show if Pending */}
-              {viewProductDetails.approvalStatus !== 'Approved' && viewProductDetails.approvalStatus !== 'Rejected' && (
+              {(() => {
+                const approval = normalizeApprovalStatus(viewProductDetails.approvalStatus || viewProductDetails.packageStatus || viewProductDetails.status || '');
+                return approval !== 'Approved' && approval !== 'Rejected' && approval !== 'VendorActionRequired' && approval !== 'AdminActionRequired';
+              })() && (
                 <div className="flex gap-2 items-center">
                   <button
                     onClick={() => handleApprove(String(viewProductDetails.packageId || viewProductDetails.id))}
@@ -677,9 +776,17 @@ const StaffProductManagement: React.FC<StaffProductManagementProps> = ({ onNavig
                   {/* Primary image display */}
                   <div className="w-full aspect-square relative rounded-t-[2rem] overflow-hidden">
                     {(() => {
-                      const primarySrc = viewProductDetails.imageUrls && viewProductDetails.imageUrls.length > 0
-                        ? (viewProductDetails.imageUrls[viewDisplayImageIndex] || viewProductDetails.imageUrls[0])
-                        : (viewProductDetails.imageUrl || (viewProductDetails.packageImages && viewProductDetails.packageImages.length > 0 ? (viewProductDetails.packageImages.find((img: any) => img.isPrimary)?.imageUrl || viewProductDetails.packageImages[0].imageUrl) : ''));
+                      const imagePool = (Array.isArray(viewProductDetails.imageUrls) ? viewProductDetails.imageUrls : [])
+                        .map((it: any) => String((it && typeof it === 'object') ? (it.imageUrl || it.url || '') : it).trim())
+                        .filter((u: string) => u.length > 0);
+                      const packageImagePool = (Array.isArray(viewProductDetails.packageImages) ? viewProductDetails.packageImages : [])
+                        .map((it: any) => String((it && typeof it === 'object') ? (it.imageUrl || it.url || '') : it).trim())
+                        .filter((u: string) => u.length > 0);
+
+                      const mergedImagePool = imagePool.length > 0 ? imagePool : packageImagePool;
+                      const primarySrc = mergedImagePool.length > 0
+                        ? (mergedImagePool[viewDisplayImageIndex] || mergedImagePool[0])
+                        : (viewProductDetails.imageUrl || '');
                       const primaryDisplaySrc = toImageSrc(primarySrc);
                       return primarySrc ? (
                         <img
@@ -786,7 +893,105 @@ const StaffProductManagement: React.FC<StaffProductManagementProps> = ({ onNavig
                       {aiScreeningError}
                     </div>
                   ) : aiScreeningResult ? (
-                    <div className="text-sm">{renderAIScreeningValue(aiScreeningResult)}</div>
+                    (() => {
+                      const summary = getAISummary(aiScreeningResult);
+                      const decisionInfo = mapAiDecisionLabel(summary.decision);
+                      const reasoningTooLong = summary.reasoning.length > 320;
+                      const visibleReasoning = aiReasonExpanded || !reasoningTooLong
+                        ? summary.reasoning
+                        : `${summary.reasoning.slice(0, 320)}...`;
+
+                      return (
+                        <div className="space-y-4 text-sm">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            {summary.screeningResultId && (
+                              <div className="bg-slate-50 border border-slate-200 rounded-xl p-3">
+                                <p className="text-slate-500 text-[11px] font-bold uppercase tracking-widest">Screening ID</p>
+                                <p className="font-bold text-slate-800 mt-1">{summary.screeningResultId}</p>
+                              </div>
+                            )}
+                            {summary.packageId && (
+                              <div className="bg-slate-50 border border-slate-200 rounded-xl p-3">
+                                <p className="text-slate-500 text-[11px] font-bold uppercase tracking-widest">Package ID</p>
+                                <p className="font-bold text-slate-800 mt-1">{summary.packageId}</p>
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="flex items-center justify-between gap-2 bg-slate-50 border border-slate-200 rounded-xl p-3">
+                            <span className="text-slate-500 font-semibold">Kết luận AI</span>
+                            <span className={`px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-widest ${decisionInfo.className}`}>
+                              {decisionInfo.text}
+                            </span>
+                          </div>
+
+                          <div className="bg-slate-50 border border-slate-200 rounded-xl p-3">
+                            <p className="text-slate-500 text-[11px] font-bold uppercase tracking-widest mb-2">Nhận xét</p>
+                            <p className="text-slate-700 leading-relaxed break-words">
+                              {visibleReasoning || 'Chưa có nhận xét từ AI.'}
+                            </p>
+                            {reasoningTooLong && (
+                              <button
+                                type="button"
+                                onClick={() => setAiReasonExpanded((prev) => !prev)}
+                                className="mt-2 text-xs font-bold text-primary hover:underline"
+                              >
+                                {aiReasonExpanded ? 'Thu gọn' : 'Xem thêm'}
+                              </button>
+                            )}
+                          </div>
+
+                          {summary.issues.length > 0 && (
+                            <div className="bg-amber-50 border border-amber-100 rounded-xl p-3">
+                              <p className="text-amber-700 text-[11px] font-bold uppercase tracking-widest mb-2">Vấn đề phát hiện</p>
+                              <ul className="space-y-1.5 text-slate-700">
+                                {summary.issues.slice(0, 4).map((issue: string, idx: number) => (
+                                  <li key={`issue-${idx}`} className="flex items-start gap-2">
+                                    <span className="mt-1 h-1.5 w-1.5 rounded-full bg-amber-500 flex-shrink-0"></span>
+                                    <span>{issue}</span>
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+
+                          {summary.recommendations.length > 0 && (
+                            <div className="bg-blue-50 border border-blue-100 rounded-xl p-3">
+                              <p className="text-blue-700 text-[11px] font-bold uppercase tracking-widest mb-2">Khuyến nghị</p>
+                              <ul className="space-y-1.5 text-slate-700">
+                                {summary.recommendations.slice(0, 4).map((rec: string, idx: number) => (
+                                  <li key={`rec-${idx}`} className="flex items-start gap-2">
+                                    <span className="mt-1 h-1.5 w-1.5 rounded-full bg-blue-500 flex-shrink-0"></span>
+                                    <span>{rec}</span>
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            <div className="bg-slate-50 border border-slate-200 rounded-xl p-3">
+                              <p className="text-slate-500 text-[11px] font-bold uppercase tracking-widest">Cần review thủ công</p>
+                              <p className="font-bold text-slate-800 mt-1">
+                                {summary.requiresManualReview === null ? 'Chưa rõ' : summary.requiresManualReview ? 'Có' : 'Không'}
+                              </p>
+                            </div>
+                            <div className="bg-slate-50 border border-slate-200 rounded-xl p-3">
+                              <p className="text-slate-500 text-[11px] font-bold uppercase tracking-widest">Độ tin cậy</p>
+                              <p className="font-bold text-slate-800 mt-1">
+                                {summary.confidenceScore === null ? 'Chưa có' : summary.confidenceScore}
+                              </p>
+                            </div>
+                            {summary.screenedAt && (
+                              <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 sm:col-span-2">
+                                <p className="text-slate-500 text-[11px] font-bold uppercase tracking-widest">Thời điểm quét</p>
+                                <p className="font-semibold text-slate-800 mt-1">{new Date(summary.screenedAt).toLocaleString('vi-VN')}</p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })()
                   ) : (
                     <div className="text-sm text-gray-500">Chưa có dữ liệu AI screening cho gói này.</div>
                   )}
