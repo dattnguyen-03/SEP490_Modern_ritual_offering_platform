@@ -726,7 +726,8 @@ class PackageService {
         tier: variant.variantName,
         price: variant.price,
         description: variant.description,
-        items: items.length > 0 ? items : []
+        items: items.length > 0 ? items : [],
+        availableSwaps: variant.availableSwaps || []
       };
     });
 
@@ -756,7 +757,7 @@ class PackageService {
     return {
       id: pkgId,
       name: pkgName,
-      description: apiPackage.description || 'Mâm cúng truyền thống với đầy đủ lễ vật',
+      description: apiPackage.description || 'Mâm cúng truyền thống with đầy đủ lễ vật',
       category: (apiPackage as any).categoryName || (apiPackage as any).ceremonyCategory?.name || this.mapCategoryIdToOccasion(apiPackage.categoryId?.toString() || '1'),
       price: defaultVariant?.price || 2500000,
       image: finalImage,
@@ -770,6 +771,7 @@ class PackageService {
       variants: parsedVariants || [],
       vendorId: vendorId,
       vendorName: vendor?.shopName || (vendorId ? `Shop ${vendorId.substring(0, 8)}` : 'Shop'),
+      availableAddOns: apiPackage.availableAddOns || [],
     };
   }
 

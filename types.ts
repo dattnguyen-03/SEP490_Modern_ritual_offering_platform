@@ -29,6 +29,27 @@ export interface Product {
   vendorId?: string;
   vendorName?: string;
   distanceKm?: number;
+  availableAddOns?: PackageAddOn[];
+}
+
+export interface PackageAddOn {
+  addOnId: number;
+  itemName: string;
+  retailPrice: number;
+  itemType: string;
+  maxQuantity: number;
+  displayOrder: number;
+  isActive: boolean;
+}
+
+export interface AvailableSwap {
+  swapId: number;
+  originalItemName: string;
+  originalItemAllocatedPrice: number;
+  replacementItemName: string;
+  surcharge: number;
+  displayOrder: number;
+  isActive: boolean;
 }
 
 // API Types
@@ -40,6 +61,9 @@ export interface PackageVariant {
   description: string;
   isActive: boolean;
   createdAt: string;
+  imageUrl?: string;
+  variantImages?: string[];
+  availableSwaps?: AvailableSwap[];
 }
 
 export interface ApiPackage {
@@ -52,10 +76,13 @@ export interface ApiPackage {
   createdAt: string;
   packageVariants?: PackageVariant[];
   imageUrls?: string[];
+  packageImages?: string[];
   packageAvatarUrl?: string;
   primaryImageIndex?: number;
   ratingAvg?: number;
   reviewCount?: number;
+  totalSold?: number;
+  availableAddOns?: PackageAddOn[];
 }
 
 // Product Variant for UI (parsed from API)
@@ -66,6 +93,7 @@ export interface ProductVariant {
   price: number;
   description: string;
   items: string[];
+  availableSwaps?: AvailableSwap[];
 }
 
 export interface ApiResponse<T> {

@@ -72,7 +72,7 @@ const OrderDetailsPage: React.FC = () => {
                 if (v.profileId && avatar) map[v.profileId] = avatar;
             });
             setVendorAvatarMap(map);
-        }).catch(() => {});
+        }).catch(() => { });
     }, [id, navigate]);
 
     const loadRefundInfo = async (orderId: string) => {
@@ -794,7 +794,7 @@ const OrderDetailsPage: React.FC = () => {
                                     };
 
                                     return (
-                                        <div key={idx} className="flex gap-4 items-start">
+                                        <div key={idx} className="flex gap-4 items-start pb-6 border-b border-slate-50 last:border-0 last:pb-0">
                                             <div
                                                 className="size-20 rounded-2xl bg-gray-100 border border-gray-200 flex-shrink-0 relative overflow-hidden cursor-pointer group/img"
                                                 onClick={goToDetail}
@@ -813,14 +813,53 @@ const OrderDetailsPage: React.FC = () => {
                                                     x{item.quantity}
                                                 </div>
                                             </div>
-                                            <div className="flex-1 pt-1">
+                                            <div className="flex-1 pt-1 min-w-0">
                                                 <h4
                                                     className="font-bold text-gray-800 cursor-pointer hover:text-primary transition-colors"
                                                     onClick={goToDetail}
                                                 >
                                                     {item.packageName}
                                                 </h4>
-                                                <p className="text-xs text-gray-500 mt-1">Gói: <span className="text-gray-700 font-medium">{item.variantName}</span></p>
+                                                <div className="flex items-center justify-between mt-1">
+                                                    <p className="text-xs text-gray-500 italic">
+                                                        Gói: <span className="text-gray-700 font-medium">{item.variantName}</span>
+                                                        <span className="ml-2 px-1.5 py-0.5 bg-slate-50 border border-slate-100 rounded text-[10px] text-slate-400 font-bold">x{item.quantity}</span>
+                                                    </p>
+                                                    <p className="text-[11px] font-bold text-slate-500">
+                                                        {((item as any).variantSubTotal || (item.price || 0) * item.quantity).toLocaleString('vi-VN')}đ
+                                                    </p>
+                                                </div>
+
+                                                {/* Swaps */}
+                                                {Array.isArray((item as any).swaps) && (item as any).swaps.length > 0 && (
+                                                    <div className="mt-2 space-y-1">
+                                                        {(item as any).swaps.map((swap: any, si: number) => (
+                                                            <div key={si} className="flex items-center gap-1.5 text-[11px]">
+                                                                <span className="material-symbols-outlined text-amber-500 text-[13px]">swap_horiz</span>
+                                                                <span className="text-slate-600">{swap.originalItemName || swap.replacementItemName || swap.addOnName}</span>
+                                                                {swap.surcharge > 0 && (
+                                                                    <span className="ml-auto text-amber-600 font-bold">+{swap.surcharge.toLocaleString('vi-VN')}đ</span>
+                                                                )}
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                )}
+
+                                                {/* Add-ons */}
+                                                {Array.isArray((item as any).addOns) && (item as any).addOns.length > 0 && (
+                                                    <div className="mt-2 space-y-1 border-l-2 border-emerald-100 pl-2">
+                                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Món kèm</p>
+                                                        {(item as any).addOns.map((addOn: any, ai: number) => (
+                                                            <div key={ai} className="flex items-center gap-1.5 text-[11px]">
+                                                                <span className="material-symbols-outlined text-emerald-500 text-[13px]">add_circle</span>
+                                                                <span className="text-slate-700 font-medium">{addOn.addOnName || addOn.itemName}</span>
+                                                                <span className="text-slate-400">×{addOn.quantity}</span>
+                                                                <span className="ml-auto text-emerald-600 font-bold">+{(addOn.lineTotal || addOn.retailPrice * addOn.quantity).toLocaleString('vi-VN')}đ</span>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                )}
+
                                                 {item.isRequestRefund && (
                                                     <div className="mt-2 flex">
                                                         <span className={`px-2 py-0.5 rounded-lg text-[10px] font-black uppercase tracking-widest border flex items-center gap-1 ${isRefundRejected
@@ -837,9 +876,7 @@ const OrderDetailsPage: React.FC = () => {
                                                     </div>
                                                 )}
                                             </div>
-                                            <div className="pt-1 text-right">
-                                                <p className="font-bold text-primary">{(item.lineTotal || (item.price || (item as any).unitPrice || 0) * item.quantity).toLocaleString('vi-VN')}đ</p>
-
+                                            <div className="pt-1 text-right flex-shrink-0 min-w-[100px]">
                                                 {order.orderStatus.toUpperCase() === 'COMPLETED' && (
                                                     <button
                                                         onClick={(e) => {
@@ -870,11 +907,11 @@ const OrderDetailsPage: React.FC = () => {
 
                             <div className="space-y-3 text-sm mb-4">
                                 <div className="flex justify-between">
-                                    <span className="text-gray-500">Tạm tính ({order.items?.length || 0} món)</span>
+                                    <span className="text-gray-500">Tạm tính :</span>
                                     <span className="font-medium">{(order.pricing?.subTotal || (order.pricing as any)?.subTotal || (order as any).subTotal || 0).toLocaleString('vi-VN')}đ</span>
                                 </div>
                                 <div className="flex justify-between">
-                                    <span className="text-gray-500">Phí giao hàng</span>
+                                    <span className="text-gray-500">Phí giao hàng :</span>
                                     <span className="font-medium">{(order.pricing?.shippingFee || (order.pricing as any)?.totalShippingFee || (order as any).shippingFee || (order as any).totalShippingFee || 0).toLocaleString('vi-VN')}đ</span>
                                 </div>
                                 {((order.pricing as any)?.discountAmount || (order.pricing as any)?.totalDiscount || (order as any).totalDiscount || (order as any).discountAmount || 0) > 0 && (
@@ -886,7 +923,7 @@ const OrderDetailsPage: React.FC = () => {
                             </div>
 
                             <div className="pt-4 border-t border-dashed border-gray-200 flex justify-between items-end">
-                                <span className="text-sm font-bold text-gray-700">Tổng cộng</span>
+                                <span className="text-sm font-bold text-gray-700">Tổng cộng :</span>
                                 <span className="text-2xl font-black text-primary">{((order.pricing as any)?.finalAmount || order.pricing?.totalAmount || (order as any).totalAmount || (order as any).finalAmount || 0).toLocaleString('vi-VN')}đ</span>
                             </div>
                         </div>

@@ -4,36 +4,76 @@ import { getAuthToken } from './auth';
 const API_BASE_URL = '/api';
 
 // Cart API Types
+export interface CartItemAddOnApi {
+  cartItemAddOnId: number;
+  addOnId: number;
+  itemName: string;
+  retailPrice: number;
+  quantity: number;
+  lineTotal: number;
+}
+
+export interface CartItemSwapApi {
+  cartItemSwapId: number;
+  swapId: number;
+  originalItemName: string;
+  replacementItemName: string;
+  surcharge: number;
+}
+
 export interface CartItemApi {
   cartItemId: number;
-  cartId: number;
-  packageId: number;
   variantId: number;
-  quantity: number;
-  price: number;
-  packageName: string;
   variantName: string;
+  packageId: number;
+  packageName: string;
   imageUrl?: string;
+  price: number;
+  quantity: number;
+  variantSubTotal: number;
+  swaps: CartItemSwapApi[];
+  swapSubTotal: number;
+  addOns: CartItemAddOnApi[];
+  addOnSubTotal: number;
+  lineTotal: number;
+  // UI helper fields
+  cartId?: number;
+}
+
+export interface CartVendorApi {
+  vendorId: string;
+  vendorName: string;
+  totalItems: number;
+  subTotal: number;
+  items: CartItemApi[];
 }
 
 export interface CartApi {
   cartId: number;
   userId: string;
+  customerId?: string;
   createdAt: string;
-  updatedAt: string;
-  cartItems: CartItemApi[];
+  updatedAt: string | null;
+  vendors: CartVendorApi[];
   totalItems: number;
+  cartTotal: number;
+  // Backward compatibility
+  cartItems: CartItemApi[];
   subtotal: number;
 }
 
 export interface AddToCartRequest {
   variantId: number;
   quantity: number;
+  swapIds?: number[];
+  addOns?: { addOnId: number; quantity: number }[];
 }
 
 export interface UpdateCartItemRequest {
   cartItemId: number;
   quantity: number;
+  swaps?: { swapId: number }[];
+  addOns?: { addOnId: number; quantity: number }[];
 }
 
 class CartService {
@@ -43,12 +83,12 @@ class CartService {
       'Accept': 'application/json',
       ...(token ? { 'Authorization': `Bearer ${token}` } : {})
     };
-    
+
     // Only set Content-Type for methods that actually have a body
     if (method !== 'GET' && method !== 'DELETE') {
       headers['Content-Type'] = 'application/json';
     }
-    
+
     return headers;
   }
 
@@ -59,7 +99,7 @@ class CartService {
     if (!data) return null;
 
     let payload = data;
-    
+
     // If the response is wrapped in ApiResponse { isSuccess, result, ... }
     if (data.isSuccess !== undefined || data.isSucceeded !== undefined || data.statusCode !== undefined) {
       if (data.isSuccess === false || data.isSucceeded === false) {
@@ -75,39 +115,48 @@ class CartService {
 
     // If the payload is an array, it's a list of items
     if (Array.isArray(payload)) {
+      const cartItems = payload.map(item => this.mapCartItem(item));
+      const subtotal = payload.reduce((sum, item) => sum + ((item.price || 0) * (item.quantity || 1)), 0);
       return {
         cartId: 0,
         userId: '',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
-        cartItems: payload.map(item => this.mapCartItem(item)),
+        vendors: [],       // required by CartApi
+        cartTotal: subtotal,
+        cartItems,
         totalItems: payload.reduce((sum, item) => sum + (item.quantity || 1), 0),
-        subtotal: payload.reduce((sum, item) => sum + ((item.price || 0) * (item.quantity || 1)), 0)
+        subtotal,
       };
     }
 
-    // Handle nested cartItems or items
-    const rawItems = payload.cartItems || payload.items || [];
-    
-    // If it's the specific format with 'vendors'
-    let allItems = Array.isArray(rawItems) ? [...rawItems] : [];
-    if (payload.vendors && Array.isArray(payload.vendors)) {
-      payload.vendors.forEach((v: any) => {
-        const nestedItems = v.items || v.cartItems || v.packageItems || v.products || v.packages || [];
-        if (Array.isArray(nestedItems)) {
-          allItems = [...allItems, ...nestedItems];
-        }
-      });
-    }
+    // Handle the new structure with 'vendors'
+    const vendors = Array.isArray(payload.vendors) ? payload.vendors : [];
+    const flattenedItems: CartItemApi[] = [];
+
+    const mappedVendors: CartVendorApi[] = vendors.map((v: any) => {
+      const vendorItems = Array.isArray(v.items) ? v.items.map((item: any) => this.mapCartItem(item)) : [];
+      flattenedItems.push(...vendorItems);
+      return {
+        vendorId: v.vendorId || '',
+        vendorName: v.vendorName || 'Vendor',
+        totalItems: v.totalItems || 0,
+        subTotal: v.subTotal || 0,
+        items: vendorItems
+      };
+    });
 
     return {
       cartId: payload.cartId || payload.id || 0,
       userId: payload.userId || payload.customerId || '',
+      customerId: payload.customerId,
       createdAt: payload.createdAt || new Date().toISOString(),
-      updatedAt: payload.updatedAt || new Date().toISOString(),
-      cartItems: allItems.map(item => this.mapCartItem(item)),
-      totalItems: payload.totalItems || payload.totalItem || allItems.reduce((sum, item) => sum + (item.quantity || 1), 0),
-      subtotal: payload.subtotal || payload.subTotal || allItems.reduce((sum, item) => sum + ((item.price || 0) * (item.quantity || 1)), 0)
+      updatedAt: payload.updatedAt || null,
+      vendors: mappedVendors,
+      cartItems: flattenedItems,
+      totalItems: payload.totalItems || flattenedItems.length,
+      cartTotal: payload.cartTotal || payload.subtotal || payload.subTotal || 0,
+      subtotal: payload.cartTotal || payload.subtotal || payload.subTotal || 0
     };
   }
 
@@ -138,7 +187,26 @@ class CartService {
       price: item.price || 0,
       packageName: item.packageName || item.name || 'Sản phẩm',
       variantName: item.variantName || 'Mặc định',
-      imageUrl
+      imageUrl,
+      variantSubTotal: item.variantSubTotal || (item.price * item.quantity) || 0,
+      swaps: Array.isArray(item.swaps) ? item.swaps.map((s: any) => ({
+        cartItemSwapId: s.cartItemSwapId,
+        swapId: s.swapId,
+        originalItemName: s.originalItemName,
+        replacementItemName: s.replacementItemName,
+        surcharge: s.surcharge
+      })) : [],
+      swapSubTotal: item.swapSubTotal || 0,
+      addOns: Array.isArray(item.addOns) ? item.addOns.map((a: any) => ({
+        cartItemAddOnId: a.cartItemAddOnId,
+        addOnId: a.addOnId,
+        itemName: a.itemName,
+        retailPrice: a.retailPrice,
+        quantity: a.quantity,
+        lineTotal: a.lineTotal
+      })) : [],
+      addOnSubTotal: item.addOnSubTotal || 0,
+      lineTotal: item.lineTotal || (item.price * item.quantity) || 0
     };
   }
 
@@ -149,7 +217,7 @@ class CartService {
   async getCart(): Promise<CartApi | null> {
     try {
       console.log('🛒 Fetching cart from API...');
-      
+
       // OpenAPI: GET /api/cart only (no GET on /api/cart/items)
       const response = await fetch(`${API_BASE_URL}/cart`, {
         method: 'GET',
@@ -159,12 +227,12 @@ class CartService {
       if (!response.ok) {
         const errorText = await response.text().catch(() => '');
         console.error(`❌ Fetch Cart API Error (Status: ${response.status}):`, errorText);
-        
+
         if (response.status === 404) return null;
         if (response.status === 500) {
           console.warn('💡 Tip: A 500 error on GET /api/cart might mean a backend bug or missing user profile data.');
         }
-        
+
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
@@ -227,30 +295,34 @@ class CartService {
   }
 
   /**
-   * Cập nhật số lượng item
+   * Cập nhật số lượng item (quantity only - server only supports this)
    */
   async updateCartItem(request: UpdateCartItemRequest): Promise<boolean> {
     try {
-      console.log('📝 Updating cart item:', request);
 
-      // OpenAPI: PUT /api/cart/items with UpdateCartItemRequest { cartItemId, quantity }
+      const isFullUpdate = request.swaps !== undefined || request.addOns !== undefined;
+      const payload = isFullUpdate
+        ? {
+          cartItemId: request.cartItemId,
+          quantity: request.quantity,
+          swaps: request.swaps ?? [],     // empty array when no swaps
+          addOns: request.addOns ?? [],   // empty array when no add-ons
+        }
+        : { cartItemId: request.cartItemId, quantity: request.quantity };
+
+      console.log('📝 Updating cart item (payload):', payload);
+
       let response = await fetch(`${API_BASE_URL}/cart/items`, {
         method: 'PUT',
         headers: this.getHeaders('PUT'),
-        body: JSON.stringify({
-          cartItemId: request.cartItemId,
-          quantity: request.quantity,
-        }),
+        body: JSON.stringify(payload),
       });
 
       if (response.status === 405 || response.status === 404) {
         response = await fetch(`${API_BASE_URL}/cart`, {
           method: 'PUT',
           headers: this.getHeaders('PUT'),
-          body: JSON.stringify({
-            cartItemId: request.cartItemId,
-            quantity: request.quantity,
-          }),
+          body: JSON.stringify(payload),
         });
       }
 
@@ -319,7 +391,7 @@ class CartService {
   async clearCart(): Promise<boolean> {
     try {
       console.log('🧹 Clearing cart...');
-      
+
       // Try DELETE /api/cart/clear (based on Swagger)
       let response = await fetch(`${API_BASE_URL}/cart/clear`, {
         method: 'DELETE',

@@ -42,6 +42,8 @@ const ProductDetailPage: React.FC<{ onNavigate: (path: string) => void }> = ({ o
   const [isVendor, setIsVendor] = useState(false);
   const [activeReviewMenu, setActiveReviewMenu] = useState<string | null>(null);
   const [isTogglingVisibility, setIsTogglingVisibility] = useState(false);
+  const [selectedSwaps, setSelectedSwaps] = useState<Record<number, boolean>>({});
+  const [selectedAddOns, setSelectedAddOns] = useState<Record<number, number>>({});
 
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
@@ -308,7 +310,13 @@ const ProductDetailPage: React.FC<{ onNavigate: (path: string) => void }> = ({ o
     try {
       const success = await cartService.addToCart({
         variantId: selectedVariant.variantId,
-        quantity
+        quantity,
+        swapIds: Object.entries(selectedSwaps)
+          .filter(([_, selected]) => selected)
+          .map(([id]) => Number(id)),
+        addOns: Object.entries(selectedAddOns)
+          .filter(([_, qty]) => qty > 0)
+          .map(([id, qty]) => ({ addOnId: Number(id), quantity: qty }))
       });
       if (success) {
         toast.success('Đã thêm vào giỏ hàng!');
@@ -342,7 +350,13 @@ const ProductDetailPage: React.FC<{ onNavigate: (path: string) => void }> = ({ o
     try {
       const success = await cartService.addToCart({
         variantId: selectedVariant.variantId,
-        quantity
+        quantity,
+        swapIds: Object.entries(selectedSwaps)
+          .filter(([_, selected]) => selected)
+          .map(([id]) => Number(id)),
+        addOns: Object.entries(selectedAddOns)
+          .filter(([_, qty]) => qty > 0)
+          .map(([id, qty]) => ({ addOnId: Number(id), quantity: qty }))
       });
 
       if (success) {
@@ -582,6 +596,138 @@ const ProductDetailPage: React.FC<{ onNavigate: (path: string) => void }> = ({ o
                   </button>
                 </div>
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest italic hidden sm:block">Giao tận nơi</p>
+              </div>
+            </div>
+
+            {/* Available Swaps Section */}
+            {selectedVariantIndex !== null && product.variants?.[selectedVariantIndex]?.availableSwaps && product.variants[selectedVariantIndex].availableSwaps!.length > 0 && (
+              <div className="pt-6 border-t border-gold/10">
+                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 block mb-4">Tùy chọn thay đổi (Swaps)</label>
+                <div className="space-y-3">
+                  {product.variants[selectedVariantIndex].availableSwaps!.map((swap) => (
+                    <div 
+                      key={swap.swapId}
+                      className={`p-4 rounded-2xl border-2 transition-all cursor-pointer ${selectedSwaps[swap.swapId] ? 'border-primary bg-primary/5 shadow-md shadow-primary/5' : 'border-slate-50 hover:border-gold hover:bg-gold/5'}`}
+                      onClick={() => setSelectedSwaps(prev => ({ ...prev, [swap.swapId]: !prev[swap.swapId] }))}
+                    >
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="flex-1">
+                          <p className="text-xs font-bold text-slate-800">
+                            Thay <span className="text-slate-500 line-through font-medium">{swap.originalItemName}</span>
+                          </p>
+                          <p className="text-sm font-black text-primary">
+                            Bằng {swap.replacementItemName}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <p className={`text-xs font-black ${swap.surcharge > 0 ? 'text-amber-600' : 'text-emerald-600'}`}>
+                            {swap.surcharge > 0 ? `+${swap.surcharge.toLocaleString()}đ` : 'Miễn phí'}
+                          </p>
+                          <div className={`mt-1 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${selectedSwaps[swap.swapId] ? 'border-primary bg-primary' : 'border-slate-200'}`}>
+                            {selectedSwaps[swap.swapId] && (
+                              <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="4">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                              </svg>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Available Add-ons Section */}
+            {product.availableAddOns && product.availableAddOns.length > 0 && (
+              <div className="pt-6 border-t border-gold/10">
+                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 block mb-4">Mua thêm lễ vật (Add-ons)</label>
+                <div className="space-y-3">
+                  {product.availableAddOns.map((addOn) => (
+                    <div 
+                      key={addOn.addOnId}
+                      className={`p-4 rounded-2xl border-2 transition-all ${selectedAddOns[addOn.addOnId] > 0 ? 'border-primary bg-primary/5 shadow-md shadow-primary/5' : 'border-slate-50 hover:border-gold hover:bg-gold/5'}`}
+                    >
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-black text-slate-800 truncate">{addOn.itemName}</p>
+                          <p className="text-xs font-bold text-primary">{addOn.retailPrice.toLocaleString()}đ</p>
+                        </div>
+                        <div className="flex items-center bg-gray-100 rounded-xl p-0.5">
+                          <button
+                            onClick={() => setSelectedAddOns(prev => ({ ...prev, [addOn.addOnId]: Math.max(0, (prev[addOn.addOnId] || 0) - 1) }))}
+                            className={`w-7 h-7 rounded-lg flex items-center justify-center font-bold transition-all ${selectedAddOns[addOn.addOnId] > 0 ? 'bg-white text-primary shadow-sm active:scale-90' : 'text-slate-300 pointer-events-none'}`}
+                          >
+                            −
+                          </button>
+                          <span className="w-8 text-center text-xs font-black text-slate-800">{selectedAddOns[addOn.addOnId] || 0}</span>
+                          <button
+                            onClick={() => setSelectedAddOns(prev => ({ ...prev, [addOn.addOnId]: Math.min(addOn.maxQuantity, (prev[addOn.addOnId] || 0) + 1) }))}
+                            className={`w-7 h-7 rounded-lg flex items-center justify-center font-bold transition-all ${(selectedAddOns[addOn.addOnId] || 0) < addOn.maxQuantity ? 'bg-white text-primary shadow-sm active:scale-90' : 'text-slate-300 pointer-events-none'}`}
+                          >
+                            +
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Updated Price Calculation */}
+            <div className="pt-6 border-t border-gold/10">
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-xs font-bold text-slate-400">Giá gói:</span>
+                <span className="text-xs font-bold text-slate-700">
+                  {((product.variants && selectedVariantIndex !== null && product.variants[selectedVariantIndex]
+                    ? product.variants[selectedVariantIndex].price
+                    : product.price) * quantity).toLocaleString()}đ
+                </span>
+              </div>
+              
+              {/* Surcharges from Swaps */}
+              {Object.entries(selectedSwaps).filter(([_, selected]) => selected).map(([swapId]) => {
+                const swap = product.variants?.[selectedVariantIndex!]?.availableSwaps?.find(s => s.swapId === Number(swapId));
+                if (swap && swap.surcharge > 0) {
+                  return (
+                    <div key={swapId} className="flex justify-between items-center mb-1">
+                      <span className="text-[10px] font-bold text-amber-600 uppercase tracking-tighter">Phụ phí swap ({swap.replacementItemName}):</span>
+                      <span className="text-[10px] font-bold text-amber-600">+{ (swap.surcharge * quantity).toLocaleString() }đ</span>
+                    </div>
+                  );
+                }
+                return null;
+              })}
+
+              {/* Add-ons Total */}
+              {Object.entries(selectedAddOns).filter(([_, qty]) => qty > 0).map(([addOnId, qty]) => {
+                const addOn = product.availableAddOns?.find(a => a.addOnId === Number(addOnId));
+                if (addOn) {
+                  return (
+                    <div key={addOnId} className="flex justify-between items-center mb-1">
+                      <span className="text-[10px] font-bold text-primary uppercase tracking-tighter">Thêm ({addOn.itemName} x{qty}):</span>
+                      <span className="text-[10px] font-bold text-primary">+{(addOn.retailPrice * qty).toLocaleString()}đ</span>
+                    </div>
+                  );
+                }
+                return null;
+              })}
+
+              <div className="flex justify-between items-center mt-3 pt-3 border-t border-dashed border-slate-200">
+                <span className="text-sm font-black text-slate-900">TỔNG CỘNG:</span>
+                <span className="text-xl font-black text-primary">
+                  {(
+                    ((product.variants && selectedVariantIndex !== null && product.variants[selectedVariantIndex]
+                      ? product.variants[selectedVariantIndex].price
+                      : product.price) * quantity) +
+                    Object.entries(selectedSwaps)
+                      .filter(([_, selected]) => selected)
+                      .reduce((sum, [id]) => sum + (product.variants?.[selectedVariantIndex!]?.availableSwaps?.find(s => s.swapId === Number(id))?.surcharge || 0) * quantity, 0) +
+                    Object.entries(selectedAddOns)
+                      .reduce((sum, [id, qty]) => sum + (product.availableAddOns?.find(a => a.addOnId === Number(id))?.retailPrice || 0) * qty, 0)
+                  ).toLocaleString()}đ
+                </span>
               </div>
             </div>
 

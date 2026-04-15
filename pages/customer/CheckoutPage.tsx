@@ -616,144 +616,153 @@ const CheckoutPage: React.FC<{ onNavigate: (path: string) => void }> = ({ onNavi
         </section>
       </div>
 
-      <aside className="w-full lg:w-[400px] shrink-0">
-        <div className="sticky top-24 bg-white p-5 md:p-6 rounded-[1.5rem] md:rounded-[2rem] border border-slate-100 shadow-lg shadow-slate-200/50">
-          <h3 className="text-lg md:text-xl font-sans not-italic font-bold text-slate-800 mb-5 border-b border-slate-50 pb-3">Đơn hàng</h3>
-          <div className="space-y-6 mb-8">
+      <aside className="w-full lg:w-[420px] shrink-0">
+        <div className="sticky top-24 bg-white p-6 md:p-8 rounded-[2rem] border border-slate-100 shadow-2xl shadow-slate-200/40">
+          <h3 className="text-xl font-bold text-slate-900 mb-6 border-b border-slate-50 pb-4">Tóm tắt đơn hàng</h3>
+          
+          {/* Items List */}
+          <div className="space-y-6 mb-8 max-h-[40vh] overflow-y-auto pr-2 custom-scrollbar">
             {summary.items.map((item) => (
-              <div key={item.cartItemId} className="flex gap-4">
-                <div className="size-16 rounded-2xl bg-slate-100 shrink-0 overflow-hidden flex items-center justify-center">
+              <div key={item.cartItemId} className="flex gap-4 group">
+                <div className="size-20 rounded-2xl bg-slate-50 shrink-0 overflow-hidden border border-slate-100 group-hover:border-primary/20 transition-colors">
                   {item.imageUrl ? (
                     <img
                       src={item.imageUrl}
                       alt={item.packageName}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-cover transition-transform group-hover:scale-110 duration-500"
                     />
                   ) : (
-                    <div className="text-slate-300 text-xs text-center">
-                      No Image
-                    </div>
+                    <div className="w-full h-full flex items-center justify-center text-slate-300 text-[10px] uppercase font-bold">No Image</div>
                   )}
                 </div>
-                <div className="flex-1">
-                  <p className="text-sm font-bold leading-tight">{item.packageName}</p>
-                  <p className="text-[10px] text-slate-400 uppercase mt-1">
-                    SL: {item.quantity.toString().padStart(2, '0')} • {item.variantName}
-                  </p>
-                  <p className="text-[10px] text-slate-400 mt-1">
-                    {item.vendorName}
-                  </p>
-                  <p className="text-sm font-bold text-primary mt-1">
-                    {(item.lineTotal || (item.price * item.quantity) || 0).toLocaleString()}đ
-                  </p>
+                <div className="flex-1 min-w-0">
+                  <h4 className="text-sm font-bold text-slate-800 leading-snug line-clamp-2">{item.packageName}</h4>
+                  <div className="flex items-center gap-2 mt-1">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{item.variantName}</span>
+                    <span className="w-1 h-1 rounded-full bg-slate-200"></span>
+                    <span className="text-[10px] font-bold text-slate-500">SL: {item.quantity}</span>
+                  </div>
+                  
+                  {/* Swaps & Add-ons */}
+                  {(item.swaps?.length > 0 || item.addOns?.length > 0) && (
+                    <div className="mt-2 space-y-1">
+                      {item.swaps?.map((swap, idx) => (
+                        <div key={idx} className="flex items-center gap-1.5 text-[9px] text-amber-600 font-bold">
+                          <span className="material-symbols-outlined text-[12px]">swap_horiz</span>
+                          <span>{swap.itemName}</span>
+                        </div>
+                      ))}
+                      {item.addOns?.map((addOn, idx) => (
+                        <div key={idx} className="flex items-center gap-1.5 text-[9px] text-emerald-600 font-bold">
+                          <span className="material-symbols-outlined text-[12px]">check_circle</span>
+                          <span>{addOn.itemName} <span className="text-slate-400">x{addOn.quantity}</span></span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  <div className="flex items-center justify-between mt-2">
+                    <span className="text-[9px] font-medium text-slate-400 italic">{item.vendorName}</span>
+                    <span className="text-sm font-bold text-slate-900">{(item.lineTotal || 0).toLocaleString()}đ</span>
+                  </div>
                 </div>
               </div>
             ))}
           </div>
 
-          <div className="space-y-3 pt-6 border-t border-gray-200">
-            <div className="flex justify-between text-sm text-slate-500">
-              <span>Tạm tính ({summary.totalItems} sản phẩm)</span>
-              <span className="font-bold">{(summary.subTotal || 0).toLocaleString()}đ</span>
-            </div>
-            <div className="flex justify-between text-sm text-slate-500">
-              <span>Phí vận chuyển</span>
-              <span className={`font-bold ${summary.shippingFee === 0 ? 'text-green-600' : ''}`}>
-                {!summary.shippingFee || summary.shippingFee === 0 ? 'Miễn phí' : `${summary.shippingFee.toLocaleString()}đ`}
-              </span>
-            </div>
-            {/* {(summary.totalHoldFee || 0) > 0 && (
-              <div className="flex justify-between text-sm text-slate-500">
-                <span>Phí giữ chỗ (5%)</span>
-                <span className="font-bold text-amber-700">
-                  {(summary.totalHoldFee || 0).toLocaleString()}đ
-                </span>
-              </div>
-            )} */}
-            {(summary.totalDiscount || 0) > 0 && (
-              <div className="flex justify-between text-sm text-slate-500">
-                <span>Giảm giá</span>
-                <span className="font-bold text-green-600">
-                  -{(summary.totalDiscount || 0).toLocaleString()}đ
-                </span>
-              </div>
-            )}
-            {summary.deliveryAddress && (
-              <div className="pt-3 border-t border-gray-100">
-                <p className="text-xs text-slate-400 mb-1">Địa chỉ giao hàng:</p>
-                <p className="text-xs text-slate-600">{summary.deliveryAddress}</p>
-              </div>
-            )}
-            <div className="pt-4 flex justify-between items-end">
-              <div>
-                <p className="text-xs font-bold uppercase text-slate-400">Tổng cộng</p>
-                <p className="text-[10px] text-slate-300 italic">(Đã bao gồm VAT)</p>
-              </div>
-              <p className="text-3xl font-black text-primary tracking-tight">
-                {(summary.totalAmount || (summary.subTotal || 0) + (summary.shippingFee || 0) - (summary.totalDiscount || 0)).toLocaleString()}đ
-              </p>
+          {/* Totals */}
+          <div className="space-y-4 pt-6 border-t border-slate-100">
+            <div className="flex justify-between items-center text-sm">
+              <span className="text-slate-500 font-medium">Tạm tính ({summary.totalItems} món)</span>
+              <span className="text-slate-900 font-bold">{(summary.subTotal || 0).toLocaleString()}đ</span>
             </div>
             
+            <div className="flex justify-between items-center text-sm">
+              <span className="text-slate-500 font-medium">Phí giao hàng</span>
+              <span className={`font-bold ${summary.shippingFee === 0 ? 'text-emerald-500' : 'text-slate-900'}`}>
+                {summary.shippingFee === 0 ? 'Miễn phí' : `+${summary.shippingFee.toLocaleString()}đ`}
+              </span>
+            </div>
+
+            {summary.totalDiscount > 0 && (
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-slate-500 font-medium">Khuyến mãi</span>
+                <span className="text-emerald-500 font-bold">-{(summary.totalDiscount || 0).toLocaleString()}đ</span>
+              </div>
+            )}
+
+            {summary.deliveryAddress && (
+              <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="material-symbols-outlined text-[14px] text-slate-400">location_on</span>
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Giao tới</span>
+                </div>
+                <p className="text-[11px] text-slate-600 line-clamp-2 leading-relaxed">{summary.deliveryAddress}</p>
+              </div>
+            )}
+
+            <div className="pt-6 mt-2">
+              <div className="flex justify-between items-end mb-1">
+                <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Tổng thanh toán</span>
+                <div className="text-right">
+                  <p className="text-3xl font-black text-primary tracking-tighter leading-none">
+                    {(summary.totalAmount || 0).toLocaleString()}đ
+                  </p>
+                  <p className="text-[9px] text-slate-400 font-medium italic mt-1">(Đã bao gồm phí dịch vụ & VAT)</p>
+                </div>
+              </div>
+            </div>
+
             {hasExceededDistance && (
-              <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-2xl flex items-start gap-3">
-                <span className="material-symbols-outlined text-red-500 mt-0.5">error</span>
-                <p className="text-sm font-semibold text-red-700 leading-relaxed">
-                  Khoảng cách giao hàng quá 60km. Vui lòng chọn địa chỉ giao hàng gần hơn hoặc mua ở cửa hàng khác.
+              <div className="p-3 bg-red-50 border border-red-100 rounded-xl flex items-start gap-2">
+                <span className="material-symbols-outlined text-red-500 text-sm mt-0.5">error</span>
+                <p className="text-[10px] font-bold text-red-600 leading-tight">
+                  Vượt quá phạm vi giao hàng 60km. Vui lòng kiểm tra lại địa chỉ.
                 </p>
               </div>
             )}
-            
+
             {(summary.totalHoldFee || 0) > 0 && !hasExceededDistance && (
-              <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-xl flex items-start gap-2">
-                <div className="flex-1">
-                  <p className="text-xs text-amber-800 leading-relaxed">
-                    Đơn hàng này có phí giữ chỗ dự kiến khoảng {(summary.totalHoldFee || 0).toLocaleString()}đ (40%). Khoản này chỉ bị trừ nếu bạn chủ động hủy đơn. Hãy đọc kĩ thông tin đơn hàng trước khi thanh toán nhé!
-                  </p>
-                  {showHoldFeeInfo && (
-                    <div className="mt-2 text-[11px] text-amber-900 leading-relaxed border-t border-amber-200 pt-2">
-                      <p className="font-semibold mb-1">Chi tiết về phí giữ chỗ:</p>
-                      <ul className="list-disc list-inside space-y-1">
-                        <li>Phí giữ chỗ được tạm tính khoảng 40% tổng giá trị đơn hàng sau khuyến mãi.</li>
-                        <li>Phí giữ chỗ được tính nếu đơn hàng có giá trị từ 2.000.000 trở lên.</li>
-                        <li>Khoản phí này dùng để giữ lịch, chuẩn bị mâm cúng và nhân sự phục vụ cho buổi lễ của bạn.</li>
-                        <li>Nếu bạn hủy đơn vì bất kỳ lý do gì, khoản phí giữ chỗ này sẽ bị trừ và không được hoàn lại.</li>
-                        <li>Nếu đơn được thực hiện bình thường, bạn chỉ thanh toán số tiền hiển thị tại mục "Tổng cộng", không bị trừ thêm phí giữ chỗ.</li>
-                      </ul>
-                    </div>
-                  )}
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setShowHoldFeeInfo(prev => !prev)}
-                  className="ml-2 mt-0.5 flex-shrink-0 w-5 h-5 rounded-full border border-amber-400 text-amber-700 text-[11px] font-bold flex items-center justify-center bg-amber-50 hover:bg-amber-100 hover:border-amber-500 transition-colors"
-                  aria-label="Giải thích về phí giữ chỗ"
-                >
-                  ?
-                </button>
+              <div className="p-3 bg-amber-50/50 border border-amber-100 rounded-xl">
+                 <div className="flex items-center justify-between mb-1">
+                   <span className="text-[10px] font-bold text-amber-700 uppercase tracking-wider">Phí giữ chỗ (Dự kiến)</span>
+                   <span className="text-xs font-bold text-amber-700">{(summary.totalHoldFee || 0).toLocaleString()}đ</span>
+                 </div>
+                 <p className="text-[9px] text-amber-600/70 leading-relaxed">
+                   Khoản phí này dùng để giữ lịch và chỉ bị trừ nếu bạn chủ động hủy đơn.
+                 </p>
               </div>
             )}
+
+            <div className="pt-4 space-y-3">
+              <button
+                onClick={handleCheckout}
+                disabled={processing || !deliveryDate || hasExceededDistance}
+                className={`w-full py-4 rounded-xl font-bold uppercase tracking-widest text-sm transition-all shadow-lg active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed ${
+                  hasExceededDistance 
+                  ? 'bg-slate-300 text-slate-500 shadow-none' 
+                  : (processing || !deliveryDate 
+                      ? 'bg-slate-500 text-white cursor-not-allowed shadow-none' 
+                      : 'bg-primary text-white shadow-primary/20 hover:shadow-primary/30 hover:-translate-y-0.5')
+                }`}
+              >
+                {processing ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <span className="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-white"></span>
+                    Đang xử lý
+                  </span>
+                ) : 'Xác nhận thanh toán'}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => navigate('/cart')}
+                className="w-full py-3.5 rounded-xl font-bold text-slate-500 text-xs hover:bg-slate-50 hover:text-slate-700 transition-all border border-transparent hover:border-slate-200"
+              >
+                Quay về giỏ hàng
+              </button>
+            </div>
           </div>
-
-          <button
-            onClick={handleCheckout}
-            disabled={processing || !deliveryDate || hasExceededDistance}
-            className={`w-full mt-10 text-white py-5 rounded-2xl font-black uppercase tracking-widest shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 ${hasExceededDistance ? 'bg-slate-400 shadow-none' : 'bg-primary shadow-primary/20 hover:-translate-y-1'}`}
-          >
-            {processing ? (
-              <span className="flex items-center justify-center gap-2">
-                <span className="inline-block animate-spin rounded-full h-5 w-5 border-b-2 border-white"></span>
-                Đang xử lý...
-              </span>
-            ) : 'Thanh toán ngay'}
-          </button>
-
-          <button
-            type="button"
-            onClick={() => navigate('/cart')}
-            className="w-full mt-3 bg-white text-slate-700 py-4 rounded-2xl font-bold border border-gray-200 hover:border-primary hover:text-primary transition-all"
-          >
-            Quay về giỏ hàng
-          </button>
         </div>
       </aside>
     </div>

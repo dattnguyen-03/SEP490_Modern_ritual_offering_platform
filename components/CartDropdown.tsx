@@ -162,9 +162,23 @@ const CartDropdown: React.FC<CartDropdownProps> = ({ isOpen, onClose, onNavigate
                     <h4 className="text-sm font-semibold text-slate-800 line-clamp-1 mb-1">
                       {item.packageName}
                     </h4>
-                    <p className="text-xs text-slate-500 line-clamp-1 mb-2">
+                    <p className="text-xs text-slate-500 line-clamp-1 mb-1">
                       {item.variantName || 'Gói tiêu chuẩn'}
                     </p>
+                    <div className="flex flex-wrap gap-1 mb-2">
+                      {item.swaps.length > 0 && (
+                        <span className="bg-amber-50 text-amber-600 text-[8px] font-black uppercase px-1 py-0.5 rounded-sm border border-amber-100/50 flex items-center gap-0.5">
+                          <span className="material-symbols-outlined text-[10px]">swap_horiz</span>
+                          Swap
+                        </span>
+                      )}
+                      {item.addOns.length > 0 && (
+                        <span className="bg-emerald-50 text-emerald-600 text-[8px] font-black uppercase px-1 py-0.5 rounded-sm border border-emerald-100/50 flex items-center gap-0.5">
+                          <span className="material-symbols-outlined text-[10px]">add_circle</span>
+                          Add-on
+                        </span>
+                      )}
+                    </div>
                     <div className="flex items-center justify-between gap-2">
                       <span className="text-xs text-slate-500">
                         x{item.quantity}

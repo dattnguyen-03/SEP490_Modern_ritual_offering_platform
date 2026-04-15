@@ -2,10 +2,29 @@ import { getAuthToken } from './auth';
 import { packageService } from './packageService';
 const API_BASE_URL = '/api';
 
+export interface OrderItemAddOn {
+    orderItemAddOnId?: string;
+    addOnId?: number;
+    addOnName?: string;
+    itemName?: string;
+    retailPrice?: number;
+    quantity: number;
+    lineTotal?: number;
+    isRefunded?: boolean;
+}
+
+export interface OrderItemSwap {
+    swapId?: number | string;
+    originalItemName?: string;
+    replacementItemName?: string;
+    surcharge?: number;
+}
+
 export interface OrderItem {
     itemId: string;
     variantId?: string | number;
     variantName: string;
+    variantSubTotal?: number;
     packageName: string;
     quantity: number;
     price: number;
@@ -14,6 +33,10 @@ export interface OrderItem {
     packageId?: string | number;
     imageUrl?: string | null;
     isRequestRefund?: boolean;
+    addOns?: OrderItemAddOn[];
+    swaps?: OrderItemSwap[];
+    addOnSubTotal?: number;
+    swapSubTotal?: number;
     // Fields from API response
     totalAmount?: number;
     subTotal?: number;
@@ -499,6 +522,7 @@ class OrderService {
                             itemId: item.itemId || (item as any).orderItemId || (item as any).id || `item-${Math.random().toString(36).slice(2, 10)}`,
                             variantId: item.variantId ?? '',
                             variantName: item.variantName || 'N/A',
+                            variantSubTotal: Number((item as any).variantSubTotal) || 0,
                             packageName: item.packageName || 'N/A',
                             quantity,
                             price: unitPrice,
@@ -527,6 +551,11 @@ class OrderService {
                                 (item as any).productImageURL ||
                                 null,
                             isRequestRefund: !!item.isRequestRefund,
+                            // Preserve add-ons and swaps from backend
+                            addOns: Array.isArray((item as any).addOns) ? (item as any).addOns : [],
+                            swaps: Array.isArray((item as any).swaps) ? (item as any).swaps : [],
+                            addOnSubTotal: Number((item as any).addOnSubTotal) || 0,
+                            swapSubTotal: Number((item as any).swapSubTotal) || 0,
                         };
                     })
                     : [];
