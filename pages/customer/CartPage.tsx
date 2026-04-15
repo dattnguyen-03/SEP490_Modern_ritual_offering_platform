@@ -137,29 +137,29 @@ const CartPage: React.FC<{ onNavigate: (path: string) => void }> = ({ onNavigate
     }
 
     setUpdating(cartItemId);
-    
+
     // Capture state for potential rollback
     let originalCart: CartApi | null = null;
-    
+
     setCart(prev => {
       if (!prev) return prev;
       originalCart = JSON.parse(JSON.stringify(prev));
-      
+
       const updatedVendors = prev.vendors.map(v => ({
         ...v,
         items: v.items.map(i => Number(i.cartItemId) === Number(cartItemId) ? { ...i, quantity: newQuantity } : i)
       }));
       const updatedItems = prev.cartItems.map(i => Number(i.cartItemId) === Number(cartItemId) ? { ...i, quantity: newQuantity } : i);
-      
+
       return { ...prev, vendors: updatedVendors, cartItems: updatedItems };
     });
 
     try {
       console.log(`🚀 Sending qty update: item ${cartItemId} → ${newQuantity}`);
-      
+
       // Only send quantity - server returns 500 if swaps/addOns are included
-      const success = await cartService.updateCartItem({ 
-        cartItemId: Number(cartItemId), 
+      const success = await cartService.updateCartItem({
+        cartItemId: Number(cartItemId),
         quantity: newQuantity,
       });
 
@@ -167,8 +167,8 @@ const CartPage: React.FC<{ onNavigate: (path: string) => void }> = ({ onNavigate
         const refreshedCart = await cartService.getCart();
         setCart(refreshedCart);
         if (refreshedCart) {
-           const newSelected = selectedItemIds.filter(id => refreshedCart.cartItems.some(i => i.cartItemId === id));
-           await refreshCheckoutSummary(newSelected);
+          const newSelected = selectedItemIds.filter(id => refreshedCart.cartItems.some(i => i.cartItemId === id));
+          await refreshCheckoutSummary(newSelected);
         }
         window.dispatchEvent(new Event('cartUpdated'));
       } else {
@@ -185,73 +185,73 @@ const CartPage: React.FC<{ onNavigate: (path: string) => void }> = ({ onNavigate
   };
 
   const updateAddOnQuantity = async (cartItemId: number, addOnId: number, newAddOnQty: number) => {
-     let originalCart: CartApi | null = null;
-     const isRemoving = newAddOnQty <= 0;
+    let originalCart: CartApi | null = null;
+    const isRemoving = newAddOnQty <= 0;
 
-     setCart(prev => {
-        if (!prev) return prev;
-        originalCart = JSON.parse(JSON.stringify(prev));
+    setCart(prev => {
+      if (!prev) return prev;
+      originalCart = JSON.parse(JSON.stringify(prev));
 
-        const updatedVendors = prev.vendors.map(v => ({
-          ...v,
-          items: v.items.map(i => {
-            if (Number(i.cartItemId) !== Number(cartItemId)) return i;
-            const updatedAddOns = isRemoving 
-              ? i.addOns.filter(a => Number(a.addOnId) !== Number(addOnId))
-              : i.addOns.map(a => Number(a.addOnId) === Number(addOnId) ? { ...a, quantity: newAddOnQty } : a);
-            return { ...i, addOns: updatedAddOns };
-          })
-        }));
-        const updatedItems = prev.cartItems.map(i => {
-            if (Number(i.cartItemId) !== Number(cartItemId)) return i;
-            const updatedAddOns = isRemoving 
-              ? i.addOns.filter(a => Number(a.addOnId) !== Number(addOnId))
-              : i.addOns.map(a => Number(a.addOnId) === Number(addOnId) ? { ...a, quantity: newAddOnQty } : a);
-            return { ...i, addOns: updatedAddOns };
-        });
+      const updatedVendors = prev.vendors.map(v => ({
+        ...v,
+        items: v.items.map(i => {
+          if (Number(i.cartItemId) !== Number(cartItemId)) return i;
+          const updatedAddOns = isRemoving
+            ? i.addOns.filter(a => Number(a.addOnId) !== Number(addOnId))
+            : i.addOns.map(a => Number(a.addOnId) === Number(addOnId) ? { ...a, quantity: newAddOnQty } : a);
+          return { ...i, addOns: updatedAddOns };
+        })
+      }));
+      const updatedItems = prev.cartItems.map(i => {
+        if (Number(i.cartItemId) !== Number(cartItemId)) return i;
+        const updatedAddOns = isRemoving
+          ? i.addOns.filter(a => Number(a.addOnId) !== Number(addOnId))
+          : i.addOns.map(a => Number(a.addOnId) === Number(addOnId) ? { ...a, quantity: newAddOnQty } : a);
+        return { ...i, addOns: updatedAddOns };
+      });
 
-        return { ...prev, vendors: updatedVendors, cartItems: updatedItems };
-     });
+      return { ...prev, vendors: updatedVendors, cartItems: updatedItems };
+    });
 
-     setUpdating(cartItemId);
-     try {
-       // Again, get latest state for the request
-       const targetItem = cart?.cartItems.find(i => Number(i.cartItemId) === Number(cartItemId));
-       if (!targetItem) throw new Error("Item not found");
+    setUpdating(cartItemId);
+    try {
+      // Again, get latest state for the request
+      const targetItem = cart?.cartItems.find(i => Number(i.cartItemId) === Number(cartItemId));
+      if (!targetItem) throw new Error("Item not found");
 
-       let apiAddOns = targetItem.addOns.map(a => ({ addOnId: a.addOnId, quantity: a.quantity }));
-       if (isRemoving) {
-          apiAddOns = apiAddOns.filter(a => Number(a.addOnId) !== Number(addOnId));
-       } else {
-          const exists = apiAddOns.find(a => Number(a.addOnId) === Number(addOnId));
-          if (exists) {
-            apiAddOns = apiAddOns.map(a => Number(a.addOnId) === Number(addOnId) ? { ...a, quantity: newAddOnQty } : a);
-          } else {
-            apiAddOns.push({ addOnId, quantity: newAddOnQty });
-          }
-       }
+      let apiAddOns = targetItem.addOns.map(a => ({ addOnId: a.addOnId, quantity: a.quantity }));
+      if (isRemoving) {
+        apiAddOns = apiAddOns.filter(a => Number(a.addOnId) !== Number(addOnId));
+      } else {
+        const exists = apiAddOns.find(a => Number(a.addOnId) === Number(addOnId));
+        if (exists) {
+          apiAddOns = apiAddOns.map(a => Number(a.addOnId) === Number(addOnId) ? { ...a, quantity: newAddOnQty } : a);
+        } else {
+          apiAddOns.push({ addOnId, quantity: newAddOnQty });
+        }
+      }
 
-       const success = await cartService.updateCartItem({
-         cartItemId: Number(cartItemId),
-         quantity: targetItem.quantity,
-         swaps: targetItem.swaps.map(s => ({ swapId: s.swapId })),
-         addOns: apiAddOns
-       });
+      const success = await cartService.updateCartItem({
+        cartItemId: Number(cartItemId),
+        quantity: targetItem.quantity,
+        swaps: targetItem.swaps.map(s => ({ swapId: s.swapId })),
+        addOns: apiAddOns
+      });
 
-       if (success) {
-         const refreshedCart = await cartService.getCart();
-         setCart(refreshedCart);
-         await refreshCheckoutSummary(selectedItemIds);
-         window.dispatchEvent(new Event('cartUpdated'));
-       } else {
-         if (originalCart) setCart(originalCart);
-       }
-     } catch (error) {
+      if (success) {
+        const refreshedCart = await cartService.getCart();
+        setCart(refreshedCart);
+        await refreshCheckoutSummary(selectedItemIds);
+        window.dispatchEvent(new Event('cartUpdated'));
+      } else {
         if (originalCart) setCart(originalCart);
-        toast.error('Lỗi cập nhật món kèm');
-     } finally {
-        setUpdating(null);
-     }
+      }
+    } catch (error) {
+      if (originalCart) setCart(originalCart);
+      toast.error('Lỗi cập nhật món kèm');
+    } finally {
+      setUpdating(null);
+    }
   };
 
   const removeItem = async (cartItemId: number) => {
@@ -378,8 +378,8 @@ const CartPage: React.FC<{ onNavigate: (path: string) => void }> = ({ onNavigate
 
     setUpdating(editingItem.cartItemId);
     const closeEditing = () => {
-       setEditingItem(null);
-       setFullPackageData(null);
+      setEditingItem(null);
+      setFullPackageData(null);
     };
 
     try {
@@ -481,7 +481,7 @@ const CartPage: React.FC<{ onNavigate: (path: string) => void }> = ({ onNavigate
                   <span className="material-symbols-outlined text-slate-400 text-lg">storefront</span>
                   <h2 className="font-bold text-slate-800 text-sm uppercase tracking-wider">{vendor.vendorName}</h2>
                 </div>
-                
+
                 <div className="space-y-3">
                   {vendor.items.map(item => {
                     const isUpdating = updating === item.cartItemId;
@@ -504,9 +504,9 @@ const CartPage: React.FC<{ onNavigate: (path: string) => void }> = ({ onNavigate
 
                           {/* Image */}
                           <div className="w-20 h-20 rounded-lg overflow-hidden flex-shrink-0 bg-slate-50 border border-slate-100 cursor-pointer" onClick={() => onNavigate(`/product/${item.packageId}`)}>
-                            <img 
-                              src={item.imageUrl || ''} 
-                              alt={item.packageName} 
+                            <img
+                              src={item.imageUrl || ''}
+                              alt={item.packageName}
                               className="w-full h-full object-cover"
                               onError={(e) => {
                                 e.currentTarget.style.display = 'none';
@@ -543,17 +543,17 @@ const CartPage: React.FC<{ onNavigate: (path: string) => void }> = ({ onNavigate
                                     <div className="flex-1 min-w-0 flex items-center gap-2">
                                       <span className="text-slate-600 font-medium truncate">{addOn.itemName}</span>
                                       <div className="flex items-center gap-1.5 px-1 bg-slate-50/80 rounded border border-slate-100 flex-shrink-0">
-                                          <button 
-                                            onClick={() => updateAddOnQuantity(item.cartItemId, addOn.addOnId, addOn.quantity - 1)} 
-                                            disabled={isUpdating} 
-                                            className="text-[12px] text-slate-400 hover:text-red-500 transition-colors px-0.5"
-                                          >−</button>
-                                          <span className="text-[9px] text-slate-500 font-bold min-w-[12px] text-center">x{addOn.quantity}</span>
-                                          <button 
-                                            onClick={() => updateAddOnQuantity(item.cartItemId, addOn.addOnId, addOn.quantity + 1)} 
-                                            disabled={isUpdating} 
-                                            className="text-[12px] text-slate-400 hover:text-primary transition-colors px-0.5"
-                                          >+</button>
+                                        <button
+                                          onClick={() => updateAddOnQuantity(item.cartItemId, addOn.addOnId, addOn.quantity - 1)}
+                                          disabled={isUpdating}
+                                          className="text-[12px] text-slate-400 hover:text-red-500 transition-colors px-0.5"
+                                        >−</button>
+                                        <span className="text-[9px] text-slate-500 font-bold min-w-[12px] text-center">x{addOn.quantity}</span>
+                                        <button
+                                          onClick={() => updateAddOnQuantity(item.cartItemId, addOn.addOnId, addOn.quantity + 1)}
+                                          disabled={isUpdating}
+                                          className="text-[12px] text-slate-400 hover:text-primary transition-colors px-0.5"
+                                        >+</button>
                                       </div>
                                     </div>
                                     <span className="font-bold text-slate-400 shrink-0">+{addOn.lineTotal.toLocaleString()}đ</span>
@@ -590,7 +590,6 @@ const CartPage: React.FC<{ onNavigate: (path: string) => void }> = ({ onNavigate
                                   className="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-primary transition-colors"
                                   title="Chỉnh sửa lựa chọn"
                                 >
-                                  <span className="material-symbols-outlined text-[18px]">edit_square</span>
                                 </button>
                                 <button
                                   onClick={() => removeItem(item.cartItemId)}
@@ -651,7 +650,7 @@ const CartPage: React.FC<{ onNavigate: (path: string) => void }> = ({ onNavigate
                 try {
                   const wallet = await walletService.getMyWallet('Customer');
                   const balance = wallet.balance || 0;
-                  
+
                   if (balance < total) {
                     const needed = total - balance;
                     const result = await toast.confirm({
@@ -711,7 +710,7 @@ const CartPage: React.FC<{ onNavigate: (path: string) => void }> = ({ onNavigate
                 <h3 className="text-xl font-bold text-slate-800">Cập nhật lựa chọn</h3>
                 <p className="text-xs text-slate-500 mt-1 uppercase tracking-wider">{editingItem.packageName}</p>
               </div>
-              <button 
+              <button
                 onClick={() => setEditingItem(null)}
                 className="size-8 rounded-full bg-white flex items-center justify-center text-slate-400 hover:text-red-500 transition-colors shadow-sm"
               >
@@ -730,8 +729,8 @@ const CartPage: React.FC<{ onNavigate: (path: string) => void }> = ({ onNavigate
                 <div className="space-y-3">
                   <label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Phiên bản</label>
                   <div className="p-4 bg-primary/5 border border-primary/20 rounded-2xl flex justify-between items-center">
-                     <span className="text-sm font-bold text-primary">{editingItem.variantName}</span>
-                     <span className="text-[10px] font-bold text-slate-400">Không thể đổi phiên bản tại đây</span>
+                    <span className="text-sm font-bold text-primary">{editingItem.variantName}</span>
+                    <span className="text-[10px] font-bold text-slate-400">Không thể đổi phiên bản tại đây</span>
                   </div>
                 </div>
 
@@ -743,10 +742,10 @@ const CartPage: React.FC<{ onNavigate: (path: string) => void }> = ({ onNavigate
                       {fullPackageData.packageVariants.find(v => v.variantId === selectedVariantId)?.availableSwaps?.map((swap) => {
                         const isSelected = selectedSwapIds.includes(swap.swapId);
                         return (
-                          <div 
+                          <div
                             key={swap.swapId}
                             onClick={() => {
-                              setSelectedSwapIds(prev => 
+                              setSelectedSwapIds(prev =>
                                 prev.includes(swap.swapId) ? prev.filter(id => id !== swap.swapId) : [...prev, swap.swapId]
                               );
                             }}
@@ -794,7 +793,7 @@ const CartPage: React.FC<{ onNavigate: (path: string) => void }> = ({ onNavigate
                               <p className="text-xs font-bold text-emerald-600 mt-1">{addon.retailPrice.toLocaleString()}đ</p>
                             </div>
                             <div className="flex items-center gap-3 bg-white p-1 rounded-lg border border-slate-100 shadow-sm">
-                              <button 
+                              <button
                                 onClick={() => updateAddOn(quantity - 1)}
                                 disabled={quantity === 0}
                                 className="size-6 flex items-center justify-center text-slate-400 hover:text-red-500 disabled:opacity-30"
@@ -802,7 +801,7 @@ const CartPage: React.FC<{ onNavigate: (path: string) => void }> = ({ onNavigate
                                 −
                               </button>
                               <span className="text-xs font-bold w-4 text-center">{quantity}</span>
-                              <button 
+                              <button
                                 onClick={() => updateAddOn(quantity + 1)}
                                 className="size-6 flex items-center justify-center text-slate-400 hover:text-emerald-500"
                               >
@@ -819,20 +818,20 @@ const CartPage: React.FC<{ onNavigate: (path: string) => void }> = ({ onNavigate
             )}
 
             <div className="p-6 md:p-8 bg-slate-50 border-t border-slate-100 flex gap-4">
-               <button 
+              <button
                 onClick={() => setEditingItem(null)}
                 disabled={updating !== null}
                 className="flex-1 py-4 text-sm font-bold text-slate-500 hover:bg-slate-100 rounded-2xl transition-all"
-               >
-                 Hủy bỏ
-               </button>
-               <button 
+              >
+                Hủy bỏ
+              </button>
+              <button
                 onClick={handleUpdateItemOptions}
                 disabled={editLoading || updating !== null}
                 className="flex-[2] py-4 text-sm font-bold text-white bg-primary rounded-2xl shadow-xl shadow-primary/20 hover:-translate-y-1 transition-all disabled:opacity-50 disabled:translate-y-0"
-               >
-                 {updating !== null ? 'Đang cập nhật...' : 'Lưu thay đổi'}
-               </button>
+              >
+                {updating !== null ? 'Đang cập nhật...' : 'Lưu thay đổi'}
+              </button>
             </div>
           </div>
         </div>

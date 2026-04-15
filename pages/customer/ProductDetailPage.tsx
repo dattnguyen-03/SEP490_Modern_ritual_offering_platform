@@ -605,7 +605,7 @@ const ProductDetailPage: React.FC<{ onNavigate: (path: string) => void }> = ({ o
                 <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 block mb-4">Tùy chọn thay đổi (Swaps)</label>
                 <div className="space-y-3">
                   {product.variants[selectedVariantIndex].availableSwaps!.map((swap) => (
-                    <div 
+                    <div
                       key={swap.swapId}
                       className={`p-4 rounded-2xl border-2 transition-all cursor-pointer ${selectedSwaps[swap.swapId] ? 'border-primary bg-primary/5 shadow-md shadow-primary/5' : 'border-slate-50 hover:border-gold hover:bg-gold/5'}`}
                       onClick={() => setSelectedSwaps(prev => ({ ...prev, [swap.swapId]: !prev[swap.swapId] }))}
@@ -641,10 +641,10 @@ const ProductDetailPage: React.FC<{ onNavigate: (path: string) => void }> = ({ o
             {/* Available Add-ons Section */}
             {product.availableAddOns && product.availableAddOns.length > 0 && (
               <div className="pt-6 border-t border-gold/10">
-                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 block mb-4">Mua thêm lễ vật (Add-ons)</label>
+                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 block mb-4">Mua thêm lễ vật</label>
                 <div className="space-y-3">
                   {product.availableAddOns.map((addOn) => (
-                    <div 
+                    <div
                       key={addOn.addOnId}
                       className={`p-4 rounded-2xl border-2 transition-all ${selectedAddOns[addOn.addOnId] > 0 ? 'border-primary bg-primary/5 shadow-md shadow-primary/5' : 'border-slate-50 hover:border-gold hover:bg-gold/5'}`}
                     >
@@ -685,7 +685,7 @@ const ProductDetailPage: React.FC<{ onNavigate: (path: string) => void }> = ({ o
                     : product.price) * quantity).toLocaleString()}đ
                 </span>
               </div>
-              
+
               {/* Surcharges from Swaps */}
               {Object.entries(selectedSwaps).filter(([_, selected]) => selected).map(([swapId]) => {
                 const swap = product.variants?.[selectedVariantIndex!]?.availableSwaps?.find(s => s.swapId === Number(swapId));
@@ -693,7 +693,7 @@ const ProductDetailPage: React.FC<{ onNavigate: (path: string) => void }> = ({ o
                   return (
                     <div key={swapId} className="flex justify-between items-center mb-1">
                       <span className="text-[10px] font-bold text-amber-600 uppercase tracking-tighter">Phụ phí swap ({swap.replacementItemName}):</span>
-                      <span className="text-[10px] font-bold text-amber-600">+{ (swap.surcharge * quantity).toLocaleString() }đ</span>
+                      <span className="text-[10px] font-bold text-amber-600">+{(swap.surcharge * quantity).toLocaleString()}đ</span>
                     </div>
                   );
                 }
