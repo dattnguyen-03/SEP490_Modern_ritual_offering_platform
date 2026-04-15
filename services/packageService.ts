@@ -6,6 +6,9 @@ import { getAuthToken } from './auth';
 const API_BASE_URL = '/api'; // Use proxy instead of direct URL
 
 class PackageService {
+  private managementCollectionEndpointUnavailable = false;
+  private hasWarnedMissingManagementCollection = false;
+
   private extractBackendErrorMessage(errText: string): string | null {
     const raw = String(errText || '').trim();
     if (!raw) return null;
@@ -194,32 +197,81 @@ class PackageService {
       const token = getAuthToken();
       const normalizedStatus = String(status || '').trim();
 
-      const query = new URLSearchParams({
-        PageNumber: String(pageNumber),
-        PageSize: String(pageSize),
-      });
-      if (normalizedStatus) {
-        query.set('status', normalizedStatus);
+      const fetchByStatusFromManagement = async (statusValue: string): Promise<ApiPackage[]> => {
+        const query = new URLSearchParams({
+          PageNumber: String(pageNumber),
+          PageSize: String(pageSize),
+          status: statusValue,
+        });
+
+        const endpoint = `${API_BASE_URL}/packages/management/by-status?${query.toString()}`;
+        console.log(`📡 Fetching by-status: ${endpoint}`);
+
+        const response = await fetch(endpoint, {
+          method: 'GET',
+          headers: {
+            Accept: 'application/json, text/plain, */*',
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data: any = await response.json();
+
+        if (Array.isArray(data)) {
+          return data as ApiPackage[];
+        }
+
+        if (data?.isSuccess && data.result) {
+          if (Array.isArray(data.result)) {
+            return data.result as ApiPackage[];
+          }
+          if (data.result.items && Array.isArray(data.result.items)) {
+            return data.result.items as ApiPackage[];
+          }
+        }
+
+        return [];
+      };
+
+      // Khi không filter, vẫn dùng management by-status để dữ liệu đồng nhất với các tab trạng thái cụ thể.
+      if (!normalizedStatus) {
+        if (!token) return await this.getAllPackages(pageNumber, pageSize);
+
+        const statuses: Array<'Draft' | 'Pending' | 'Approved' | 'Rejected'> = ['Draft', 'Pending', 'Approved', 'Rejected'];
+        const results = await Promise.allSettled(statuses.map((s) => fetchByStatusFromManagement(s)));
+
+        const merged = new Map<string, ApiPackage>();
+        for (const result of results) {
+          if (result.status !== 'fulfilled') continue;
+          for (const pkg of result.value) {
+            const key = String((pkg as any).packageId ?? (pkg as any).id ?? '').trim();
+            if (!key) continue;
+            if (!merged.has(key)) merged.set(key, pkg);
+          }
+        }
+
+        if (merged.size > 0) {
+          return Array.from(merged.values());
+        }
+
+        console.warn('⚠️ Failed to aggregate all statuses from management endpoint. Falling back to public API...');
+        return await this.getAllPackages(pageNumber, pageSize);
       }
 
-      const endpoint = `${API_BASE_URL}/packages/management/by-status?${query.toString()}`;
-
-      console.log(`📡 Fetching by-status: ${endpoint}`);
-      const response = await fetch(endpoint, {
-        method: 'GET',
-        headers: {
-          Accept: 'application/json, text/plain, */*',
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-      });
-
-      if (!response.ok) {
-        // Fallback cho endpoint by-status (nếu bị 404/403)
-        if (response.status === 404 || response.status === 403) {
-          console.warn(`⚠️ Management by-status endpoint failed (${response.status}). Falling back to management collection...`);
+      try {
+        return await fetchByStatusFromManagement(normalizedStatus);
+      } catch (statusError: any) {
+        const errText = String(statusError?.message || '');
+        const statusCode = errText.match(/status:\s*(\d{3})/)?.[1];
+        // Fallback cho endpoint by-status nếu backend không hỗ trợ/không đúng role
+        if (statusCode === '400' || statusCode === '404' || statusCode === '403') {
+          console.warn(`⚠️ Management by-status endpoint failed (${statusCode}). Falling back to local filtering...`);
           const allPackages = token ? await this.getManagementPackages(pageNumber, pageSize) : await this.getAllPackages(pageNumber, pageSize);
 
-          if (!normalizedStatus) return allPackages;
           return allPackages.filter(pkg =>
             (pkg as any).status === normalizedStatus ||
             (pkg as any).packageStatus === normalizedStatus ||
@@ -228,28 +280,8 @@ class PackageService {
             (normalizedStatus === 'Inactive' && !pkg.isActive)
           );
         }
-        throw new Error(`HTTP error! status: ${response.status}`);
+        throw statusError;
       }
-
-      const data: any = await response.json();
-
-      if (Array.isArray(data)) {
-        return data as ApiPackage[];
-      }
-
-      if (data?.isSuccess && data.result) {
-        if (Array.isArray(data.result)) {
-          console.log(`✅ by-status success: ${data.result.length} items`);
-          return data.result as ApiPackage[];
-        }
-        if (data.result.items && Array.isArray(data.result.items)) {
-          console.log(`✅ by-status success (paginated): ${data.result.items.length} items`);
-          return data.result.items as ApiPackage[];
-        }
-      }
-      console.warn('⚠️ by-status returned no items or invalid structure:', data);
-
-      return [];
     } catch (error) {
       console.error('Failed to fetch packages by status:', error);
       // Final fallback
@@ -277,6 +309,7 @@ class PackageService {
     try {
       const token = getAuthToken();
       if (!token) return this.getAllPackages(pageNumber, pageSize);
+      if (this.managementCollectionEndpointUnavailable) return this.getAllPackages(pageNumber, pageSize);
 
       console.log(`📦 Fetching management packages (page ${pageNumber}, size ${pageSize})...`);
       const response = await fetch(`${API_BASE_URL}/packages/management?PageNumber=${pageNumber}&PageSize=${pageSize}`, {
@@ -288,10 +321,13 @@ class PackageService {
       });
 
       if (!response.ok) {
-        // Nếu 404 thì có thể dùng by-status không filter? 
-        // Backend thường không hỗ trợ /management chung mà bắt status, nên fallback về public là an toàn nhất.
+        // Backend hiện tại có thể không expose endpoint collection này.
         if (response.status === 404) {
-          console.warn('⚠️ Management collection endpoint not found (404). Falling back to public API...');
+          this.managementCollectionEndpointUnavailable = true;
+          if (!this.hasWarnedMissingManagementCollection) {
+            console.warn('⚠️ Management collection endpoint not found (404). Falling back to public API...');
+            this.hasWarnedMissingManagementCollection = true;
+          }
           return this.getAllPackages(pageNumber, pageSize);
         }
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -556,6 +592,42 @@ class PackageService {
     } catch (error) {
       console.error('❌ Failed to fetch package:', error);
       return null;
+    }
+  }
+
+  /**
+   * Lấy kết quả AI screening cho package (Staff/Admin toàn bộ; Vendor chỉ package của mình)
+   * GET /api/packages/management/{id}/ai-screening
+   */
+  async getPackageAIScreening(id: string | number): Promise<any | null> {
+    try {
+      const token = getAuthToken();
+      const normalizedId = Number(String(id).trim());
+      if (!Number.isInteger(normalizedId) || normalizedId <= 0) {
+        throw new Error(`Invalid package id: ${id}`);
+      }
+
+      const response = await fetch(`${API_BASE_URL}/packages/management/${normalizedId}/ai-screening`, {
+        method: 'GET',
+        headers: {
+          Accept: 'application/json, text/plain, */*',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      });
+
+      if (!response.ok) {
+        if (response.status === 401) throw new Error('Bạn chưa đăng nhập hoặc phiên đã hết hạn.');
+        if (response.status === 403) throw new Error('Bạn không có quyền xem kết quả AI screening của gói này.');
+        if (response.status === 404) throw new Error('Không tìm thấy kết quả AI screening cho gói này.');
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data: any = await response.json();
+      if (data?.result !== undefined) return data.result;
+      return data ?? null;
+    } catch (error) {
+      console.error('Failed to fetch package AI screening:', error);
+      throw error;
     }
   }
 
