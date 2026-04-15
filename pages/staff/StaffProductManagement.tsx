@@ -43,6 +43,9 @@ const StaffProductManagement: React.FC<StaffProductManagementProps> = ({ onNavig
   const [previewOpen, setPreviewOpen] = useState<boolean>(false);
   const [rawPackages, setRawPackages] = useState<any[]>([]);
   const [categories, setCategories] = useState<CeremonyCategory[]>([]);
+  const [aiScreeningLoading, setAiScreeningLoading] = useState<boolean>(false);
+  const [aiScreeningError, setAiScreeningError] = useState<string | null>(null);
+  const [aiScreeningResult, setAiScreeningResult] = useState<any | null>(null);
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -67,6 +70,7 @@ const StaffProductManagement: React.FC<StaffProductManagementProps> = ({ onNavig
   const toImageSrc = (value: string): string => {
     const normalized = String(value || '').trim();
     if (!normalized) return fallbackProductImage;
+    if (normalized.includes('storage.vietritual.com')) return fallbackProductImage;
     if (/^https?:\/\//i.test(normalized)) return normalized;
     return fallbackProductImage;
   };
@@ -224,6 +228,22 @@ const StaffProductManagement: React.FC<StaffProductManagementProps> = ({ onNavig
     }
   };
 
+  const loadAIScreening = async (id: string) => {
+    setAiScreeningLoading(true);
+    setAiScreeningError(null);
+    setAiScreeningResult(null);
+
+    try {
+      const result = await packageService.getPackageAIScreening(id);
+      setAiScreeningResult(result);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Không thể tải kết quả AI screening.';
+      setAiScreeningError(message);
+    } finally {
+      setAiScreeningLoading(false);
+    }
+  };
+
   const handleViewDetails = async (id: string) => {
     try {
       let details: any = await packageService.getPackageById(id, true);
@@ -245,12 +265,71 @@ const StaffProductManagement: React.FC<StaffProductManagementProps> = ({ onNavig
 
         setViewDisplayImageIndex(details.primaryImageIndex || 0);
         setViewProductDetails(details);
+        await loadAIScreening(String(details.packageId || details.id || id));
       } else {
         toast.error('Không tìm thấy thông tin chi tiết sản phẩm');
       }
     } catch (error) {
       toast.error('Có lỗi khi lấy thông tin chi tiết sản phẩm từ API');
     }
+  };
+
+  const formatAIScreeningLabel = (raw: string): string => {
+    const withSpace = raw.replace(/([a-z])([A-Z])/g, '$1 $2').replace(/[_-]+/g, ' ').trim();
+    if (!withSpace) return 'Thông tin';
+    return withSpace.charAt(0).toUpperCase() + withSpace.slice(1);
+  };
+
+  const renderAIScreeningValue = (value: any, depth: number = 0): React.ReactNode => {
+    if (value === null || value === undefined || value === '') {
+      return <span className="text-gray-400 italic">Không có dữ liệu</span>;
+    }
+
+    if (typeof value === 'boolean') {
+      return (
+        <span className={`px-2 py-1 rounded-md text-[11px] font-bold ${value ? 'bg-green-100 text-green-700 border border-green-200' : 'bg-red-100 text-red-700 border border-red-200'}`}>
+          {value ? 'Đạt' : 'Không đạt'}
+        </span>
+      );
+    }
+
+    if (typeof value === 'number') {
+      return <span className="font-semibold text-gray-800">{Number(value).toLocaleString('vi-VN')}</span>;
+    }
+
+    if (typeof value === 'string') {
+      return <span className="text-gray-700 break-words">{value}</span>;
+    }
+
+    if (Array.isArray(value)) {
+      if (value.length === 0) return <span className="text-gray-400 italic">Danh sách rỗng</span>;
+      return (
+        <div className="space-y-2">
+          {value.map((item, index) => (
+            <div key={`${depth}-arr-${index}`} className="bg-gray-50 border border-gray-100 rounded-xl p-3 text-sm">
+              {renderAIScreeningValue(item, depth + 1)}
+            </div>
+          ))}
+        </div>
+      );
+    }
+
+    if (typeof value === 'object') {
+      const entries = Object.entries(value as Record<string, any>);
+      if (entries.length === 0) return <span className="text-gray-400 italic">Không có dữ liệu</span>;
+      return (
+        <div className="space-y-2">
+          {entries.map(([key, val]) => (
+            <div key={`${depth}-${key}`} className="grid grid-cols-12 gap-2 text-sm bg-gray-50 border border-gray-100 rounded-xl p-3">
+              <span className="col-span-4 text-gray-500 font-semibold">{formatAIScreeningLabel(key)}</span>
+              <div className="col-span-8">{renderAIScreeningValue(val, depth + 1)}</div>
+            </div>
+          ))}
+        </div>
+      );
+    }
+
+    return <span className="text-gray-700">{String(value)}</span>;
   };
 
   return (
@@ -418,7 +497,11 @@ const StaffProductManagement: React.FC<StaffProductManagementProps> = ({ onNavig
             {/* Header */}
             <div className="bg-white px-6 md:px-8 py-5 flex flex-wrap items-center gap-4 border-b border-gray-100">
               <button
-                onClick={() => setViewProductDetails(null)}
+                onClick={() => {
+                  setViewProductDetails(null);
+                  setAiScreeningResult(null);
+                  setAiScreeningError(null);
+                }}
                 className="px-5 py-2.5 bg-white rounded-xl flex items-center justify-center shadow-sm border border-gray-200 hover:bg-gray-50 transition flex-shrink-0 font-bold text-xs uppercase tracking-widest text-gray-600"
               >
                 Đóng
@@ -582,9 +665,10 @@ const StaffProductManagement: React.FC<StaffProductManagementProps> = ({ onNavig
                       const primarySrc = viewProductDetails.imageUrls && viewProductDetails.imageUrls.length > 0
                         ? (viewProductDetails.imageUrls[viewDisplayImageIndex] || viewProductDetails.imageUrls[0])
                         : (viewProductDetails.imageUrl || (viewProductDetails.packageImages && viewProductDetails.packageImages.length > 0 ? (viewProductDetails.packageImages.find((img: any) => img.isPrimary)?.imageUrl || viewProductDetails.packageImages[0].imageUrl) : ''));
+                      const primaryDisplaySrc = toImageSrc(primarySrc);
                       return primarySrc ? (
                         <img
-                          src={primarySrc}
+                          src={primaryDisplaySrc}
                           alt={viewProductDetails.packageName}
                           className="w-full h-full object-cover cursor-pointer"
                           onClick={() => {
@@ -622,7 +706,7 @@ const StaffProductManagement: React.FC<StaffProductManagementProps> = ({ onNavig
                             }`}
                         >
                           <img
-                            src={url}
+                            src={toImageSrc(url)}
                             alt={`thumb-${idx}`}
                             className="w-full h-full object-cover"
                             onClick={(e) => {
@@ -661,6 +745,36 @@ const StaffProductManagement: React.FC<StaffProductManagementProps> = ({ onNavig
                       <span className="font-bold text-gray-800">{viewProductDetails.vendorProfileId || viewProductDetails.vendorId || 'N/A'}</span>
                     </div>
                   </div>
+                </div>
+
+                {/* AI Screening Result */}
+                <div className="bg-white rounded-[2rem] border border-gray-200 p-6 shadow-sm">
+                  <div className="flex items-center justify-between gap-3 mb-4 pb-3 border-b border-gray-100">
+                    <h3 className="text-sm font-bold uppercase tracking-widest text-gray-400 flex items-center gap-2">
+                      <i className="fas fa-robot text-primary"></i>
+                      Kết quả AI Screening
+                    </h3>
+                    <button
+                      type="button"
+                      onClick={() => loadAIScreening(String(viewProductDetails.packageId || viewProductDetails.id))}
+                      disabled={aiScreeningLoading}
+                      className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-60"
+                    >
+                      {aiScreeningLoading ? 'Đang tải...' : 'Tải lại'}
+                    </button>
+                  </div>
+
+                  {aiScreeningLoading ? (
+                    <div className="text-sm text-gray-500">Đang tải kết quả AI screening...</div>
+                  ) : aiScreeningError ? (
+                    <div className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-xl p-3">
+                      {aiScreeningError}
+                    </div>
+                  ) : aiScreeningResult ? (
+                    <div className="text-sm">{renderAIScreeningValue(aiScreeningResult)}</div>
+                  ) : (
+                    <div className="text-sm text-gray-500">Chưa có dữ liệu AI screening cho gói này.</div>
+                  )}
                 </div>
               </div>
             </div>
