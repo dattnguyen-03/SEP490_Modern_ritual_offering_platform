@@ -190,6 +190,41 @@ const Layout: React.FC<LayoutProps> = ({ children, activeRoute, onNavigate, onLo
       return null;
     };
 
+    const extractPackageId = (text: string): string | null => {
+      const raw = String(text || '');
+      const patterns: RegExp[] = [
+        /package(?:id)?\s*[:=#]?\s*(\d{1,12})/i,
+        /gói\s*#?\s*(\d{1,12})/i,
+        /sản\s*phẩm\s*#?\s*(\d{1,12})/i,
+        /\/packages\/(\d{1,12})(?:\b|\/|\?|#)?/i,
+      ];
+
+      for (const re of patterns) {
+        const m = raw.match(re);
+        if (m?.[1]) return m[1];
+      }
+
+      return null;
+    };
+
+    const extractPackageName = (text: string): string | null => {
+      const raw = String(text || '').trim();
+      if (!raw) return null;
+
+      const quoteMatches = [
+        raw.match(/["“”']([^"“”']{2,120})["“”']/),
+      ];
+
+      for (const match of quoteMatches) {
+        const candidate = String(match?.[1] || '').trim();
+        if (candidate) return candidate;
+      }
+
+      const fallback = raw.match(/sản\s*phẩm\s*[:\-]?\s*([^\.\n]{2,120})/i)?.[1];
+      const cleaned = String(fallback || '').trim();
+      return cleaned || null;
+    };
+
     const normalizedUserRole = (userRole || '').trim().toLowerCase();
     const isVendorArea = activeRoute.startsWith('/vendor/') || normalizedUserRole === 'vendor';
     const isVendorContext = isVendorArea || hasVendorRole;
@@ -267,18 +302,73 @@ const Layout: React.FC<LayoutProps> = ({ children, activeRoute, onNavigate, onLo
       return '/wallet/transactions';
     }
 
-    // Staff product/vendor notifications
-    if (isStaffContext && (title.includes('sản phẩm') || message.includes('sản phẩm')) && (title.includes('duyệt') || message.includes('duyệt'))) {
-      return '/staff-product';
+    // Staff product/AI-screening notifications: open exact product if possible.
+    if (
+      isStaffContext && (
+        title.includes('sản phẩm') ||
+        message.includes('sản phẩm') ||
+        title.includes('ai screening') ||
+        message.includes('ai screening') ||
+        title.includes('vendor chỉnh sửa') ||
+        message.includes('vendor chỉnh sửa')
+      )
+    ) {
+      const packageId = extractPackageId(`${rawUrl || ''} ${rawTarget || ''} ${item.title || ''} ${item.message || ''}`);
+      const packageName = extractPackageName(`${item.title || ''}. ${item.message || ''}`);
+
+      const isVendorActionRequiredNotice =
+        title.includes('vendor chỉnh sửa') ||
+        message.includes('vendor chỉnh sửa') ||
+        title.includes('high priority') ||
+        message.includes('high priority') ||
+        title.includes('vendoractionrequired') ||
+        message.includes('vendoractionrequired');
+      const isApprovedNotice =
+        title.includes('được duyệt') ||
+        message.includes('được duyệt') ||
+        title.includes('approved') ||
+        message.includes('approved');
+
+      const params = new URLSearchParams();
+      if (packageId) params.set('productId', packageId);
+      if (packageName) params.set('productName', packageName);
+      if (isVendorActionRequiredNotice) params.set('status', 'VendorActionRequired');
+      if (isApprovedNotice) params.set('status', 'Approved');
+
+      const query = params.toString();
+      return query ? `/staff-product?${query}` : '/staff-product';
     }
 
     if (isStaffContext && (title.includes('nhà cung cấp') || message.includes('nhà cung cấp') || title.includes('hồ sơ') || message.includes('hồ sơ'))) {
       return '/staff-vendors';
     }
 
-    // Vendor/product notifications (no redirectUrl from backend yet)
-    if (isVendorContext && (title.includes('sản phẩm') || message.includes('sản phẩm')) && (title.includes('được duyệt') || message.includes('được duyệt'))) {
-      return '/vendor/products';
+    // Vendor/product notifications: open exact product if possible.
+    if (isVendorContext && (title.includes('sản phẩm') || message.includes('sản phẩm'))) {
+      const packageId = extractPackageId(`${rawUrl || ''} ${rawTarget || ''} ${item.title || ''} ${item.message || ''}`);
+      const packageName = extractPackageName(`${item.title || ''}. ${item.message || ''}`);
+      const isNeedEditNotice =
+        title.includes('cần chỉnh sửa') ||
+        message.includes('cần chỉnh sửa') ||
+        title.includes('vendoractionrequired') ||
+        message.includes('vendoractionrequired') ||
+        title.includes('từ chối') ||
+        message.includes('từ chối');
+      const isApprovedNotice =
+        title.includes('được duyệt') ||
+        message.includes('được duyệt') ||
+        title.includes('approved') ||
+        message.includes('approved');
+
+      const params = new URLSearchParams();
+      if (packageId) params.set('productId', packageId);
+      if (packageName) params.set('productName', packageName);
+      // Keep status empty for "need edit" notifications because backend may use VendorActionRequired.
+      if (isNeedEditNotice) params.delete('status');
+      if (isApprovedNotice) params.set('status', 'Approved');
+
+      const query = params.toString();
+      return query ? `/vendor/products?${query}` : '/vendor/products';
     }
 
     const tryOrderRouteFromText = (text: string): string => {
