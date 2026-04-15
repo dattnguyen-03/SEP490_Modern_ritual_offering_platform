@@ -274,8 +274,23 @@ const StaffProductManagement: React.FC<StaffProductManagementProps> = ({ onNavig
     }
   };
 
-  const formatAIScreeningLabel = (raw: string): string => {
-    const withSpace = raw.replace(/([a-z])([A-Z])/g, '$1 $2').replace(/[_-]+/g, ' ').trim();
+  const formatAIScreeningLabel = (key: string): string => {
+    // Bản đồ dịch các key từ API sang tiếng Việt
+    const translationMap: Record<string, string> = {
+      'statusCode': 'Mã trạng thái',
+      'isSuccess': 'Trạng thái duyệt',
+      'message': 'Thông báo',
+      'description': 'Mô tả',
+      'result': 'Kết quả',
+      'score': 'Điểm số',
+      'label': 'Nhãn',
+      'violations': 'Các vi phạm',
+      'violationRecords': 'Lịch sử vi phạm'
+    };
+
+    if (translationMap[key]) return translationMap[key];
+
+    const withSpace = key.replace(/([a-z])([A-Z])/g, '$1 $2').replace(/[_-]+/g, ' ').trim();
     if (!withSpace) return 'Thông tin';
     return withSpace.charAt(0).toUpperCase() + withSpace.slice(1);
   };
