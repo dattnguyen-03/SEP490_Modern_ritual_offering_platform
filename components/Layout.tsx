@@ -319,8 +319,6 @@ const Layout: React.FC<LayoutProps> = ({ children, activeRoute, onNavigate, onLo
       const isVendorActionRequiredNotice =
         title.includes('vendor chỉnh sửa') ||
         message.includes('vendor chỉnh sửa') ||
-        title.includes('high priority') ||
-        message.includes('high priority') ||
         title.includes('vendoractionrequired') ||
         message.includes('vendoractionrequired');
       const isApprovedNotice =
@@ -900,8 +898,8 @@ const Layout: React.FC<LayoutProps> = ({ children, activeRoute, onNavigate, onLo
     <div className="min-h-screen flex flex-col font-sans bg-white dark:bg-[#111113]">
       {!hideHeader && (
         <header className="sticky top-0 z-50 bg-white dark:bg-[#1c1c1e] border-b border-gray-200 dark:border-white/10">
-          <div className="max-w-[92rem] mx-auto px-6 md:px-10 py-4 flex items-center justify-between">
-            <div className="flex items-center gap-4 lg:gap-12">
+          <div className="max-w-[92rem] mx-auto px-4 md:px-6 xl:px-8 py-3 flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3 lg:gap-8 xl:gap-10 min-w-0">
               <button
                 onClick={() => setIsMobileMenuOpen(true)}
                 className="lg:hidden p-2 -ml-2 text-slate-600 hover:text-primary transition-colors focus:outline-none"
@@ -913,11 +911,11 @@ const Layout: React.FC<LayoutProps> = ({ children, activeRoute, onNavigate, onLo
                 className="cursor-pointer"
                 onClick={() => onNavigate(getLogoRedirectPath())}
               >
-                <div className="w-[240px] h-[72px] md:w-[288px] md:h-[84px] lg:w-[312px] lg:h-[96px] -ml-16">
+                <div className="w-[170px] h-[56px] md:w-[190px] md:h-[62px] lg:w-[210px] lg:h-[68px]">
                   <img
                     src={theme === 'dark' ? darkLogo : headerLogo}
                     alt="Modern Ritual Offering"
-                    className={`w-full h-full object-contain object-left origin-left ${theme === 'dark' ? 'scale-110' : 'scale-[1.34]'}`}
+                    className="w-full h-full object-contain object-left"
                   />
                 </div>
               </div>
@@ -927,7 +925,7 @@ const Layout: React.FC<LayoutProps> = ({ children, activeRoute, onNavigate, onLo
                   Trang ban hang */}
                 </div>
               ) : !isBackofficeRole && (
-                <nav className="hidden lg:flex items-center gap-10 mr-12">
+                <nav className="hidden lg:flex items-center gap-6 xl:gap-8 min-w-0">
                   {getNavItems().map((item) => (
                     <div
                       key={item.label}
@@ -937,7 +935,7 @@ const Layout: React.FC<LayoutProps> = ({ children, activeRoute, onNavigate, onLo
                     >
                       <button
                         onClick={() => item.path && handleMainNavClick(item.path)}
-                        className={`text-sm font-semibold transition-colors border-b-2 py-1 flex items-center gap-1 ${item.path === activeRoute ? 'text-primary border-primary' : 'text-slate-600 border-transparent hover:text-primary hover:border-primary'
+                        className={`text-sm font-semibold transition-colors border-b-2 py-1 flex items-center gap-1 whitespace-nowrap ${item.path === activeRoute ? 'text-primary border-primary' : 'text-slate-600 border-transparent hover:text-primary hover:border-primary'
                           }`}
                       >
                         {item.label}
@@ -973,7 +971,7 @@ const Layout: React.FC<LayoutProps> = ({ children, activeRoute, onNavigate, onLo
                 </nav>
               )}
             </div>
-            <div className="flex items-center gap-6">
+            <div className="flex items-center gap-3 md:gap-4 flex-shrink-0">
               {/* Dark/Light Mode Toggle */}
               <button
                 id="theme-toggle-btn"
@@ -1380,7 +1378,7 @@ const Layout: React.FC<LayoutProps> = ({ children, activeRoute, onNavigate, onLo
               {userName && canSwitchRole && (
                 <button
                   onClick={() => onNavigate(isVendorArea ? '/' : '/vendor/dashboard')}
-                  className="hidden md:flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 text-primary font-bold text-sm hover:border-primary transition-all"
+                  className="hidden md:flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 text-primary font-bold text-sm hover:border-primary transition-all whitespace-nowrap"
                 >
                   <span className="material-symbols-outlined text-[18px]">storefront</span>
                   {isVendorArea ? 'Trang mua hàng' : 'Trang bán hàng'}

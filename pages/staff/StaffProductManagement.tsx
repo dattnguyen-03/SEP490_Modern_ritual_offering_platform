@@ -342,6 +342,30 @@ const StaffProductManagement: React.FC<StaffProductManagementProps> = ({ onNavig
     }
   };
 
+  const tryOpenDetailByProductName = async (normalizedProductName: string): Promise<boolean> => {
+    const inCurrentList = products.find((p) => String(p.name || '').trim().toLowerCase() === normalizedProductName);
+    if (inCurrentList?.id) {
+      await handleViewDetails(String(inCurrentList.id));
+      return true;
+    }
+
+    try {
+      const allPackages = await packageService.getPackagesByStatus('', 1, 200);
+      const matched = allPackages.find((pkg: any) => {
+        const name = String(pkg?.packageName || pkg?.name || '').trim().toLowerCase();
+        return name === normalizedProductName;
+      });
+
+      const matchedId = matched ? String((matched as any).packageId ?? (matched as any).id ?? '').trim() : '';
+      if (!matchedId) return false;
+
+      await handleViewDetails(matchedId);
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
   const clearNotificationFocusParams = () => {
     const params = new URLSearchParams(location.search);
     if (!params.has('productId') && !params.has('productName')) return;
@@ -429,11 +453,12 @@ const StaffProductManagement: React.FC<StaffProductManagementProps> = ({ onNavig
     const productName = String(params.get('productName') || '').trim().toLowerCase();
     if (productId || !productName) return;
 
-    const targetProduct = products.find((p) => String(p.name || '').trim().toLowerCase() === productName);
-    if (!targetProduct) return;
-
-    handleViewDetails(targetProduct.id);
-    clearNotificationFocusParams();
+    (async () => {
+      const opened = await tryOpenDetailByProductName(productName);
+      if (opened) {
+        clearNotificationFocusParams();
+      }
+    })();
   }, [loadingProducts, products, location.search, selectedStatus]);
 
   return (
