@@ -7,6 +7,7 @@ import { getCurrentUser } from '../../services/auth';
 import { walletService } from '../../services/walletService';
 import { ApiPackage } from '../../types';
 import toast from '../../services/toast';
+import LoadingScreen from '../../components/LoadingScreen';
 
 const MAX_CART_ITEM_QUANTITY = 50;
 
@@ -408,14 +409,7 @@ const CartPage: React.FC<{ onNavigate: (path: string) => void }> = ({ onNavigate
   };
 
   if (isCheckingAuth || loading) {
-    return (
-      <div className="max-w-7xl mx-auto px-6 md:px-10 py-16 flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-16 w-16 border-4 border-primary border-t-transparent mb-4"></div>
-          <p className="text-slate-600">Đang tải giỏ hàng...</p>
-        </div>
-      </div>
-    );
+    return <LoadingScreen message="Đang tải giỏ hàng..." subMessage="Chuẩn bị đồ cúng cho bạn" />;
   }
 
   const cartItems = cart?.cartItems || [];

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { checkoutService, CheckoutSummary } from '../../services/checkoutService';
@@ -7,6 +6,7 @@ import { getCurrentUser, getProfile } from '../../services/auth';
 import { addressService, CustomerAddress } from '../../services/addressService';
 import { walletService } from '../../services/walletService';
 import toast from '../../services/toast';
+import LoadingScreen from '../../components/LoadingScreen';
 
 const PENDING_CHECKOUT_KEY = 'pendingCheckoutRequest';
 const TOPUP_SUCCESS_TOAST_KEY = 'checkoutTopupSuccessToast';
@@ -112,7 +112,7 @@ const CheckoutPage: React.FC<{ onNavigate: (path: string) => void }> = ({ onNavi
             imageUrl: item.imageUrl || cartImageMap.get(Number(item.cartItemId)) || item.packageAvatarUrl || item.packageImageUrl || item.productImageUrl || null,
           }));
 
-          const enrichedVendorOrders = (summaryData.vendorOrders || []).map((vendorOrder: any) => ({
+          const enrichedVendors = ((summaryData as any).vendors || (summaryData as any).vendorOrders || []).map((vendorOrder: any) => ({
             ...vendorOrder,
             items: Array.isArray(vendorOrder.items)
               ? vendorOrder.items.map((item: any) => ({
@@ -125,7 +125,7 @@ const CheckoutPage: React.FC<{ onNavigate: (path: string) => void }> = ({ onNavi
           setSummary({
             ...summaryData,
             items: enrichedItems,
-            vendorOrders: enrichedVendorOrders,
+            vendors: enrichedVendors,
           });
           try {
             const profile = await getProfile();
@@ -231,7 +231,7 @@ const CheckoutPage: React.FC<{ onNavigate: (path: string) => void }> = ({ onNavi
       return;
     }
 
-    if (summary?.vendorOrders?.some((order: any) => order.shippingDistanceKm && order.shippingDistanceKm > 60)) {
+    if (summary?.vendors?.some((order: any) => order.shippingDistanceKm && order.shippingDistanceKm > 60)) {
       toast.error('Khoảng cách giao hàng quá 60km. Vui lòng chọn địa chỉ giao hàng gần hơn hoặc chọn cửa hàng khác.');
       return;
     }
@@ -416,21 +416,14 @@ const CheckoutPage: React.FC<{ onNavigate: (path: string) => void }> = ({ onNavi
   };
 
   if (isCheckingAuth || loading) {
-    return (
-      <div className="max-w-7xl mx-auto px-6 md:px-10 py-16 flex justify-center items-center min-h-screen">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary mb-4"></div>
-          <p className="text-slate-500">Đang tải thông tin...</p>
-        </div>
-      </div>
-    );
+    return <LoadingScreen message="Đang tải thông tin..." subMessage="Chuẩn bị thanh toán an toàn" />;
   }
 
   if (!summary) {
     return null;
   }
 
-  const hasExceededDistance = summary.vendorOrders?.some((order: any) => order.shippingDistanceKm && order.shippingDistanceKm > 60) || false;
+  const hasExceededDistance = summary.vendors?.some((order: any) => order.shippingDistanceKm && order.shippingDistanceKm > 60) || false;
 
   return (
     <div className="max-w-7xl mx-auto px-4 md:px-10 py-6 md:py-8 flex flex-col lg:flex-row gap-6 lg:gap-8">

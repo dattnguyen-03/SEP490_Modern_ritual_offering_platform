@@ -123,7 +123,7 @@ const CartDropdown: React.FC<CartDropdownProps> = ({ isOpen, onClose, onNavigate
             {displayItems.map((item) => {
               // Find matching item in checkout summary for correct pricing
               const summaryItem = checkoutSummary?.items?.find(i => i.cartItemId === item.cartItemId);
-              const displayPrice = summaryItem?.lineTotal ?? summaryItem?.totalPrice ?? (item.price * (item.quantity || 1));
+              const displayPrice = summaryItem?.lineTotal ?? item.lineTotal ?? (item.price * (item.quantity || 1));
               
               return (
               <div 
@@ -169,13 +169,13 @@ const CartDropdown: React.FC<CartDropdownProps> = ({ isOpen, onClose, onNavigate
                       {item.swaps.length > 0 && (
                         <span className="bg-amber-50 text-amber-600 text-[8px] font-black uppercase px-1 py-0.5 rounded-sm border border-amber-100/50 flex items-center gap-0.5">
                           <span className="material-symbols-outlined text-[10px]">swap_horiz</span>
-                          Swap
+                          Thay thế
                         </span>
                       )}
                       {item.addOns.length > 0 && (
                         <span className="bg-emerald-50 text-emerald-600 text-[8px] font-black uppercase px-1 py-0.5 rounded-sm border border-emerald-100/50 flex items-center gap-0.5">
                           <span className="material-symbols-outlined text-[10px]">add_circle</span>
-                          Add-on
+                          Món thêm
                         </span>
                       )}
                     </div>

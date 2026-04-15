@@ -14,6 +14,7 @@ import {
 import { geocodingService, ReverseGeocodingAddress, AddressSuggestion } from '../../services/geocodingService';
 import AddressMapPicker from '../../components/AddressMapPicker';
 import ImageCropModal from '../../components/ImageCropModal';
+import LoadingScreen from '../../components/LoadingScreen';
 
 interface ProfilePageProps {
   onNavigate: (path: string) => void;
@@ -2561,12 +2562,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigate }) => {
 
         {/* Loading State */}
         {loading && (
-          <div className="flex items-center justify-center py-20">
-            <div className="text-center">
-              <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent mb-4"></div>
-              <p className="text-slate-500 font-semibold">Đang tải thông tin...</p>
-            </div>
-          </div>
+          <LoadingScreen message="Đang tải thông tin cá nhân..." subMessage="Bảo mật và riêng tư" />
         )}
 
         {/* Error State */}

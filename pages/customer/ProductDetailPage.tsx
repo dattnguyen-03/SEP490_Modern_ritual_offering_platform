@@ -10,6 +10,7 @@ import { reviewService, Review } from '../../services/reviewService';
 import toast from '../../services/toast';
 import { cartService } from '../../services/cartService';
 import { vendorChatService } from '../../services/vendorChatService';
+import LoadingScreen from '../../components/LoadingScreen';
 
 const ProductDetailPage: React.FC<{ onNavigate: (path: string) => void }> = ({ onNavigate }) => {
   const { id } = useParams<{ id: string }>();
@@ -403,14 +404,7 @@ const ProductDetailPage: React.FC<{ onNavigate: (path: string) => void }> = ({ o
   };
 
   if (loading) {
-    return (
-      <div className="max-w-7xl mx-auto px-6 md:px-10 py-16 flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-16 w-16 border-4 border-primary border-t-transparent mb-4"></div>
-          <p className="text-slate-600 font-semibold text-lg">Đang tải sản phẩm...</p>
-        </div>
-      </div>
-    );
+    return <LoadingScreen message="Đang khám phá lễ vật..." subMessage="Trau chuốt từng chi tiết tâm linh" />;
   }
 
   if (!product) {

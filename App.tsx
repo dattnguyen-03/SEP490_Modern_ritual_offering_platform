@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, useNavigate, Navigate, useSearchParams, useLocation } from 'react-router-dom';
 import Layout from './components/Layout';
 import { getCurrentUser, getProfile, isAuthenticated as checkAuth } from './services/auth';
+import LoadingScreen from './components/LoadingScreen';
 
 
 // Customer Pages
@@ -428,14 +429,7 @@ const App: React.FC = () => {
 
   // Show loading screen while checking authentication
   if (isAuthChecking) {
-    return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent mb-4"></div>
-          <p className="text-slate-500 font-semibold">Đang kiểm tra đăng nhập...</p>
-        </div>
-      </div>
-    );
+    return <LoadingScreen message="Đang kiểm tra đăng nhập..." subMessage="Bảo mật là ưu tiên hàng đầu" />;
   }
 
   return (

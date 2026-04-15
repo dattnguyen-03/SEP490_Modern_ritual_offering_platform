@@ -7,6 +7,7 @@ import { bannerService, BannerResponse } from '../../services/bannerService';
 import { getCurrentUser } from '../../services/auth';
 import { Product, CeremonyCategory } from '../../types';
 import toast from '../../services/toast';
+import LoadingScreen from '../../components/LoadingScreen';
 
 const HomePage: React.FC<{ onNavigate: (path: string) => void }> = ({ onNavigate }) => {
   const [showAllServices, setShowAllServices] = useState(false);
@@ -223,12 +224,7 @@ const HomePage: React.FC<{ onNavigate: (path: string) => void }> = ({ onNavigate
             </button>
         </div>
         {loadingProducts ? (
-          <div className="flex items-center justify-center py-16">
-            <div className="text-center">
-              <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent mb-4"></div>
-              <p className="text-slate-600 font-semibold">Đang tải sản phẩm...</p>
-            </div>
-          </div>
+          <LoadingScreen message="Đang tìm kiếm lễ vật tinh xảo..." subMessage="Chuẩn bị cho ngày trọng đại của bạn" />
         ) : (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {products.map((product) => (

@@ -8,6 +8,7 @@ import { getCurrentUser } from '../../services/auth';
 import { addressService } from '../../services/addressService';
 import { vendorService } from '../../services/vendorService';
 import toast from '../../services/toast';
+import LoadingScreen from '../../components/LoadingScreen';
 
 const ProductListPage: React.FC<{ onNavigate: (route: AppRoute | string) => void }> = ({ onNavigate }) => {
   const [searchParams] = useSearchParams();
@@ -493,12 +494,7 @@ const ProductListPage: React.FC<{ onNavigate: (route: AppRoute | string) => void
 
       <section className="flex-1 space-y-12">
         {loading ? (
-          <div className="flex items-center justify-center py-24">
-            <div className="text-center">
-              <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent mb-4"></div>
-              <p className="text-slate-600 font-semibold text-lg">Đang tìm mâm cúng tinh hoa...</p>
-            </div>
-          </div>
+          <LoadingScreen message="Đang tìm mâm cúng tinh hoa..." subMessage="Kết nối với hàng ngàn nghệ nhân tâm huyết" />
         ) : (
           <>
             {/* Near Products Banner/Session */}

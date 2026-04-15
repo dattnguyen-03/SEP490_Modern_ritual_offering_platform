@@ -4,6 +4,7 @@ import { orderService, Order } from '../../services/orderService';
 import { vendorService } from '../../services/vendorService';
 import { refundService, RefundRecord } from '../../services/refundService';
 import toast from '../../services/toast';
+import LoadingScreen from '../../components/LoadingScreen';
 
     const MyOrdersPage: React.FC = () => {
     const navigate = useNavigate();
@@ -226,14 +227,7 @@ import toast from '../../services/toast';
     ];
 
     if (loading) {
-        return (
-            <div className="flex items-center justify-center min-h-[60vh] bg-gray-50 dark:bg-[#09090b]">
-                <div className="text-center">
-                    <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-primary mb-4"></div>
-                    <p className="text-slate-500 font-medium">Đang tải danh sách đơn hàng...</p>
-                </div>
-            </div>
-        );
+        return <LoadingScreen message="Đang tải danh sách đơn hàng..." subMessage="Xem lại lịch sử cúng bái" />;
     }
 
     return (
@@ -390,8 +384,8 @@ import toast from '../../services/toast';
                             </div>
                         ) : (
                             filteredOrders.map((order) => (
-                                <div key={order.orderId} className="bg-white dark:bg-[#18181b] rounded-[2.5rem] border border-slate-100 dark:border-white/5 overflow-hidden shadow-2xl shadow-slate-200/40 dark:shadow-none hover:shadow-primary/5 hover:border-primary/10 transition-all duration-500 group">
-                                    <div className="p-5 md:p-8 flex flex-col md:flex-row gap-4 md:gap-6 justify-between border-b border-gray-100 dark:border-white/5 bg-gray-50/20 dark:bg-white/5">
+                                <div key={order.orderId} className="bg-white dark:bg-zinc-900 rounded-[2.5rem] border border-slate-100 dark:border-zinc-800 overflow-hidden shadow-2xl shadow-slate-200/40 dark:shadow-none hover:shadow-primary/5 hover:border-primary/10 transition-all duration-500 group">
+                                    <div className="p-5 md:p-8 flex flex-col md:flex-row gap-4 md:gap-6 justify-between border-b border-gray-100 dark:border-zinc-800 bg-gray-50/20 dark:bg-zinc-800/50">
                                         <div className="flex flex-row md:flex-row gap-4 items-center justify-between md:justify-start w-full md:w-auto">
                                             <div>
                                                 <span className="text-[10px] font-bold uppercase text-slate-400 dark:text-zinc-500 tracking-widest block mb-1">Ngày đặt</span>
@@ -409,29 +403,32 @@ import toast from '../../services/toast';
                                     <div className="p-5 md:p-8">
                                         <div className="flex items-center gap-3 mb-5 pb-5 border-b border-dashed border-gray-100 dark:border-white/5">
                                             {(() => {
-                                                const shopName = order.vendor?.shopName || (order as any).shopName || '';
+                                                const shopName = order.vendor?.shopName || (order as any).shopName || "Cửa hàng";
                                                 const vId = String(order.vendor?.profileId || (order as any).vendorProfileId || (order as any).vendorId || '').trim();
                                                 const avatarSrc = vendorAvatarMap[vId] || vendorAvatarMap[shopName] || '';
-                                                return avatarSrc ? (
-                                                    <div
-                                                        className={`size-8 rounded-full overflow-hidden border border-orange-100 dark:border-orange-500/20 shrink-0 transition-transform active:scale-90 ${vId ? 'cursor-pointer hover:opacity-80' : 'cursor-default'}`}
+                                                
+                                                return (
+                                                    <div 
+                                                        className={`size-10 rounded-xl overflow-hidden bg-slate-50 dark:bg-zinc-800 border border-slate-100 dark:border-zinc-700 flex-shrink-0 flex items-center justify-center shadow-sm transition-transform active:scale-95 ${vId ? 'cursor-pointer hover:border-primary/50' : ''}`}
                                                         onClick={() => vId && navigate(`/vendor/${vId}`)}
                                                     >
-                                                        <img
-                                                            src={avatarSrc}
-                                                            alt={shopName}
-                                                            className="w-full h-full object-cover"
-                                                            onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-                                                        />
-                                                    </div>
-                                                ) : (
-                                                    <div
-                                                        className={`size-8 rounded-full bg-orange-100 dark:bg-orange-500/10 flex items-center justify-center text-primary dark:text-orange-400 shrink-0 transition-transform active:scale-90 ${vId ? 'cursor-pointer hover:bg-orange-200' : ''}`}
-                                                        onClick={() => vId && navigate(`/vendor/${vId}`)}
-                                                    >
-                                                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                                                        </svg>
+                                                        {avatarSrc ? (
+                                                            <img
+                                                                src={avatarSrc}
+                                                                alt={shopName}
+                                                                className="w-full h-full object-cover"
+                                                                onError={(e) => {
+                                                                    const target = e.target as HTMLImageElement;
+                                                                    target.style.display = 'none';
+                                                                    const parent = target.parentElement;
+                                                                    if (parent) {
+                                                                        parent.innerHTML = `<span class="text-base font-black text-slate-300 dark:text-zinc-600">${shopName.charAt(0).toUpperCase()}</span>`;
+                                                                    }
+                                                                }}
+                                                            />
+                                                        ) : (
+                                                            <span className="text-base font-black text-slate-200 dark:text-zinc-700 uppercase">{shopName.charAt(0).toUpperCase()}</span>
+                                                        )}
                                                     </div>
                                                 );
                                             })()}
@@ -460,20 +457,29 @@ import toast from '../../services/toast';
                                             {order.items?.map((item, idx) => (
                                                 <div key={idx} className="flex gap-4 items-center group/item">
                                                     <div
-                                                        className="size-14 md:size-20 rounded-2xl bg-gray-100 dark:bg-white/5 border border-gray-100 dark:border-white/5 shrink-0 bg-cover bg-center shadow-sm group-hover/item:scale-105 transition-all cursor-pointer"
-                                                        style={{ backgroundImage: `url("${item.imageUrl || 'https://picsum.photos/200?random=1'}")` }}
+                                                        className="size-16 md:size-20 rounded-2xl bg-slate-50 dark:bg-zinc-800 border border-slate-100 dark:border-zinc-700 shrink-0 overflow-hidden shadow-sm group-hover/item:scale-105 transition-all cursor-pointer flex items-center justify-center"
                                                         onClick={() => (item as any).packageId && navigate(`/product/${(item as any).packageId}`)}
-                                                    />
+                                                    >
+                                                        <img 
+                                                            src={item.imageUrl || 'https://picsum.photos/200?random=1'} 
+                                                            alt={item.packageName}
+                                                            className="w-full h-full object-cover"
+                                                            onError={(e) => {
+                                                                const target = e.target as HTMLImageElement;
+                                                                target.src = 'https://picsum.photos/200?random=fallback';
+                                                            }}
+                                                        />
+                                                    </div>
                                                     <div className="flex-1 min-w-0">
                                                         <h5
-                                                            className="font-bold text-gray-900 dark:text-white text-sm md:text-base cursor-pointer hover:text-primary transition-colors truncate"
+                                                            className="font-bold text-gray-900 dark:text-zinc-100 text-sm md:text-base cursor-pointer hover:text-primary transition-colors truncate"
                                                             onClick={() => (item as any).packageId && navigate(`/product/${(item as any).packageId}`)}
                                                         >
                                                             {item.packageName}
                                                         </h5>
                                                         <div className="flex items-center gap-2 mt-1">
                                                             <p className="text-[10px] md:text-xs text-slate-400 dark:text-zinc-500 font-medium">Gói {item.variantName}</p>
-                                                            <span className="size-1 bg-gray-300 dark:bg-white/10 rounded-full"></span>
+                                                            <span className="size-1 bg-gray-300 dark:bg-zinc-700 rounded-full"></span>
                                                             <p className="text-xs font-bold text-gray-700 dark:text-zinc-300">x{item.quantity}</p>
                                                         </div>
                                                         {item.isRequestRefund && (
@@ -497,7 +503,7 @@ import toast from '../../services/toast';
                                         </div>
                                     </div>
 
-                                    <div className="p-5 md:p-8 pt-0 flex flex-col md:flex-row items-center justify-between gap-6 border-t border-gray-50 dark:border-white/5 mt-2">
+                                    <div className="p-5 md:p-8 pt-0 flex flex-col md:flex-row items-center justify-between gap-6 border-t border-gray-50 dark:border-zinc-800 mt-2 bg-white dark:bg-zinc-900">
                                         <div className="flex flex-col items-center md:items-start w-full md:w-auto">
                                             <div className="flex items-center gap-2">
                                                 <span className="text-xs font-bold text-slate-400 dark:text-zinc-500 uppercase tracking-widest">Tổng cộng</span>

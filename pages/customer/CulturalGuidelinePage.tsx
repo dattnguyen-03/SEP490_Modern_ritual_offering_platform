@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { guidelineService, CulturalGuideline } from '../../services/guidelineService';
+import LoadingScreen from '../../components/LoadingScreen';
 
 const CulturalGuidelinePage: React.FC<{ onNavigate: (path: string) => void }> = ({ onNavigate }) => {
   const [guidelines, setGuidelines] = useState<CulturalGuideline[]>([]);
@@ -126,10 +127,7 @@ const CulturalGuidelinePage: React.FC<{ onNavigate: (path: string) => void }> = 
         )}
 
         {loading ? (
-          <div className="flex flex-col items-center justify-center py-24">
-            <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mb-6"></div>
-            <p className="text-slate-400 font-bold uppercase tracking-widest text-xs">Đang tải kiến thức tâm linh...</p>
-          </div>
+          <LoadingScreen message="Đang tải kiến thức tâm linh..." subMessage="Gìn giữ nét đẹp truyền thống" />
         ) : filteredGuidelines.length === 0 ? (
           <div className="text-center py-24 bg-white rounded-[3rem] border border-dashed border-slate-200 animate-fade-in">
             <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6 text-slate-300">

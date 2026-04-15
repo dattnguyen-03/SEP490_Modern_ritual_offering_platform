@@ -4,6 +4,7 @@ import { orderService, Order } from '../../services/orderService';
 import { refundService, RefundRecord } from '../../services/refundService';
 import { vendorService, VendorProfile } from '../../services/vendorService';
 import toast from '../../services/toast';
+import LoadingScreen from '../../components/LoadingScreen';
 import RefundModal from '../../components/customer/RefundModal';
 import ReviewModal from '../../components/customer/ReviewModal';
 import ImageModal from '../../components/ImageModal';
@@ -331,14 +332,7 @@ const OrderDetailsPage: React.FC = () => {
             : 'Đang chờ duyệt hoàn tiền';
 
     if (loading) {
-        return (
-            <div className="flex items-center justify-center min-h-screen bg-gray-50">
-                <div className="text-center">
-                    <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-primary mb-4"></div>
-                    <p className="text-slate-500 font-medium">Đang tải chi tiết đơn hàng...</p>
-                </div>
-            </div>
-        );
+        return <LoadingScreen message="Đang tải chi tiết đơn hàng..." subMessage="Lấy lại ký ức tâm linh" />;
     }
 
     if (!order) return null;
@@ -720,56 +714,55 @@ const OrderDetailsPage: React.FC = () => {
                     <div className="md:col-span-2 space-y-6">
 
                         {/* Store details */}
-                        <div className="bg-white p-8 rounded-[2rem] border border-gray-200 shadow-sm relative overflow-hidden group">
-                            {!vendorAvatarSrc && (
-                                <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity pointer-events-none">
-                                    <svg className="w-24 h-24" fill="currentColor" viewBox="0 0 24 24">
-                                        <path d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                                    </svg>
-                                </div>
-                            )}
+                        <div className="bg-white dark:bg-zinc-900 rounded-[2rem] border border-slate-100 dark:border-zinc-800 shadow-xl shadow-slate-200/40 divide-y divide-slate-50 dark:divide-zinc-800">
+                            {/* Card Header Label */}
+                            <div className="px-8 py-5 flex items-center gap-2.5">
+                                <span className="material-symbols-outlined text-slate-400 text-lg">storefront</span>
+                                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Cung cấp bởi</label>
+                            </div>
 
-                            <div className="flex items-center justify-between mb-4 gap-4">
-                                <h3 className="text-lg font-bold text-gray-900 flex items-center gap-3">
-                                    <span className="w-8 h-8 rounded-full bg-orange-100 text-primary flex items-center justify-center">
-                                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-                                        </svg>
-                                    </span>
-                                    Người cung cấp
-                                </h3>
-
-                                {vendorAvatarSrc && (
-                                    <div
-                                        className={`w-20 h-20 rounded-3xl overflow-hidden bg-gray-100 border border-gray-200 flex-shrink-0 shadow-sm transition-transform active:scale-95 ${vendorProfileId ? 'cursor-pointer hover:opacity-80' : 'cursor-default'}`}
-                                        onClick={() => vendorProfileId && navigate(`/vendor/${vendorProfileId}`)}
-                                    >
+                            {/* Card Body - Shop Info */}
+                            <div 
+                                className="p-8 flex items-center gap-5 cursor-pointer hover:bg-slate-50 dark:hover:bg-zinc-800/50 transition-all active:scale-[0.98]"
+                                onClick={() => vendorProfileId && navigate(`/vendor/${vendorProfileId}`)}
+                            >
+                                {/* Avatar */}
+                                <div className="w-16 h-16 rounded-2xl overflow-hidden bg-slate-50 dark:bg-zinc-800 border border-slate-100 dark:border-zinc-700 flex-shrink-0 flex items-center justify-center shadow-inner">
+                                    {vendorAvatarSrc ? (
                                         <img
                                             src={vendorAvatarSrc}
                                             alt={vendorShopName}
                                             className="w-full h-full object-cover"
                                             onError={(e) => {
                                                 const target = e.target as HTMLImageElement;
-                                                target.onerror = null;
-                                                target.src = 'https://picsum.photos/200?random=vendor';
+                                                target.style.display = 'none';
+                                                const parent = target.parentElement;
+                                                if (parent) {
+                                                    parent.innerHTML = `<span class="text-2xl font-black text-slate-300 dark:text-zinc-600">${vendorShopName.charAt(0).toUpperCase()}</span>`;
+                                                }
                                             }}
                                         />
-                                    </div>
-                                )}
-                            </div>
+                                    ) : (
+                                        <span className="text-2xl font-black text-slate-200 dark:text-zinc-700 uppercase">{vendorShopName.charAt(0).toUpperCase()}</span>
+                                    )}
+                                </div>
 
-                            <div>
-                                <button
-                                    type="button"
-                                    onClick={() => vendorProfileId && navigate(`/vendor/${vendorProfileId}`)}
-                                    className={`font-bold text-xl text-primary text-left truncate ${vendorProfileId ? 'cursor-pointer hover:text-primary/80' : 'cursor-default'}`}
-                                    title={vendorProfileId ? 'Xem trang cửa hàng' : ''}
-                                >
-                                    {order.vendor?.shopName || (order as any).shopName || vendorInfo?.shopName || "Cúng Bái Tâm Linh"}
-                                </button>
-                                <p className="text-sm text-gray-500 mt-2 line-clamp-2">
-                                    {vendorInfo?.shopDescription || 'Dịch vụ mâm cúng trọn gói và trang trí tận nhà.'}
-                                </p>
+                                {/* Info */}
+                                <div className="flex-1 min-w-0">
+                                    <h4 className="text-xl font-bold text-slate-800 dark:text-zinc-100 tracking-tight truncate">{vendorShopName}</h4>
+                                    <div className="flex items-center gap-1 mt-1">
+                                        <span className="text-xs font-bold text-slate-400 dark:text-zinc-500">Xem cửa hàng</span>
+                                        <span className="material-symbols-outlined text-[12px] text-slate-300 dark:text-zinc-600">open_in_new</span>
+                                    </div>
+                                    <p className="text-xs text-slate-500 mt-3 line-clamp-1 italic opacity-60">
+                                        {vendorInfo?.shopDescription || 'Dịch vụ mâm cúng trọn gói và trang trí tận nhà.'}
+                                    </p>
+                                </div>
+
+                                {/* Action Icon */}
+                                <div className="text-slate-300">
+                                    <span className="material-symbols-outlined">chevron_right</span>
+                                </div>
                             </div>
                         </div>
 
