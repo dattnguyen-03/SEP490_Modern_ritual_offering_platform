@@ -105,7 +105,10 @@ const StaffProductManagement: React.FC<StaffProductManagementProps> = ({ onNavig
   const normalizeApprovalStatus = (raw: unknown): string => {
     const value = String(raw || '').trim();
     if (!value) return 'Pending';
-    if (value === 'Pending') return 'StaffActionRequired';
+    // Consolidated 'waiting' statuses into StaffActionRequired
+    if (value === 'Pending' || value === 'WaitingStaffApproval' || value === 'StaffActionRequired') {
+      return 'StaffActionRequired';
+    }
     return value;
   };
 
@@ -150,7 +153,9 @@ const StaffProductManagement: React.FC<StaffProductManagementProps> = ({ onNavig
     setCurrentPage(1);
 
     try {
-      const apiStatus = selectedStatus === 'Pending' ? 'StaffActionRequired' : selectedStatus;
+      const apiStatus = (selectedStatus === 'Pending' || selectedStatus === 'StaffActionRequired' || selectedStatus === 'WaitingStaffApproval')
+        ? 'WaitingStaffApproval'
+        : selectedStatus;
       const packages = await packageService.getPackagesByStatus(apiStatus);
       if (requestId !== latestLoadRequestRef.current) return;
 
