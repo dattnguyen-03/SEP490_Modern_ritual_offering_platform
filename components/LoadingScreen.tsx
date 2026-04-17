@@ -26,7 +26,7 @@ const LoadingScreen: React.FC<LoadingScreenProps> = ({
               className="w-[120%] h-[120%] object-contain animate-bounce"
               onError={(e) => {
                 const target = e.target as HTMLImageElement;
-                target.src = 'https://img.pikbest.com/png-images/20241028/cute-puppy-cartoon-image_11018797.png!w700wp'; // Fallback to a generic cute puppy icon
+                target.src = 'https://png.pngtree.com/png-clipart/20231018/original/pngtree-lotus-flower-element-in-3d-style-png-image_13342730.png'; // Fallback to a generic cute puppy icon
               }}
             />
           </div>
