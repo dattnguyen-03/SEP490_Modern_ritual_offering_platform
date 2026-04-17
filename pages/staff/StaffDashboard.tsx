@@ -203,7 +203,7 @@ const StaffDashboard: React.FC<StaffDashboardProps> = ({ onNavigate }) => {
                   onClick={() => onNavigate(item.path)}
                   className={`flex items-center w-full px-6 py-4 rounded-3xl font-bold text-sm uppercase transition-all tracking-wider ${item.path === '/staff/dashboard'
                     ? 'bg-primary text-white shadow-lg shadow-primary/20 scale-[1.02]'
-                    : 'text-slate-500 hover:bg-ritual-bg hover:text-primary'
+                    : 'text-black hover:bg-ritual-bg hover:text-primary'
                     }`}
                 >
                   <span className="material-symbols-outlined mr-4 text-xl">{item.icon}</span>
@@ -227,7 +227,7 @@ const StaffDashboard: React.FC<StaffDashboardProps> = ({ onNavigate }) => {
                   </span>
                 </div>
                 <h3 className="text-2xl font-black text-primary mb-1">{stat.value}</h3>
-                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{stat.label}</p>
+                <p className="text-[10px] font-bold text-black uppercase tracking-widest">{stat.label}</p>
               </div>
             ))}
           </div>
@@ -243,10 +243,10 @@ const StaffDashboard: React.FC<StaffDashboardProps> = ({ onNavigate }) => {
               </div>
 
               {loading ? (
-                <div className="py-12 text-center text-slate-500">Đang tải dữ liệu...</div>
+                <div className="py-12 text-center text-black">Đang tải dữ liệu...</div>
               ) : recentProducts.length === 0 ? (
                 <div className="py-12 text-center bg-ritual-bg/30 rounded-3xl border border-dashed border-gold/20">
-                  <p className="text-slate-500 font-medium">Chưa có sản phẩm nào.</p>
+                  <p className="text-black font-medium">Chưa có sản phẩm nào.</p>
                 </div>
               ) : (
                 <div className="space-y-4">
@@ -263,7 +263,7 @@ const StaffDashboard: React.FC<StaffDashboardProps> = ({ onNavigate }) => {
                             {getStatusText(product.status)}
                           </span>
                         </div>
-                        <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500">
+                        <div className="flex flex-wrap items-center gap-3 text-xs text-black">
                           <span className="font-bold text-slate-700">{product.category}</span>
                           <span className="w-1 h-1 bg-slate-300 rounded-full"></span>
                           <span>{product.date.split('T')[0]}</span>
@@ -284,7 +284,7 @@ const StaffDashboard: React.FC<StaffDashboardProps> = ({ onNavigate }) => {
               <div className="bg-white rounded-[2rem] border border-gold/10 shadow-sm p-8 text-center hover:shadow-lg transition-all">
                 <span className="material-symbols-outlined text-5xl text-gold mb-4 block">verified_user</span>
                 <h3 className="font-bold text-primary mb-2">Xác minh nhà cung cấp</h3>
-                <p className="text-xs text-slate-500 mb-4">{pendingVendors.length} chờ xử lý</p>
+                <p className="text-xs text-black mb-4">{pendingVendors.length} chờ xử lý</p>
                 <button
                   onClick={() => onNavigate('/staff-vendors')}
                   className="w-full border-2 border-primary text-primary py-2 rounded-lg font-bold text-sm uppercase hover:bg-primary/5 transition-all"
@@ -296,7 +296,7 @@ const StaffDashboard: React.FC<StaffDashboardProps> = ({ onNavigate }) => {
               <div className="bg-white rounded-[2rem] border border-gold/10 shadow-sm p-8 text-center hover:shadow-lg transition-all">
                 <span className="material-symbols-outlined text-5xl text-gold mb-4 block">pending_actions</span>
                 <h3 className="font-bold text-primary mb-2">Sản phẩm chờ duyệt</h3>
-                <p className="text-xs text-slate-500 mb-4">{pendingProductCount} sản phẩm</p>
+                <p className="text-xs text-black mb-4">{pendingProductCount} sản phẩm</p>
                 <button
                   onClick={() => onNavigate('/staff-product')}
                   className="w-full border-2 border-primary text-primary py-2 rounded-lg font-bold text-sm uppercase hover:bg-primary/5 transition-all"
@@ -317,10 +317,10 @@ const StaffDashboard: React.FC<StaffDashboardProps> = ({ onNavigate }) => {
             </div>
 
             {loading ? (
-              <div className="py-12 text-center text-slate-500">Đang tải dữ liệu...</div>
+              <div className="py-12 text-center text-black">Đang tải dữ liệu...</div>
             ) : pendingVendors.length === 0 ? (
               <div className="py-12 text-center bg-ritual-bg/30 rounded-3xl border border-dashed border-gold/20">
-                <p className="text-slate-500 font-medium">Không có hồ sơ nào chờ duyệt.</p>
+                <p className="text-black font-medium">Không có hồ sơ nào chờ duyệt.</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -339,7 +339,7 @@ const StaffDashboard: React.FC<StaffDashboardProps> = ({ onNavigate }) => {
                     </div>
                     <div className="min-w-0">
                       <h3 className="font-bold text-primary truncate group-hover:text-gold transition-colors">{vendor.shopName}</h3>
-                      <p className="text-xs text-slate-500 truncate">{vendor.fullName}</p>
+                      <p className="text-xs text-black truncate">{vendor.fullName}</p>
                       <p className="text-[9px] font-bold text-gold/60 uppercase tracking-widest mt-2">{formatDateVi(vendor.createdAt)}</p>
                     </div>
                   </div>

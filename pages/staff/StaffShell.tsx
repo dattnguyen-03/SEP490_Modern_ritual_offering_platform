@@ -29,7 +29,7 @@ const StaffShell: React.FC<StaffShellProps> = ({
               <div>
                 <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Staff Console</p>
                 <h1 className="text-lg font-bold text-slate-900 md:text-xl">{title}</h1>
-                {subtitle && <p className="text-xs text-slate-500 md:text-sm">{subtitle}</p>}
+                {subtitle && <p className="text-xs text-black md:text-sm">{subtitle}</p>}
               </div>
             </div>
           </div>

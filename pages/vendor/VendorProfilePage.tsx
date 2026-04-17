@@ -17,10 +17,10 @@ const ProductCard: React.FC<{
     onClick={() => onNavigate(`/product/${product.id}`)}
   >
     <div className="relative w-full pt-[100%] overflow-hidden bg-slate-50 shrink-0">
-      <img 
-        src={product.image || 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&q=80&w=1000'} 
-        alt={product.name} 
-        className="absolute top-0 left-0 w-full h-full object-cover group-hover:scale-110 transition-all duration-700" 
+      <img
+        src={product.image || 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&q=80&w=1000'}
+        alt={product.name}
+        className="absolute top-0 left-0 w-full h-full object-cover group-hover:scale-110 transition-all duration-700"
         onError={(e) => {
           (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&q=80&w=1000';
         }}
@@ -34,7 +34,7 @@ const ProductCard: React.FC<{
           <span className="text-[10px] text-slate-400 ml-1">({product.reviews || 0})</span>
         </div>
         {product.totalSold !== undefined && product.totalSold > 0 && (
-          <span className="text-[10px] font-medium text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">
+          <span className="text-[10px] font-medium text-black bg-slate-100 px-2 py-0.5 rounded-full">
             Đã bán {product.totalSold}
           </span>
         )}
@@ -85,26 +85,26 @@ const VendorProfilePage: React.FC<VendorProfilePageProps> = ({ onNavigate }) => 
           setVendor(profile);
           // Concurrent fetch for products, reviews and categories
           Promise.all([
-             packageService.getPackagesByVendor(id),
-             // Assuming reviewService is available (need to import it)
-             import('../../services/reviewService').then(m => m.reviewService.getReviewsByVendorId(id)),
-             packageService.getCeremonyCategories()
+            packageService.getPackagesByVendor(id),
+            // Assuming reviewService is available (need to import it)
+            import('../../services/reviewService').then(m => m.reviewService.getReviewsByVendorId(id)),
+            packageService.getCeremonyCategories()
           ]).then(([pkgs, reviews, cats]) => {
-             const activeCats = cats.filter((c: any) => c.isActive);
-             setCategories(activeCats);
+            const activeCats = cats.filter((c: any) => c.isActive);
+            setCategories(activeCats);
 
-             packageService.mapToProductsWithVendors(pkgs).then(products => {
-                // Ensure product categories match the dynamic category names for filtering
-                const fixedProducts = products.map((p, idx) => {
-                  const apiPkg = pkgs[idx];
-                  const catName = activeCats.find(c => c.categoryId === apiPkg.categoryId)?.name;
-                  return catName ? { ...p, category: catName } : p;
-                });
-                setProducts(fixedProducts);
-             });
-             setVendorOverallReviews(reviews);
+            packageService.mapToProductsWithVendors(pkgs).then(products => {
+              // Ensure product categories match the dynamic category names for filtering
+              const fixedProducts = products.map((p, idx) => {
+                const apiPkg = pkgs[idx];
+                const catName = activeCats.find(c => c.categoryId === apiPkg.categoryId)?.name;
+                return catName ? { ...p, category: catName } : p;
+              });
+              setProducts(fixedProducts);
+            });
+            setVendorOverallReviews(reviews);
           }).catch(e => console.warn('⚠️ Error fetching vendor extra data:', e));
-          
+
         } else {
           toast.error('Không tìm thấy thông tin cửa hàng');
         }
@@ -164,14 +164,14 @@ const VendorProfilePage: React.FC<VendorProfilePageProps> = ({ onNavigate }) => 
     );
   }
 
-     const vendorRatingCount = vendorOverallReviews.length;
-     const vendorAvgRating = vendorRatingCount > 0
-       ? (vendorOverallReviews.reduce((acc: number, r: any) => acc + r.rating, 0) / vendorRatingCount).toFixed(1)
-       : (vendor?.ratingAvg || '0.0');
+  const vendorRatingCount = vendorOverallReviews.length;
+  const vendorAvgRating = vendorRatingCount > 0
+    ? (vendorOverallReviews.reduce((acc: number, r: any) => acc + r.rating, 0) / vendorRatingCount).toFixed(1)
+    : (vendor?.ratingAvg || '0.0');
 
-     const joinTimeMonths = vendor.createdAt
-       ? Math.floor((new Date().getTime() - new Date(vendor.createdAt).getTime()) / (1000 * 60 * 60 * 24 * 30))
-       : 0;
+  const joinTimeMonths = vendor.createdAt
+    ? Math.floor((new Date().getTime() - new Date(vendor.createdAt).getTime()) / (1000 * 60 * 60 * 24 * 30))
+    : 0;
 
   return (
     <div className="min-h-screen bg-white pb-20">
@@ -180,71 +180,71 @@ const VendorProfilePage: React.FC<VendorProfilePageProps> = ({ onNavigate }) => 
         {/* Subtle decorative elements for 'Ritual' feel */}
         <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl"></div>
         <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/5 rounded-full translate-y-1/2 -translate-x-1/2 blur-2xl"></div>
-        
+
         <div className="container mx-auto px-6 relative z-10">
           <div className="flex flex-col lg:flex-row gap-16 items-center lg:items-start text-center lg:text-left">
             {/* Identity */}
             <div className="flex flex-col lg:flex-row items-center gap-8 w-full lg:w-1/2">
-               <div className="w-32 h-32 rounded-full bg-white flex items-center justify-center text-slate-900 text-4xl font-display font-black border-4 border-white/20 overflow-hidden shrink-0 shadow-2xl">
-                  {(vendor.shopAvatarUrl || vendor.avatarUrl) ? (
-                    <img src={vendor.shopAvatarUrl || vendor.avatarUrl || ''} alt={vendor.shopName} className="w-full h-full object-cover" />
-                  ) : (
-                    vendor.shopName.charAt(0).toUpperCase()
-                  )}
-               </div>
-               <div className="space-y-6">
-                  <div>
-                    <h1 className="text-4xl md:text-5xl font-display font-black text-white tracking-tight italic">{vendor.shopName}</h1>
-                    <div className="flex items-center justify-center lg:justify-start gap-2 mt-4">
-                      <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-                      <p className="text-[10px] font-black text-white/60 uppercase tracking-[0.3em]">Cửa hàng đang trực tuyến</p>
-                    </div>
+              <div className="w-32 h-32 rounded-full bg-white flex items-center justify-center text-slate-900 text-4xl font-display font-black border-4 border-white/20 overflow-hidden shrink-0 shadow-2xl">
+                {(vendor.shopAvatarUrl || vendor.avatarUrl) ? (
+                  <img src={vendor.shopAvatarUrl || vendor.avatarUrl || ''} alt={vendor.shopName} className="w-full h-full object-cover" />
+                ) : (
+                  vendor.shopName.charAt(0).toUpperCase()
+                )}
+              </div>
+              <div className="space-y-6">
+                <div>
+                  <h1 className="text-4xl md:text-5xl font-display font-black text-white tracking-tight italic">{vendor.shopName}</h1>
+                  <div className="flex items-center justify-center lg:justify-start gap-2 mt-4">
+                    <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                    <p className="text-[10px] font-black text-white/60 uppercase tracking-[0.3em]">Cửa hàng đang trực tuyến</p>
                   </div>
-                  <div className="flex flex-wrap justify-center lg:justify-start gap-3">
-                    <button
-                      type="button"
-                      onClick={() => onNavigate(`/messages?vendorId=${id || ''}`)}
-                      className="px-8 py-3 bg-transparent border-2 border-white/30 text-white text-[11px] font-black rounded-none uppercase tracking-[0.2em] hover:bg-white/10 transition-all"
-                    >
-                      Nhắn tin
-                    </button>
-                  </div>
-               </div>
+                </div>
+                <div className="flex flex-wrap justify-center lg:justify-start gap-3">
+                  <button
+                    type="button"
+                    onClick={() => onNavigate(`/messages?vendorId=${id || ''}`)}
+                    className="px-8 py-3 bg-transparent border-2 border-white/30 text-white text-[11px] font-black rounded-none uppercase tracking-[0.2em] hover:bg-white/10 transition-all"
+                  >
+                    Nhắn tin
+                  </button>
+                </div>
+              </div>
             </div>
 
             {/* B&W Stats Grid - High Contrast */}
             <div className="flex-1 grid grid-cols-2 sm:grid-cols-4 gap-y-10 gap-x-8 w-full">
-               <div className="space-y-2 group">
-                  <p className="text-[10px] text-white/40 font-black uppercase tracking-[0.2em] group-hover:text-white/60 transition-colors">Sản phẩm</p>
-                  <div className="flex items-baseline gap-2">
-                    <div className="w-1 h-6 bg-white/20 group-hover:bg-white transition-colors"></div>
-                    <p className="text-3xl font-display font-black text-white leading-none">{products.length}</p>
-                  </div>
-               </div>
-               <div className="space-y-2 group">
-                  <p className="text-[10px] text-white/40 font-black uppercase tracking-[0.2em] group-hover:text-white/60 transition-colors">Đánh giá</p>
-                  <div className="flex items-baseline gap-2">
-                    <div className="w-1 h-6 bg-white/20 group-hover:bg-white transition-colors"></div>
-                    <p className="text-3xl font-display font-black text-white leading-none whitespace-nowrap">
-                       {vendorAvgRating} <span className="text-xs text-white/30">({vendorRatingCount})</span>
-                    </p>
-                  </div>
-               </div>
-               <div className="space-y-2 group">
-                  <p className="text-[10px] text-white/40 font-black uppercase tracking-[0.2em] group-hover:text-white/60 transition-colors">Tham gia</p>
-                  <div className="flex items-baseline gap-2">
-                    <div className="w-1 h-6 bg-white/20 group-hover:bg-white transition-colors"></div>
-                    <p className="text-3xl font-display font-black text-white leading-none">{joinTimeMonths}</p>
-                    <span className="text-[10px] font-bold text-white/40 uppercase">Tháng</span>
-                  </div>
-               </div>
-               <div className="space-y-2 group">
-                  <p className="text-[10px] text-white/40 font-black uppercase tracking-[0.2em] group-hover:text-white/60 transition-colors">Hạng Shop</p>
-                  <div className="flex items-baseline gap-2">
-                    <div className="w-1 h-6 bg-white/20 group-hover:bg-white transition-colors"></div>
-                    <p className="text-3xl font-display font-black text-white leading-none uppercase">{vendor.tierName || 'Bạc'}</p>
-                  </div>
-               </div>
+              <div className="space-y-2 group">
+                <p className="text-[10px] text-white/40 font-black uppercase tracking-[0.2em] group-hover:text-white/60 transition-colors">Sản phẩm</p>
+                <div className="flex items-baseline gap-2">
+                  <div className="w-1 h-6 bg-white/20 group-hover:bg-white transition-colors"></div>
+                  <p className="text-3xl font-display font-black text-white leading-none">{products.length}</p>
+                </div>
+              </div>
+              <div className="space-y-2 group">
+                <p className="text-[10px] text-white/40 font-black uppercase tracking-[0.2em] group-hover:text-white/60 transition-colors">Đánh giá</p>
+                <div className="flex items-baseline gap-2">
+                  <div className="w-1 h-6 bg-white/20 group-hover:bg-white transition-colors"></div>
+                  <p className="text-3xl font-display font-black text-white leading-none whitespace-nowrap">
+                    {vendorAvgRating} <span className="text-xs text-white/30">({vendorRatingCount})</span>
+                  </p>
+                </div>
+              </div>
+              <div className="space-y-2 group">
+                <p className="text-[10px] text-white/40 font-black uppercase tracking-[0.2em] group-hover:text-white/60 transition-colors">Tham gia</p>
+                <div className="flex items-baseline gap-2">
+                  <div className="w-1 h-6 bg-white/20 group-hover:bg-white transition-colors"></div>
+                  <p className="text-3xl font-display font-black text-white leading-none">{joinTimeMonths}</p>
+                  <span className="text-[10px] font-bold text-white/40 uppercase">Tháng</span>
+                </div>
+              </div>
+              <div className="space-y-2 group">
+                <p className="text-[10px] text-white/40 font-black uppercase tracking-[0.2em] group-hover:text-white/60 transition-colors">Hạng Shop</p>
+                <div className="flex items-baseline gap-2">
+                  <div className="w-1 h-6 bg-white/20 group-hover:bg-white transition-colors"></div>
+                  <p className="text-3xl font-display font-black text-white leading-none uppercase">{vendor.tierName || 'Bạc'}</p>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -274,27 +274,27 @@ const VendorProfilePage: React.FC<VendorProfilePageProps> = ({ onNavigate }) => 
           <div className="space-y-24">
             {/* Banner Section */}
             {banners.length > 0 ? (
-               <div className="md:-mx-6 -mt-8 mb-16">
-                 <Carousel 
-                   slides={banners.map(b => ({
-                     image: b.imageUrl,
-                     title: b.title,
-                     subtitle: b.linkType === 'Ritual' ? 'Dịch vụ nổi bật' : 'Chương trình ưu đãi',
-                     description: `Khám phá ngay ${b.title} tại ${vendor.shopName}.`,
-                     rawBanner: b
-                   }))} 
-                   onCtaClick={handleBannerClick} 
-                 />
-               </div>
+              <div className="md:-mx-6 -mt-8 mb-16">
+                <Carousel
+                  slides={banners.map(b => ({
+                    image: b.imageUrl,
+                    title: b.title,
+                    subtitle: b.linkType === 'Ritual' ? 'Dịch vụ nổi bật' : 'Chương trình ưu đãi',
+                    description: `Khám phá ngay ${b.title} tại ${vendor.shopName}.`,
+                    rawBanner: b
+                  }))}
+                  onCtaClick={handleBannerClick}
+                />
+              </div>
             ) : (
-               <div className="w-full aspect-[21/9] bg-slate-50 flex items-center justify-center border border-slate-100 rounded-[3rem]">
-                 <h2 className="text-4xl font-bold text-slate-200 tracking-[0.5em] uppercase">{vendor.shopName}</h2>
-               </div>
+              <div className="w-full aspect-[21/9] bg-slate-50 flex items-center justify-center border border-slate-100 rounded-[3rem]">
+                <h2 className="text-4xl font-bold text-slate-200 tracking-[0.5em] uppercase">{vendor.shopName}</h2>
+              </div>
             )}
 
             <div className="space-y-10">
               <h3 className="text-lg font-bold text-slate-900 uppercase tracking-widest border-b border-slate-100 pb-4">Đề xuất</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
                 {products.slice(0, 10).map((product) => (
                   <ProductCard
                     key={product.id}
@@ -302,7 +302,7 @@ const VendorProfilePage: React.FC<VendorProfilePageProps> = ({ onNavigate }) => 
                     onNavigate={onNavigate}
                   />
                 ))}
-            </div>
+              </div>
             </div>
           </div>
         )}
@@ -342,7 +342,7 @@ const VendorProfilePage: React.FC<VendorProfilePageProps> = ({ onNavigate }) => 
                   {activeFilter === 'All' ? 'Tất cả sản phẩm' : activeFilter} ({products.filter(p => activeFilter === 'All' || p.category === activeFilter).length})
                 </h3>
               </div>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
                 {products
                   .filter(p => activeFilter === 'All' || p.category === activeFilter)

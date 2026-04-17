@@ -140,7 +140,7 @@ const DiscountPolicyManagement: React.FC<DiscountPolicyManagementProps> = ({ onN
         <div className="mb-12 flex flex-col md:flex-row md:items-center justify-between gap-8">
           <div>
             <h1 className="text-4xl font-black text-slate-900 tracking-tight mb-2">Chính Sách Giảm Giá</h1>
-            <p className="text-slate-500 font-bold text-sm">Thiết lập các ưu đãi khi khách hàng đặt hàng với số lượng lớn.</p>
+            <p className="text-black font-bold text-sm">Thiết lập các ưu đãi khi khách hàng đặt hàng với số lượng lớn.</p>
           </div>
 
           <button
@@ -158,8 +158,8 @@ const DiscountPolicyManagement: React.FC<DiscountPolicyManagementProps> = ({ onN
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {policies.length > 0 ? (
             policies.map((policy) => (
-              <div 
-                key={policy.policyId} 
+              <div
+                key={policy.policyId}
                 className={`bg-white rounded-[2.5rem] border-2 transition-all p-8 relative overflow-hidden group ${policy.isActive ? 'border-primary/20 shadow-xl shadow-primary/5' : 'border-slate-100 opacity-75'}`}
               >
                 {/* Status Badge */}
@@ -181,7 +181,7 @@ const DiscountPolicyManagement: React.FC<DiscountPolicyManagementProps> = ({ onN
                     </div>
                   </div>
 
-                  <p className="text-slate-500 font-medium text-sm mb-10 min-h-[40px] italic">"{policy.description || 'Không có mô tả'}"</p>
+                  <p className="text-black font-medium text-sm mb-10 min-h-[40px] italic">"{policy.description || 'Không có mô tả'}"</p>
 
                   <div className="mt-auto pt-6 border-t border-slate-50 flex items-center justify-between gap-4">
                     <div className="flex items-center gap-2">
@@ -227,7 +227,7 @@ const DiscountPolicyManagement: React.FC<DiscountPolicyManagementProps> = ({ onN
           ) : (
             <div className="col-span-full py-32 text-center bg-slate-50 rounded-[3rem] border border-dashed border-slate-200">
               <p className="text-slate-400 font-bold italic">Chưa có chính sách giảm giá nào được tạo.</p>
-              <button 
+              <button
                 onClick={handleOpenAdd}
                 className="mt-4 text-primary font-black uppercase tracking-widest text-xs hover:underline"
               >
@@ -242,7 +242,7 @@ const DiscountPolicyManagement: React.FC<DiscountPolicyManagementProps> = ({ onN
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
             <div className="w-full max-w-xl bg-white rounded-[3rem] shadow-2xl overflow-hidden relative">
               <div className="absolute top-0 left-0 w-full h-2 bg-primary"></div>
-              
+
               <div className="p-12">
                 <div className="flex items-center justify-between mb-10">
                   <h2 className="text-3xl font-black text-slate-900 uppercase tracking-tight">

@@ -160,9 +160,9 @@ const StaffProductManagement: React.FC<StaffProductManagementProps> = ({ onNavig
       const expectedStatus = normalizeApprovalStatus(selectedStatus);
       const packagesBySelectedStatus = apiStatus
         ? packages.filter((item: any) => {
-            const itemStatus = normalizeApprovalStatus(item?.approvalStatus || item?.packageStatus || item?.status);
-            return itemStatus === expectedStatus;
-          })
+          const itemStatus = normalizeApprovalStatus(item?.approvalStatus || item?.packageStatus || item?.status);
+          return itemStatus === expectedStatus;
+        })
         : packages;
 
       const mapped: StaffProduct[] = packagesBySelectedStatus.map((item: any) => {
@@ -649,11 +649,10 @@ const StaffProductManagement: React.FC<StaffProductManagementProps> = ({ onNavig
                   const isAdminActionRequired = approval === 'AdminActionRequired';
                   return (
                     <>
-                      <span className={`px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest flex-shrink-0 ${
-                        isApproved ? 'bg-green-100 text-green-700 border border-green-200' :
-                        isRejected ? 'bg-red-100 text-red-700 border border-red-200' :
-                        'bg-yellow-100 text-yellow-700 border border-yellow-200'
-                      }`}>
+                      <span className={`px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest flex-shrink-0 ${isApproved ? 'bg-green-100 text-green-700 border border-green-200' :
+                          isRejected ? 'bg-red-100 text-red-700 border border-red-200' :
+                            'bg-yellow-100 text-yellow-700 border border-yellow-200'
+                        }`}>
                         {isApproved ? 'Đã Duyệt' : isRejected ? 'Từ Chối' : isVendorActionRequired ? 'Chờ Vendor Sửa' : isAdminActionRequired ? 'Chờ Quản Trị' : isStaffActionRequired ? 'Chờ Staff Duyệt' : 'Chờ Duyệt'}
                       </span>
                       {!isApproved && (
@@ -670,21 +669,21 @@ const StaffProductManagement: React.FC<StaffProductManagementProps> = ({ onNavig
                 const approval = normalizeApprovalStatus(viewProductDetails.approvalStatus || viewProductDetails.packageStatus || viewProductDetails.status || '');
                 return approval !== 'Approved' && approval !== 'Rejected' && approval !== 'VendorActionRequired' && approval !== 'AdminActionRequired';
               })() && (
-                <div className="flex gap-2 items-center">
-                  <button
-                    onClick={() => handleApprove(String(viewProductDetails.packageId || viewProductDetails.id))}
-                    className="px-5 py-2 rounded-full text-xs font-black uppercase tracking-widest text-white bg-green-600 hover:bg-green-700 transition-all shadow-sm flex-shrink-0"
-                  >
-                    Phê Duyệt
-                  </button>
-                  <button
-                    onClick={() => handleReject(String(viewProductDetails.packageId || viewProductDetails.id))}
-                    className="px-5 py-2 rounded-full text-xs font-black uppercase tracking-widest text-red-600 bg-red-50 hover:bg-red-100 border border-red-200 transition-all shadow-sm flex-shrink-0"
-                  >
-                    Từ Chối
-                  </button>
-                </div>
-              )}
+                  <div className="flex gap-2 items-center">
+                    <button
+                      onClick={() => handleApprove(String(viewProductDetails.packageId || viewProductDetails.id))}
+                      className="px-5 py-2 rounded-full text-xs font-black uppercase tracking-widest text-white bg-green-600 hover:bg-green-700 transition-all shadow-sm flex-shrink-0"
+                    >
+                      Phê Duyệt
+                    </button>
+                    <button
+                      onClick={() => handleReject(String(viewProductDetails.packageId || viewProductDetails.id))}
+                      className="px-5 py-2 rounded-full text-xs font-black uppercase tracking-widest text-red-600 bg-red-50 hover:bg-red-100 border border-red-200 transition-all shadow-sm flex-shrink-0"
+                    >
+                      Từ Chối
+                    </button>
+                  </div>
+                )}
             </div>
 
             {/* Body */}
@@ -787,7 +786,7 @@ const StaffProductManagement: React.FC<StaffProductManagementProps> = ({ onNavig
                     ) : (
                       <div className="text-center py-8 bg-gray-50 rounded-[1.5rem] border border-dashed border-gray-200">
                         <p className="text-xl mb-2 opacity-30">📦</p>
-                        <p className="text-slate-500 text-sm font-medium">Sản phẩm này chưa có biến thể nào.</p>
+                        <p className="text-black text-sm font-medium">Sản phẩm này chưa có biến thể nào.</p>
                       </div>
                     )}
                   </div>
@@ -931,27 +930,27 @@ const StaffProductManagement: React.FC<StaffProductManagementProps> = ({ onNavig
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                             {summary.screeningResultId && (
                               <div className="bg-slate-50 border border-slate-200 rounded-xl p-3">
-                                <p className="text-slate-500 text-[11px] font-bold uppercase tracking-widest">Screening ID</p>
+                                <p className="text-black text-[11px] font-bold uppercase tracking-widest">Screening ID</p>
                                 <p className="font-bold text-slate-800 mt-1">{summary.screeningResultId}</p>
                               </div>
                             )}
                             {summary.packageId && (
                               <div className="bg-slate-50 border border-slate-200 rounded-xl p-3">
-                                <p className="text-slate-500 text-[11px] font-bold uppercase tracking-widest">Package ID</p>
+                                <p className="text-black text-[11px] font-bold uppercase tracking-widest">Package ID</p>
                                 <p className="font-bold text-slate-800 mt-1">{summary.packageId}</p>
                               </div>
                             )}
                           </div>
 
                           <div className="flex items-center justify-between gap-2 bg-slate-50 border border-slate-200 rounded-xl p-3">
-                            <span className="text-slate-500 font-semibold">Kết luận AI</span>
+                            <span className="text-black font-semibold">Kết luận AI</span>
                             <span className={`px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-widest ${decisionInfo.className}`}>
                               {decisionInfo.text}
                             </span>
                           </div>
 
                           <div className="bg-slate-50 border border-slate-200 rounded-xl p-3">
-                            <p className="text-slate-500 text-[11px] font-bold uppercase tracking-widest mb-2">Nhận xét</p>
+                            <p className="text-black text-[11px] font-bold uppercase tracking-widest mb-2">Nhận xét</p>
                             <p className="text-slate-700 leading-relaxed break-words">
                               {visibleReasoning || 'Chưa có nhận xét từ AI.'}
                             </p>
@@ -996,20 +995,20 @@ const StaffProductManagement: React.FC<StaffProductManagementProps> = ({ onNavig
 
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                             <div className="bg-slate-50 border border-slate-200 rounded-xl p-3">
-                              <p className="text-slate-500 text-[11px] font-bold uppercase tracking-widest">Cần review thủ công</p>
+                              <p className="text-black text-[11px] font-bold uppercase tracking-widest">Cần review thủ công</p>
                               <p className="font-bold text-slate-800 mt-1">
                                 {summary.requiresManualReview === null ? 'Chưa rõ' : summary.requiresManualReview ? 'Có' : 'Không'}
                               </p>
                             </div>
                             <div className="bg-slate-50 border border-slate-200 rounded-xl p-3">
-                              <p className="text-slate-500 text-[11px] font-bold uppercase tracking-widest">Độ tin cậy</p>
+                              <p className="text-black text-[11px] font-bold uppercase tracking-widest">Độ tin cậy</p>
                               <p className="font-bold text-slate-800 mt-1">
                                 {summary.confidenceScore === null ? 'Chưa có' : summary.confidenceScore}
                               </p>
                             </div>
                             {summary.screenedAt && (
                               <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 sm:col-span-2">
-                                <p className="text-slate-500 text-[11px] font-bold uppercase tracking-widest">Thời điểm quét</p>
+                                <p className="text-black text-[11px] font-bold uppercase tracking-widest">Thời điểm quét</p>
                                 <p className="font-semibold text-slate-800 mt-1">{new Date(summary.screenedAt).toLocaleString('vi-VN')}</p>
                               </div>
                             )}

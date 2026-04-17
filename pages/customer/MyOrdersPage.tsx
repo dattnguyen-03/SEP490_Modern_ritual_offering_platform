@@ -6,7 +6,7 @@ import { refundService, RefundRecord } from '../../services/refundService';
 import toast from '../../services/toast';
 import LoadingScreen from '../../components/LoadingScreen';
 
-    const MyOrdersPage: React.FC = () => {
+const MyOrdersPage: React.FC = () => {
     const navigate = useNavigate();
     const [orders, setOrders] = useState<Order[]>([]);
     const [refunds, setRefunds] = useState<RefundRecord[]>([]);
@@ -30,7 +30,7 @@ import LoadingScreen from '../../components/LoadingScreen';
                 return getTime(b) - getTime(a);
             });
             setOrders(sortedOrders);
-            
+
             // Lấy profileId từ đơn hàng đầu tiên (hoặc bất kỳ đơn nào) để filter refunds
             const profileId = sortedOrders.find(o => o.customer?.profileId)?.customer?.profileId;
             if (profileId) {
@@ -42,14 +42,14 @@ import LoadingScreen from '../../components/LoadingScreen';
         } catch (error) {
             console.error('Lỗi khi lấy danh sách đơn hàng:', error);
             toast.error('Không thể tải danh sách đơn hàng.');
-        } 
+        }
     };
 
     const fetchRefunds = async (profileId: string) => {
         try {
             const data = await refundService.getAllRefunds();
             // CHỈ lấy những refund thuộc về chính khách hàng này (Bảo mật)
-            const myRefunds = profileId 
+            const myRefunds = profileId
                 ? (data || []).filter(r => r.customerId === profileId)
                 : [];
             setRefunds(myRefunds);
@@ -75,7 +75,7 @@ import LoadingScreen from '../../components/LoadingScreen';
                 if (v.profileId && avatar) map[v.profileId] = avatar;
             });
             setVendorAvatarMap(map);
-        }).catch(() => {});
+        }).catch(() => { });
     }, []);
 
     const handleCancelOrder = async (orderId: string) => {
@@ -235,7 +235,7 @@ import LoadingScreen from '../../components/LoadingScreen';
             <div className="max-w-5xl mx-auto px-4 md:px-8">
                 <div className="mb-6 md:mb-10 text-center sm:text-left">
                     <h1 className="text-3xl md:text-5xl font-black text-slate-900 dark:text-white font-display italic tracking-tight leading-tight">Đơn hàng của tôi</h1>
-                    <p className="text-sm md:text-lg text-slate-500 dark:text-zinc-400 mt-2 font-medium">Theo dõi và quản lý lịch sử đặt mâm cúng của bạn.</p>
+                    <p className="text-sm md:text-lg text-black dark:text-zinc-400 mt-2 font-medium">Theo dõi và quản lý lịch sử đặt mâm cúng của bạn.</p>
                 </div>
 
                 {/* Tabs */}
@@ -247,7 +247,7 @@ import LoadingScreen from '../../components/LoadingScreen';
                                 onClick={() => setActiveTab(tab.id)}
                                 className={`whitespace-nowrap px-6 py-2.5 rounded-full font-black text-[10px] uppercase tracking-widest transition-all ${activeTab === tab.id
                                     ? 'text-white bg-slate-900 dark:bg-zinc-800 shadow-xl shadow-slate-900/20 dark:shadow-none'
-                                    : 'text-slate-500 dark:text-zinc-400 hover:text-slate-800 dark:hover:text-white hover:bg-white dark:hover:bg-white/5 hover:shadow-sm'
+                                    : 'text-black dark:text-zinc-400 hover:text-slate-800 dark:hover:text-white hover:bg-white dark:hover:bg-white/5 hover:shadow-sm'
                                     }`}
                             >
                                 {tab.label}
@@ -282,7 +282,7 @@ import LoadingScreen from '../../components/LoadingScreen';
                                     <div className="p-5 md:p-8 flex flex-col md:flex-row gap-4 md:gap-6 justify-between border-b border-gray-100 dark:border-white/5 bg-gray-50/20 dark:bg-white/5">
                                         <div className="flex flex-row md:flex-row gap-4 items-center justify-between md:justify-start w-full md:w-auto">
                                             <div>
-                                                <span className="text-[10px] font-bold uppercase text-slate-400 tracking-widest block mb-1">Ngày yêu cầu</span>
+                                                <span className="text-[10px] font-bold uppercase text-black tracking-widest block mb-1">Ngày yêu cầu</span>
                                                 <span className="text-gray-900 dark:text-white font-bold text-sm">{new Date(refund.createdAt).toLocaleDateString('vi-VN')}</span>
                                             </div>
                                             <div className="hidden md:block w-px h-8 bg-gray-200 dark:bg-white/10"></div>
@@ -318,7 +318,7 @@ import LoadingScreen from '../../components/LoadingScreen';
                                                             {item.packageName}
                                                         </h5>
                                                         <div className="flex items-center gap-2 mt-1">
-                                                            <p className="text-[10px] md:text-xs text-slate-400 dark:text-zinc-500 font-medium">Gói {item.variantName}</p>
+                                                            <p className="text-[10px] md:text-xs text-black dark:text-zinc-500 font-medium">Gói {item.variantName}</p>
                                                             <span className="size-1 bg-gray-300 dark:bg-white/10 rounded-full"></span>
                                                             <p className="text-xs font-bold text-gray-700 dark:text-zinc-300">x{item.quantity}</p>
                                                         </div>
@@ -341,7 +341,7 @@ import LoadingScreen from '../../components/LoadingScreen';
                                     <div className="p-5 md:p-8 pt-0 flex flex-col md:flex-row items-center justify-between gap-6 border-t border-gray-50 dark:border-white/5 mt-2 bg-white dark:bg-[#18181b]">
                                         <div className="flex flex-col items-center md:items-start w-full md:w-auto">
                                             <div className="flex items-center gap-2">
-                                                <span className="text-xs font-bold text-slate-400 dark:text-zinc-500 uppercase tracking-widest">Tổng hoàn lại</span>
+                                                <span className="text-xs font-bold text-black dark:text-zinc-500 uppercase tracking-widest">Tổng hoàn lại</span>
                                                 <span className="text-xl md:text-2xl font-black text-primary dark:text-white">
                                                     {refund.refundAmount.toLocaleString('vi-VN')}₫
                                                 </span>
@@ -388,7 +388,7 @@ import LoadingScreen from '../../components/LoadingScreen';
                                     <div className="p-5 md:p-8 flex flex-col md:flex-row gap-4 md:gap-6 justify-between border-b border-gray-100 dark:border-zinc-800 bg-gray-50/20 dark:bg-zinc-800/50">
                                         <div className="flex flex-row md:flex-row gap-4 items-center justify-between md:justify-start w-full md:w-auto">
                                             <div>
-                                                <span className="text-[10px] font-bold uppercase text-slate-400 dark:text-zinc-500 tracking-widest block mb-1">Ngày đặt</span>
+                                                <span className="text-[10px] font-bold uppercase text-black dark:text-zinc-500 tracking-widest block mb-1">Ngày đặt</span>
                                                 <span className="text-gray-900 dark:text-white font-bold text-sm">{order.createdAt ? new Date(order.createdAt).toLocaleDateString('vi-VN') : 'N/A'}</span>
                                             </div>
                                             <div className="hidden md:block w-px h-8 bg-gray-200 dark:bg-white/10"></div>
@@ -406,9 +406,9 @@ import LoadingScreen from '../../components/LoadingScreen';
                                                 const shopName = order.vendor?.shopName || (order as any).shopName || "Cửa hàng";
                                                 const vId = String(order.vendor?.profileId || (order as any).vendorProfileId || (order as any).vendorId || '').trim();
                                                 const avatarSrc = vendorAvatarMap[vId] || vendorAvatarMap[shopName] || '';
-                                                
+
                                                 return (
-                                                    <div 
+                                                    <div
                                                         className={`size-10 rounded-xl overflow-hidden bg-slate-50 dark:bg-zinc-800 border border-slate-100 dark:border-zinc-700 flex-shrink-0 flex items-center justify-center shadow-sm transition-transform active:scale-95 ${vId ? 'cursor-pointer hover:border-primary/50' : ''}`}
                                                         onClick={() => vId && navigate(`/vendor/${vId}`)}
                                                     >
@@ -460,8 +460,8 @@ import LoadingScreen from '../../components/LoadingScreen';
                                                         className="size-16 md:size-20 rounded-2xl bg-slate-50 dark:bg-zinc-800 border border-slate-100 dark:border-zinc-700 shrink-0 overflow-hidden shadow-sm group-hover/item:scale-105 transition-all cursor-pointer flex items-center justify-center"
                                                         onClick={() => (item as any).packageId && navigate(`/product/${(item as any).packageId}`)}
                                                     >
-                                                        <img 
-                                                            src={item.imageUrl || 'https://picsum.photos/200?random=1'} 
+                                                        <img
+                                                            src={item.imageUrl || 'https://picsum.photos/200?random=1'}
                                                             alt={item.packageName}
                                                             className="w-full h-full object-cover"
                                                             onError={(e) => {
@@ -478,7 +478,7 @@ import LoadingScreen from '../../components/LoadingScreen';
                                                             {item.packageName}
                                                         </h5>
                                                         <div className="flex items-center gap-2 mt-1">
-                                                            <p className="text-[10px] md:text-xs text-slate-400 dark:text-zinc-500 font-medium">Gói {item.variantName}</p>
+                                                            <p className="text-[10px] md:text-xs text-black dark:text-zinc-500 font-medium">Gói {item.variantName}</p>
                                                             <span className="size-1 bg-gray-300 dark:bg-zinc-700 rounded-full"></span>
                                                             <p className="text-xs font-bold text-gray-700 dark:text-zinc-300">x{item.quantity}</p>
                                                         </div>
@@ -506,12 +506,12 @@ import LoadingScreen from '../../components/LoadingScreen';
                                     <div className="p-5 md:p-8 pt-0 flex flex-col md:flex-row items-center justify-between gap-6 border-t border-gray-50 dark:border-zinc-800 mt-2 bg-white dark:bg-zinc-900">
                                         <div className="flex flex-col items-center md:items-start w-full md:w-auto">
                                             <div className="flex items-center gap-2">
-                                                <span className="text-xs font-bold text-slate-400 dark:text-zinc-500 uppercase tracking-widest">Tổng cộng</span>
+                                                <span className="text-xs font-bold text-black dark:text-zinc-500 uppercase tracking-widest">Tổng cộng</span>
                                                 <span className="text-xl md:text-2xl font-black text-slate-900 dark:text-white">
                                                     {(order.pricing?.totalAmount || order.pricing?.finalAmount || 0).toLocaleString('vi-VN')}₫
                                                 </span>
                                             </div>
-                                            <p className="text-[10px] font-bold text-slate-400 dark:text-zinc-500 uppercase tracking-tighter mt-1">
+                                            <p className="text-[10px] font-bold text-black dark:text-zinc-500 uppercase tracking-tighter mt-1">
                                                 (Đã bao gồm phí vận chuyển)
                                             </p>
                                         </div>

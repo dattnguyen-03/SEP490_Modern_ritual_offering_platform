@@ -36,19 +36,19 @@ const VendorBannerManagement: React.FC = () => {
     const now = new Date();
     const start = new Date(banner.startDate);
     const end = new Date(banner.endDate);
-    
+
     if (!banner.isActive) {
       return <span className="px-2 py-1 rounded-lg bg-red-100 text-red-600 text-[10px] font-bold uppercase">Ngừng hoạt động</span>;
     }
-    
+
     if (now < start) {
       return <span className="px-2 py-1 rounded-lg bg-blue-100 text-blue-600 text-[10px] font-bold uppercase">Sắp diễn ra</span>;
     }
-    
+
     if (now > end) {
       return <span className="px-2 py-1 rounded-lg bg-gray-100 text-gray-600 text-[10px] font-bold uppercase">Hết hạn</span>;
     }
-    
+
     return <span className="px-2 py-1 rounded-lg bg-green-100 text-green-600 text-[10px] font-bold uppercase">Đang hiển thị</span>;
   };
 
@@ -334,7 +334,7 @@ const VendorBannerManagement: React.FC = () => {
       <div className="p-8 border-b border-gold/10 flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-primary">Quản Lý Banner Shop</h2>
-          <p className="text-sm text-slate-500 mt-1">Tạo các banner quảng bá cho sản phẩm và shop của bạn trên trang chủ</p>
+          <p className="text-sm text-black mt-1">Tạo các banner quảng bá cho sản phẩm và shop của bạn trên trang chủ</p>
         </div>
         <button
           onClick={handleCreateBanner}
@@ -349,7 +349,7 @@ const VendorBannerManagement: React.FC = () => {
         {loading ? (
           <div className="py-20 text-center">
             <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent mb-4"></div>
-            <p className="text-slate-500 font-semibold tracking-wide">Đang tải dữ liệu banner...</p>
+            <p className="text-black font-semibold tracking-wide">Đang tải dữ liệu banner...</p>
           </div>
         ) : error ? (
           <div className="py-20 text-center bg-red-50 rounded-3xl border border-red-100 p-8">
@@ -365,21 +365,21 @@ const VendorBannerManagement: React.FC = () => {
         ) : banners.length === 0 ? (
           <div className="py-20 text-center bg-ritual-bg/30 rounded-3xl border border-dashed border-gold/20 flex flex-col items-center">
             <span className="material-symbols-outlined text-6xl text-gold/40 mb-4">view_carousel</span>
-            <p className="text-slate-500 font-medium text-lg">Shop chưa có banner nào.</p>
+            <p className="text-black font-medium text-lg">Shop chưa có banner nào.</p>
             <p className="text-slate-400 text-sm mt-2">Bắt đầu tạo banner đầu tiên để quảng bá shop của bạn.</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {banners.map((banner) => (
-              <div 
-                key={banner.bannerId} 
+              <div
+                key={banner.bannerId}
                 className="group relative bg-white rounded-3xl border border-gold/10 shadow-sm hover:shadow-xl transition-all overflow-hidden flex flex-col"
               >
                 {/* Banner Image Preview */}
                 <div className="relative aspect-[21/9] overflow-hidden bg-slate-100">
-                  <img 
-                    src={banner.imageUrl} 
-                    alt={banner.title} 
+                  <img
+                    src={banner.imageUrl}
+                    alt={banner.title}
                     onError={bannerService.handleImageError}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                   />
@@ -398,22 +398,22 @@ const VendorBannerManagement: React.FC = () => {
                       <h3 className="text-sm font-black text-primary truncate group-hover:text-gold transition-colors">
                         {banner.title || 'Không có tiêu đề'}
                       </h3>
-                      <p className="text-[10px] text-slate-500 font-medium mt-0.5 uppercase tracking-wider">
+                      <p className="text-[10px] text-black font-medium mt-0.5 uppercase tracking-wider">
                         {banner.linkType} • Target ID: {banner.linkTargetId}
                       </p>
                     </div>
                     <div className="flex gap-2 ml-4">
-                      <button 
-                         onClick={() => handleEditBanner(banner)}
-                         className="p-2 text-primary hover:bg-primary/5 rounded-xl transition-all"
-                         title="Chỉnh sửa"
+                      <button
+                        onClick={() => handleEditBanner(banner)}
+                        className="p-2 text-primary hover:bg-primary/5 rounded-xl transition-all"
+                        title="Chỉnh sửa"
                       >
                         <span className="material-symbols-outlined text-xl">edit_square</span>
                       </button>
-                      <button 
-                         onClick={() => handleDeleteBanner(banner.bannerId)}
-                         className="p-2 text-red-600 hover:bg-red-50 rounded-xl transition-all"
-                         title="Xóa banner"
+                      <button
+                        onClick={() => handleDeleteBanner(banner.bannerId)}
+                        className="p-2 text-red-600 hover:bg-red-50 rounded-xl transition-all"
+                        title="Xóa banner"
                       >
                         <span className="material-symbols-outlined text-xl">delete</span>
                       </button>

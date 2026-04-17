@@ -44,7 +44,7 @@ const getTransactionStatusClass = (status: string) => {
 
 const getTransactionTypeLabel = (type: string, amount: number): string => {
   const normalized = String(type || '').trim().toLowerCase();
-  
+
   if ((normalized === 'systemadjustment' || normalized === 'adjust') && amount > 0) {
     return 'Cộng số dư';
   }
@@ -83,7 +83,7 @@ const TransactionManagement: React.FC<TransactionManagementProps> = ({ onNavigat
     from: '',
     to: ''
   });
-  
+
   const [detailTx, setDetailTx] = useState<WalletTransaction | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
   const [relatedTxs, setRelatedTxs] = useState<WalletTransaction[]>([]);
@@ -166,18 +166,18 @@ const TransactionManagement: React.FC<TransactionManagementProps> = ({ onNavigat
   return (
     <div className="bg-transparent font-sans">
       <div className="max-w-7xl mx-auto py-4">
-        
+
         {/* Header */}
         <div className="mb-10">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div>
               <h1 className="text-2xl font-black text-slate-900 flex items-center gap-3">
-                 Quản trị giao dịch
-                 {userRole === 'staff' && (
-                   <span className="bg-slate-900 text-white px-2 py-0.5 rounded text-[10px] uppercase font-black tracking-widest">Quyền nhân viên</span>
-                 )}
+                Quản trị giao dịch
+                {userRole === 'staff' && (
+                  <span className="bg-slate-900 text-white px-2 py-0.5 rounded text-[10px] uppercase font-black tracking-widest">Quyền nhân viên</span>
+                )}
               </h1>
-              <p className="text-sm text-slate-500 mt-1">
+              <p className="text-sm text-black mt-1">
                 Theo dõi, rà soát và đối soát toàn bộ biến động tài chính trong hệ thống.
               </p>
             </div>
@@ -260,8 +260,8 @@ const TransactionManagement: React.FC<TransactionManagementProps> = ({ onNavigat
 
           <div className="flex flex-col md:flex-row md:items-center justify-between mt-8 gap-6 border-t border-slate-50 pt-8">
             <button
-               onClick={() => setFilter({ walletId: '', type: '', status: '', from: '', to: '' })}
-               className="inline-flex items-center px-6 py-2 rounded-xl text-xs font-black uppercase tracking-widest border-2 border-slate-100 text-slate-400 hover:bg-slate-50 hover:border-slate-200 transition-all"
+              onClick={() => setFilter({ walletId: '', type: '', status: '', from: '', to: '' })}
+              className="inline-flex items-center px-6 py-2 rounded-xl text-xs font-black uppercase tracking-widest border-2 border-slate-100 text-slate-400 hover:bg-slate-50 hover:border-slate-200 transition-all"
             >
               Làm mới bộ lọc
             </button>
@@ -278,81 +278,81 @@ const TransactionManagement: React.FC<TransactionManagementProps> = ({ onNavigat
 
         {/* List Content */}
         <div className="bg-white border-slate-200 rounded-2xl shadow-sm border overflow-hidden min-h-[400px]">
-           {loading ? (
-             <div className="p-20 text-center text-slate-400 font-bold animate-pulse">Đang rà soát chuỗi giao dịch...</div>
-           ) : transactions.length === 0 ? (
-             <div className="p-20 text-center text-slate-400 font-black italic">Không tìm thấy bản ghi.</div>
-           ) : (
-             <>
-               <div className="divide-y divide-slate-100">
-                 {pagedTransactions.map((tx) => {
-                   const incoming = tx.amount >= 0;
-                   return (
-                     <div
-                       key={tx.id}
-                       onClick={() => handleOpenDetail(tx)}
-                       className="p-6 md:p-8 flex flex-col md:flex-row md:items-center gap-4 md:gap-8 cursor-pointer hover:bg-slate-50 transition-all group"
-                     >
-                        <div className="flex-1 min-w-0">
-                           <div className="flex flex-wrap items-center gap-2 mb-2">
-                             <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 group-hover:text-slate-600 transition-colors">
-                               {getTransactionTypeLabel(tx.type, tx.amount)}
-                             </span>
-                             <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest border ${getTransactionStatusClass(tx.status)}`}>
-                               {getTransactionStatusLabel(tx.status)}
-                             </span>
-                           </div>
-                           <h4 className="text-lg font-black text-slate-900 group-hover:text-primary transition-colors leading-tight">
-                             {tx.description || 'Giao dịch không đính kèm mô tả'}
-                           </h4>
-                           <p className="text-xs text-slate-500 mt-2 flex items-center gap-4">
-                              <span>{formatDateTimeVi(tx.createdAt)}</span>
-                              <span className="opacity-40 select-none">•</span>
-                              <span className="font-mono text-slate-400">Ví: {tx.walletId ? tx.walletId.slice(0, 15) : 'Hệ thống'}...</span>
-                           </p>
+          {loading ? (
+            <div className="p-20 text-center text-slate-400 font-bold animate-pulse">Đang rà soát chuỗi giao dịch...</div>
+          ) : transactions.length === 0 ? (
+            <div className="p-20 text-center text-slate-400 font-black italic">Không tìm thấy bản ghi.</div>
+          ) : (
+            <>
+              <div className="divide-y divide-slate-100">
+                {pagedTransactions.map((tx) => {
+                  const incoming = tx.amount >= 0;
+                  return (
+                    <div
+                      key={tx.id}
+                      onClick={() => handleOpenDetail(tx)}
+                      className="p-6 md:p-8 flex flex-col md:flex-row md:items-center gap-4 md:gap-8 cursor-pointer hover:bg-slate-50 transition-all group"
+                    >
+                      <div className="flex-1 min-w-0">
+                        <div className="flex flex-wrap items-center gap-2 mb-2">
+                          <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 group-hover:text-slate-600 transition-colors">
+                            {getTransactionTypeLabel(tx.type, tx.amount)}
+                          </span>
+                          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest border ${getTransactionStatusClass(tx.status)}`}>
+                            {getTransactionStatusLabel(tx.status)}
+                          </span>
                         </div>
+                        <h4 className="text-lg font-black text-slate-900 group-hover:text-primary transition-colors leading-tight">
+                          {tx.description || 'Giao dịch không đính kèm mô tả'}
+                        </h4>
+                        <p className="text-xs text-black mt-2 flex items-center gap-4">
+                          <span>{formatDateTimeVi(tx.createdAt)}</span>
+                          <span className="opacity-40 select-none">•</span>
+                          <span className="font-mono text-slate-400">Ví: {tx.walletId ? tx.walletId.slice(0, 15) : 'Hệ thống'}...</span>
+                        </p>
+                      </div>
 
-                        <div className="text-right min-w-[200px]">
-                          <p className={`text-base md:text-lg font-extrabold tabular-nums ${incoming ? 'text-emerald-600' : 'text-rose-600'}`}>
-                            {incoming ? '+' : '-'}{formatCurrency(Math.abs(tx.amount))}
-                          </p>
-                          {/* {tx.balanceAfter !== null && (
-                            <p className="mt-1 text-xs text-slate-500">
+                      <div className="text-right min-w-[200px]">
+                        <p className={`text-base md:text-lg font-extrabold tabular-nums ${incoming ? 'text-emerald-600' : 'text-rose-600'}`}>
+                          {incoming ? '+' : '-'}{formatCurrency(Math.abs(tx.amount))}
+                        </p>
+                        {/* {tx.balanceAfter !== null && (
+                            <p className="mt-1 text-xs text-black">
                               Số dư sau giao dịch: {formatCurrency(Math.abs(tx.balanceAfter as number))}
                             </p>
                           )} */}
-                        </div>
-                     </div>
-                   );
-                 })}
-               </div>
-
-               {/* Pagination UI similar to Customer UI or better */}
-               {totalPages > 1 && (
-                 <div className="p-8 border-t border-slate-50 bg-slate-50/20 flex items-center justify-between">
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                      Trang <span className="text-slate-900">{currentPage}</span> / {totalPages}
-                    </p>
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                        disabled={currentPage === 1}
-                        className="w-10 h-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-slate-400 hover:bg-slate-900 hover:text-white transition-all disabled:opacity-20"
-                      >
-                         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" /></svg>
-                      </button>
-                      <button
-                        onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                        disabled={currentPage === totalPages}
-                        className="w-10 h-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-slate-400 hover:bg-slate-900 hover:text-white transition-all disabled:opacity-20"
-                      >
-                         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
-                      </button>
+                      </div>
                     </div>
-                 </div>
-               )}
-             </>
-           )}
+                  );
+                })}
+              </div>
+
+              {/* Pagination UI similar to Customer UI or better */}
+              {totalPages > 1 && (
+                <div className="p-8 border-t border-slate-50 bg-slate-50/20 flex items-center justify-between">
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                    Trang <span className="text-slate-900">{currentPage}</span> / {totalPages}
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                      disabled={currentPage === 1}
+                      className="w-10 h-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-slate-400 hover:bg-slate-900 hover:text-white transition-all disabled:opacity-20"
+                    >
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" /></svg>
+                    </button>
+                    <button
+                      onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                      disabled={currentPage === totalPages}
+                      className="w-10 h-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-slate-400 hover:bg-slate-900 hover:text-white transition-all disabled:opacity-20"
+                    >
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
+                    </button>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
         </div>
       </div>
 
@@ -378,63 +378,63 @@ const TransactionManagement: React.FC<TransactionManagementProps> = ({ onNavigat
                 onClick={() => setDetailOpen(false)}
                 className="w-10 h-10 rounded-2xl bg-slate-50 text-slate-400 hover:bg-rose-50 hover:text-rose-600 transition-all flex items-center justify-center"
               >
-                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
               </button>
             </div>
 
             <div className="p-8 space-y-10">
-               <div className="grid grid-cols-2 gap-8">
-                  <div className="col-span-2">
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Ví chủ thể</p>
-                    <p className="font-mono text-xs font-bold text-primary p-3 bg-primary/5 rounded-xl border border-primary/10 truncate">
-                      {detailTx.walletId}
-                      {detailTx.walletType && (
-                        <span className="ml-2 px-1.5 py-0.5 bg-primary text-white text-[8px] rounded uppercase font-black">
-                          {detailTx.walletType === 'System' ? 'Hệ thống' :
-                           detailTx.walletType === 'Vendor' ? 'Nhà cung cấp' :
-                           detailTx.walletType === 'Customer' ? 'Khách hàng' : 
-                           detailTx.walletType}
-                        </span>
-                      )}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Số tiền</p>
-                    <p className={`text-2xl font-black tabular-nums tracking-tighter ${detailTx.amount >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
-                      {detailTx.amount >= 0 ? '+' : ''}{formatCurrency(detailTx.amount)}
-                    </p>
-                  </div>
-                  {/* <div>
+              <div className="grid grid-cols-2 gap-8">
+                <div className="col-span-2">
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Ví chủ thể</p>
+                  <p className="font-mono text-xs font-bold text-primary p-3 bg-primary/5 rounded-xl border border-primary/10 truncate">
+                    {detailTx.walletId}
+                    {detailTx.walletType && (
+                      <span className="ml-2 px-1.5 py-0.5 bg-primary text-white text-[8px] rounded uppercase font-black">
+                        {detailTx.walletType === 'System' ? 'Hệ thống' :
+                          detailTx.walletType === 'Vendor' ? 'Nhà cung cấp' :
+                            detailTx.walletType === 'Customer' ? 'Khách hàng' :
+                              detailTx.walletType}
+                      </span>
+                    )}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Số tiền</p>
+                  <p className={`text-2xl font-black tabular-nums tracking-tighter ${detailTx.amount >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                    {detailTx.amount >= 0 ? '+' : ''}{formatCurrency(detailTx.amount)}
+                  </p>
+                </div>
+                {/* <div>
                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Dư sau GD</p>
                     <p className="text-2xl font-black text-slate-900 tabular-nums tracking-tighter">
                       {detailTx.balanceAfter !== null ? formatCurrency(detailTx.balanceAfter as number) : '--'}
                     </p>
                   </div> */}
-               </div>
+              </div>
 
-               <div className="bg-slate-50 rounded-3xl p-8 border border-slate-100">
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Mô tả và Ghi chú</p>
-                  <p className="text-sm text-slate-700 font-bold leading-relaxed italic">{detailTx.description || 'Giao dịch hệ thống không ghi chú.'}</p>
-               </div>
+              <div className="bg-slate-50 rounded-3xl p-8 border border-slate-100">
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Mô tả và Ghi chú</p>
+                <p className="text-sm text-slate-700 font-bold leading-relaxed italic">{detailTx.description || 'Giao dịch hệ thống không ghi chú.'}</p>
+              </div>
 
-               {relatedTxs.length > 0 && (
-                 <div className="pt-6 border-t border-slate-50">
-                    <p className="text-[10px] font-black text-primary uppercase tracking-widest mb-4">Các giao dịch liên đới ({relatedTxs.length})</p>
-                    <div className="space-y-3">
-                      {relatedTxs.map(rtx => (
-                        <div key={rtx.id} className="flex items-center justify-between p-5 bg-white border border-slate-100 rounded-[1.5rem] shadow-sm">
-                          <div>
-                            <p className="text-xs font-black text-slate-900 uppercase tracking-tight">{getTransactionTypeLabel(rtx.type, rtx.amount)}</p>
-                            <p className="text-[9px] text-slate-400 font-bold uppercase">{formatDateTimeVi(rtx.createdAt).split(' ')[0]}</p>
-                          </div>
-                          <p className={`text-sm font-black tabular-nums ${rtx.amount >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
-                            {rtx.amount >= 0 ? '+' : ''}{formatCurrency(rtx.amount)}
-                          </p>
+              {relatedTxs.length > 0 && (
+                <div className="pt-6 border-t border-slate-50">
+                  <p className="text-[10px] font-black text-primary uppercase tracking-widest mb-4">Các giao dịch liên đới ({relatedTxs.length})</p>
+                  <div className="space-y-3">
+                    {relatedTxs.map(rtx => (
+                      <div key={rtx.id} className="flex items-center justify-between p-5 bg-white border border-slate-100 rounded-[1.5rem] shadow-sm">
+                        <div>
+                          <p className="text-xs font-black text-slate-900 uppercase tracking-tight">{getTransactionTypeLabel(rtx.type, rtx.amount)}</p>
+                          <p className="text-[9px] text-slate-400 font-bold uppercase">{formatDateTimeVi(rtx.createdAt).split(' ')[0]}</p>
                         </div>
-                      ))}
-                    </div>
-                 </div>
-               )}
+                        <p className={`text-sm font-black tabular-nums ${rtx.amount >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                          {rtx.amount >= 0 ? '+' : ''}{formatCurrency(rtx.amount)}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>

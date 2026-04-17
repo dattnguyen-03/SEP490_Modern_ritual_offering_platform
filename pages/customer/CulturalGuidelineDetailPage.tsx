@@ -45,7 +45,7 @@ const CulturalGuidelineDetailPage: React.FC<{ onNavigate: (path: string) => void
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4 mx-auto"></div>
-          <p className="text-slate-400 font-bold uppercase tracking-widest text-xs">Đang tải kiến thức truyền thống...</p>
+          <p className="text-black font-bold uppercase tracking-widest text-xs">Đang tải kiến thức truyền thống...</p>
         </div>
       </div>
     );
@@ -57,7 +57,7 @@ const CulturalGuidelineDetailPage: React.FC<{ onNavigate: (path: string) => void
         <div className="text-center bg-white p-12 rounded-[3rem] shadow-xl">
           <span className="material-symbols-outlined text-6xl text-slate-200 mb-4">error_outline</span>
           <h2 className="text-2xl font-black text-slate-800 mb-4">Không tìm thấy hướng dẫn</h2>
-          <button 
+          <button
             onClick={() => onNavigate('/cultural-guideline')}
             className="px-8 py-4 bg-primary text-white rounded-2xl font-black uppercase tracking-widest"
           >
@@ -72,8 +72,8 @@ const CulturalGuidelineDetailPage: React.FC<{ onNavigate: (path: string) => void
     <div className="min-h-screen bg-slate-50">
       {/* Header Splash */}
       <div className="relative h-[400px] w-full overflow-hidden">
-        <img 
-          src={getCategoryImage(guideline.categoryName)} 
+        <img
+          src={getCategoryImage(guideline.categoryName)}
           alt={guideline.title}
           className="w-full h-full object-cover brightness-50"
         />
@@ -103,15 +103,15 @@ const CulturalGuidelineDetailPage: React.FC<{ onNavigate: (path: string) => void
                   Kiến thức chuẩn văn hóa
                 </span>
               </div>
-              
+
               <div className="prose prose-slate prose-lg max-w-none">
-                <p className="text-slate-600 leading-[2.2] text-xl font-medium italic mb-10 border-l-4 border-gold/20 pl-8">
+                <p className="text-black leading-[2.2] text-xl font-medium italic mb-10 border-l-4 border-gold/20 pl-8">
                   {guideline.description}
                 </p>
-                
+
                 <h2 className="text-2xl font-black text-slate-800 mt-12 mb-6">Cần chuẩn bị những gì?</h2>
-                <p className="text-slate-500 leading-relaxed mb-6">
-                  Để một buổi lễ diễn ra thuận lợi, sự chuẩn bị kỹ lưỡng về mặt lễ vật là vô cùng quan trọng. 
+                <p className="text-black leading-relaxed mb-6">
+                  Để một buổi lễ diễn ra thuận lợi, sự chuẩn bị kỹ lưỡng về mặt lễ vật là vô cùng quan trọng.
                   Gia chủ nên chú trọng vào sự tươi mới của thực phẩm và sự sắp xếp ngay ngắn của mâm lễ.
                 </p>
 
@@ -130,8 +130,8 @@ const CulturalGuidelineDetailPage: React.FC<{ onNavigate: (path: string) => void
                     <span className="material-symbols-outlined text-primary">lightbulb</span>
                     Lời khuyên từ cố vấn tâm linh
                   </h3>
-                  <p className="text-slate-400 text-sm leading-relaxed italic">
-                    "Trong mọi nghi lễ, lòng thành là lễ vật quý nhất. Hãy thực hiện nghi thức với tâm thế bình an và biết ơn, 
+                  <p className="text-black text-sm leading-relaxed italic">
+                    "Trong mọi nghi lễ, lòng thành là lễ vật quý nhất. Hãy thực hiện nghi thức với tâm thế bình an và biết ơn,
                     mọi điều tốt lành sẽ tự nhiên tìm đến."
                   </p>
                 </div>
@@ -145,16 +145,16 @@ const CulturalGuidelineDetailPage: React.FC<{ onNavigate: (path: string) => void
               {/* Call to action */}
               <div className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-xl shadow-slate-200/40 text-center">
                 <h3 className="text-xl font-black text-slate-800 mb-4">Bạn muốn đặt mâm cúng trọn gói?</h3>
-                <p className="text-slate-500 text-sm mb-8">Chúng tôi chuẩn bị đầy đủ mọi lễ vật, giao hàng và bài trí tận nơi cho bạn.</p>
-                <button 
+                <p className="text-black text-sm mb-8">Chúng tôi chuẩn bị đầy đủ mọi lễ vật, giao hàng và bài trí tận nơi cho bạn.</p>
+                <button
                   onClick={() => onNavigate(`/shop?category=${encodeURIComponent(guideline.categoryName)}`)}
                   className="w-full py-5 bg-primary text-white rounded-2xl font-black uppercase tracking-widest shadow-2xl shadow-primary/20 hover:scale-[1.02] transition-all mb-4"
                 >
                   Xem các gói {guideline.categoryName}
                 </button>
-                <button 
+                <button
                   onClick={() => onNavigate('/about')}
-                  className="w-full py-4 text-slate-500 font-bold hover:text-primary transition-colors text-sm"
+                  className="w-full py-4 text-black font-bold hover:text-primary transition-colors text-sm"
                 >
                   Tìm hiểu quy trình phục vụ
                 </button>
@@ -166,7 +166,7 @@ const CulturalGuidelineDetailPage: React.FC<{ onNavigate: (path: string) => void
                   <span className="material-symbols-outlined">support_agent</span>
                 </div>
                 <div>
-                  <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">Hỗ trợ 24/7</p>
+                  <p className="text-[10px] font-black uppercase tracking-wider text-black">Hỗ trợ 24/7</p>
                   <p className="font-bold text-slate-800">1900 8888</p>
                 </div>
               </div>

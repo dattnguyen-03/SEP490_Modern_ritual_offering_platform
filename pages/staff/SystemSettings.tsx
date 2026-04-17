@@ -161,7 +161,7 @@ const SystemSettings: React.FC<SystemSettingsProps> = ({ onNavigate, onLogout })
                     <h3 className="text-lg font-bold text-gray-900">{cat.name}</h3>
                     <div className="flex items-center gap-2 mt-1">
                       <span className={`size-2 rounded-full ${cat.isActive ? 'bg-emerald-500' : 'bg-slate-300'}`}></span>
-                      <span className="text-xs font-medium text-slate-500">
+                      <span className="text-xs font-medium text-black">
                         {cat.isActive ? 'Đang hoạt động' : 'Tạm ngưng'}
                       </span>
                     </div>
@@ -334,7 +334,7 @@ const SystemSettings: React.FC<SystemSettingsProps> = ({ onNavigate, onLogout })
           <div className="flex items-start justify-between gap-6 mb-2">
             <div>
               <h1 className="text-3xl md:text-4xl font-black text-slate-900">Quản lý Cấu hình Hệ thống</h1>
-              <p className="text-slate-500 font-bold mt-2">Quản lý thể loại nghi lễ và cấu hình nền tảng</p>
+              <p className="text-black font-bold mt-2">Quản lý thể loại nghi lễ và cấu hình nền tảng</p>
             </div>
           </div>
         </div>
@@ -346,17 +346,16 @@ const SystemSettings: React.FC<SystemSettingsProps> = ({ onNavigate, onLogout })
               <div className="px-6 py-8 border-b border-slate-100 bg-gradient-to-br from-slate-50 to-white">
                 <h2 className="text-sm font-black text-slate-400 uppercase tracking-widest">Danh mục</h2>
               </div>
-              
+
               <div className="divide-y divide-slate-100">
                 {categories.map((cat) => (
                   <button
                     key={cat.id}
                     onClick={() => setActiveCategory(cat.id as any)}
-                    className={`w-full px-6 py-4 text-left font-bold text-sm transition-all flex items-center gap-3 ${
-                      activeCategory === cat.id
+                    className={`w-full px-6 py-4 text-left font-bold text-sm transition-all flex items-center gap-3 ${activeCategory === cat.id
                         ? 'bg-slate-900 text-white shadow-md'
                         : 'text-slate-700 hover:bg-slate-50'
-                    }`}
+                      }`}
                   >
                     <span className="text-lg">{cat.icon || '⚙️'}</span>
                     {cat.label}
@@ -375,7 +374,7 @@ const SystemSettings: React.FC<SystemSettingsProps> = ({ onNavigate, onLogout })
                   <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pb-6 border-b border-slate-100">
                     <div>
                       <h2 className="text-2xl font-black text-slate-900">Thể loại Nghi Lễ</h2>
-                      <p className="text-sm text-slate-500 mt-1 font-medium">Quản lý các loại nghi lễ có sẵn trên nền tảng</p>
+                      <p className="text-sm text-black mt-1 font-medium">Quản lý các loại nghi lễ có sẵn trên nền tảng</p>
                     </div>
                     <button
                       onClick={() => handleOpenCeremonyModal()}
@@ -389,11 +388,11 @@ const SystemSettings: React.FC<SystemSettingsProps> = ({ onNavigate, onLogout })
                   {isCeremonyLoading ? (
                     <div className="flex flex-col items-center justify-center py-20">
                       <div className="animate-spin rounded-full h-10 w-10 border-3 border-slate-200 border-t-slate-900 mb-4"></div>
-                      <p className="text-slate-500 font-bold">Đang tải danh sách...</p>
+                      <p className="text-black font-bold">Đang tải danh sách...</p>
                     </div>
                   ) : ceremonyCategories.length === 0 ? (
                     <div className="text-center py-16">
-                      <p className="text-slate-500 font-bold text-lg">Chưa có thể loại nào</p>
+                      <p className="text-black font-bold text-lg">Chưa có thể loại nào</p>
                       <p className="text-slate-400 text-sm mt-1">Hãy thêm thể loại nghi lễ đầu tiên của bạn</p>
                     </div>
                   ) : (
@@ -401,24 +400,23 @@ const SystemSettings: React.FC<SystemSettingsProps> = ({ onNavigate, onLogout })
                       {ceremonyCategories.map((cat) => (
                         <div
                           key={cat.categoryId}
-                          className={`group rounded-2xl border-2 transition-all duration-200 p-5 ${
-                            cat.isActive
+                          className={`group rounded-2xl border-2 transition-all duration-200 p-5 ${cat.isActive
                               ? 'border-slate-200 bg-gradient-to-br from-white to-slate-50/30 hover:border-slate-300 hover:shadow-md'
                               : 'border-slate-100 bg-slate-50/50 opacity-60'
-                          }`}
+                            }`}
                         >
                           <div className="flex items-start justify-between gap-3 mb-3">
                             <div className="flex-1 min-w-0">
                               <h3 className="text-base font-black text-slate-900 line-clamp-1">{cat.name}</h3>
                               <div className="flex items-center gap-2 mt-2">
                                 <span className={`inline-flex h-2 w-2 rounded-full ${cat.isActive ? 'bg-emerald-500' : 'bg-slate-300'}`}></span>
-                                <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">
+                                <span className="text-xs font-bold text-black uppercase tracking-widest">
                                   {cat.isActive ? 'Hoạt động' : 'Tạm ngưng'}
                                 </span>
                               </div>
                             </div>
                           </div>
-                          
+
                           <p className="text-sm text-slate-600 line-clamp-3 min-h-[60px] leading-relaxed mb-4">
                             {cat.description || 'Chưa có mô tả cho thể loại này'}
                           </p>
@@ -461,7 +459,7 @@ const SystemSettings: React.FC<SystemSettingsProps> = ({ onNavigate, onLogout })
                     <h2 className="text-2xl font-black text-slate-900">
                       {categories.find(c => c.id === activeCategory)?.label}
                     </h2>
-                    <p className="text-sm text-slate-500 mt-1 font-medium">
+                    <p className="text-sm text-black mt-1 font-medium">
                       Quản lý các cấu hình của danh mục này
                     </p>
                   </div>
@@ -469,7 +467,7 @@ const SystemSettings: React.FC<SystemSettingsProps> = ({ onNavigate, onLogout })
                   <div className="space-y-4 mt-6">
                     {filteredConfigs.length === 0 ? (
                       <div className="text-center py-12">
-                        <p className="text-slate-500 font-bold">Chưa có cấu hình nào</p>
+                        <p className="text-black font-bold">Chưa có cấu hình nào</p>
                       </div>
                     ) : (
                       filteredConfigs.map((config) => (
@@ -481,7 +479,7 @@ const SystemSettings: React.FC<SystemSettingsProps> = ({ onNavigate, onLogout })
                             <div className="flex-1 min-w-0">
                               <h3 className="text-base font-black text-slate-900 mb-1">{config.name}</h3>
                               <p className="text-sm text-slate-600 mb-3">{config.description}</p>
-                              <span className="inline-block text-xs text-slate-500 font-mono bg-slate-100 px-3 py-1 rounded-lg">
+                              <span className="inline-block text-xs text-black font-mono bg-slate-100 px-3 py-1 rounded-lg">
                                 {config.id}
                               </span>
                             </div>

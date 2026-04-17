@@ -54,18 +54,18 @@ const AboutUsPage: React.FC<AboutUsPageProps> = ({ onNavigate }) => {
               </h3>
             </div>
 
-            <p className="text-slate-600 leading-relaxed text-lg">
+            <p className="text-black leading-relaxed text-lg">
               Trong guồng quay hối hả của cuộc sống hiện đại, việc chuẩn bị một mâm cúng đúng nghi thức thường trở thành một gánh nặng thời gian cho nhiều gia đình. Chúng tôi ra đời với khao khát giúp mọi người dễ dàng thực hiện các nghi lễ tâm linh mà không mất đi sự tỉ mỉ, trân trọng vốn có.
             </p>
 
             <div className="grid grid-cols-2 gap-8 pt-4">
               <div className="space-y-2">
                 <p className="text-4xl font-black text-primary italic">10k+</p>
-                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest leading-none">Mâm cúng đã giao</p>
+                <p className="text-xs font-bold text-black uppercase tracking-widest leading-none">Mâm cúng đã giao</p>
               </div>
               <div className="space-y-2">
                 <p className="text-4xl font-black text-primary italic">500+</p>
-                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest leading-none">Nghệ nhân hợp tác</p>
+                <p className="text-xs font-bold text-black uppercase tracking-widest leading-none">Nghệ nhân hợp tác</p>
               </div>
             </div>
           </div>
@@ -118,7 +118,7 @@ const AboutUsPage: React.FC<AboutUsPageProps> = ({ onNavigate }) => {
                   <span className="material-symbols-outlined text-3xl">{value.icon}</span>
                 </div>
                 <h4 className="text-xl font-black text-slate-900 mb-4 tracking-tight">{value.title}</h4>
-                <p className="text-slate-500 leading-relaxed italic">"{value.desc}"</p>
+                <p className="text-black leading-relaxed italic">"{value.desc}"</p>
               </div>
             ))}
           </div>
@@ -142,7 +142,7 @@ const AboutUsPage: React.FC<AboutUsPageProps> = ({ onNavigate }) => {
 
           <div className="flex flex-col items-center gap-4 pt-8">
             <div className="w-16 h-1 bg-gradient-to-r from-transparent via-gold to-transparent"></div>
-            <p className="text-xs font-black uppercase tracking-[0.4em] text-slate-400 italic">Đội ngũ sáng lập Modern Ritual</p>
+            <p className="text-xs font-black uppercase tracking-[0.4em] text-black italic">Đội ngũ sáng lập Modern Ritual</p>
           </div>
         </div>
       </section>
@@ -153,32 +153,32 @@ const AboutUsPage: React.FC<AboutUsPageProps> = ({ onNavigate }) => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
             <div className="order-2 lg:order-1 relative">
               <div className="max-w-md mx-auto aspect-square rounded-[2rem] overflow-hidden shadow-2xl border-4 border-white relative z-10">
-                <img 
-                  src={TeamImage} 
-                  alt="Development Team" 
+                <img
+                  src={TeamImage}
+                  alt="Development Team"
                   className="w-full h-full object-cover"
                 />
               </div>
               {/* Decorative elements */}
               <div className="absolute -z-10 -bottom-4 -left-4 w-full h-full max-w-md inset-0 mx-auto border-2 border-gold/30 rounded-[2rem]"></div>
             </div>
-            
+
             <div className="order-1 lg:order-2 space-y-8">
               <div className="space-y-4">
                 <h2 className="text-[10px] font-black text-gold uppercase tracking-[0.3em]">Con người phía sau</h2>
                 <h3 className="text-4xl md:text-5xl font-black text-primary font-display italic">Đội ngũ phát triển</h3>
               </div>
-              <p className="text-slate-600 leading-relaxed text-lg italic">
+              <p className="text-black leading-relaxed text-lg italic">
                 Sự kết hợp giữa những lập trình viên trẻ đầy nhiệt huyết và các nghệ nhân văn hóa dày dặn kinh nghiệm. Chúng tôi làm việc không ngừng để xây dựng một nền tảng không chỉ hiện đại về công nghệ mà còn sâu sắc về giá trị tinh thần.
               </p>
-              
+
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 pt-4">
                 <div className="space-y-3">
                   <div className="w-10 h-10 rounded-xl bg-gold/10 text-gold flex items-center justify-center">
                     <span className="material-symbols-outlined text-xl">self_improvement</span>
                   </div>
                   <p className="text-sm font-black text-primary uppercase tracking-widest">Trẻ trung</p>
-                  <p className="text-xs text-slate-400 font-medium">Đầy nhiệt huyết và sáng tạo trong từng giải pháp.</p>
+                  <p className="text-xs text-black font-medium">Đầy nhiệt huyết và sáng tạo trong từng giải pháp.</p>
                 </div>
 
                 <div className="space-y-3">
@@ -186,7 +186,7 @@ const AboutUsPage: React.FC<AboutUsPageProps> = ({ onNavigate }) => {
                     <span className="material-symbols-outlined text-xl">devices</span>
                   </div>
                   <p className="text-sm font-black text-primary uppercase tracking-widest">Hiện đại</p>
-                  <p className="text-xs text-slate-400 font-medium">Áp dụng công nghệ tiên tiến nhất cho trải nghiệm người dùng.</p>
+                  <p className="text-xs text-black font-medium">Áp dụng công nghệ tiên tiến nhất cho trải nghiệm người dùng.</p>
                 </div>
 
                 <div className="space-y-3">
@@ -194,7 +194,7 @@ const AboutUsPage: React.FC<AboutUsPageProps> = ({ onNavigate }) => {
                     <span className="material-symbols-outlined text-xl">history_edu</span>
                   </div>
                   <p className="text-sm font-black text-primary uppercase tracking-widest">Đậm chất văn hóa</p>
-                  <p className="text-xs text-slate-400 font-medium">Gìn giữ linh hồn của nghi lễ truyền thống Việt.</p>
+                  <p className="text-xs text-black font-medium">Gìn giữ linh hồn của nghi lễ truyền thống Việt.</p>
                 </div>
               </div>
             </div>

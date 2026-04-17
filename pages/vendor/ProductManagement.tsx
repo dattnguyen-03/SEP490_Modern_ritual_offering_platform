@@ -418,10 +418,10 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onNavigate }) => 
       // Ưu tiên dùng vendorProfileId đã fetch từ profile
       const source = vendorProfileId
         ? packages.filter((item: any) => {
-            const itemVendorId = String(item.vendorProfileId || item.vendorId || '').trim();
-            const match = itemVendorId === vendorProfileId;
-            return match;
-          })
+          const itemVendorId = String(item.vendorProfileId || item.vendorId || '').trim();
+          const match = itemVendorId === vendorProfileId;
+          return match;
+        })
         : packages;
 
       console.log(`📦 Loaded ${source.length} products after filtering (Total from API: ${packages.length})`);
@@ -610,7 +610,7 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onNavigate }) => 
             </button> */}
             <div>
               <h1 className="text-4xl font-black text-slate-900 tracking-tight mb-2">Sản Phẩm</h1>
-              <p className="text-slate-500 font-bold text-sm">Quản lý danh mục sản phẩm mâm cúng của bạn.</p>
+              <p className="text-black font-bold text-sm">Quản lý danh mục sản phẩm mâm cúng của bạn.</p>
             </div>
           </div>
 
@@ -767,9 +767,8 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onNavigate }) => 
                     onChange={e => setCreateForm({ ...createForm, description: e.target.value.slice(0, 255) })}
                     maxLength={255}
                     rows={3}
-                    className={`w-full px-4 py-3 border-2 rounded-2xl text-sm text-gray-700 focus:outline-none transition resize-none ${
-                      createForm.description.length >= 255 ? 'border-amber-400 focus:border-amber-500' : 'border-gray-200 focus:border-primary'
-                    }`}
+                    className={`w-full px-4 py-3 border-2 rounded-2xl text-sm text-gray-700 focus:outline-none transition resize-none ${createForm.description.length >= 255 ? 'border-amber-400 focus:border-amber-500' : 'border-gray-200 focus:border-primary'
+                      }`}
                     placeholder="Mô tả chi tiết sản phẩm..."
                   />
                   {createForm.description.length >= 255 && (
@@ -982,7 +981,7 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onNavigate }) => 
           </div>
 
           {loadingProducts && (
-            <div className="px-6 py-8 text-center text-slate-500 font-semibold">Đang tải danh sách sản phẩm...</div>
+            <div className="px-6 py-8 text-center text-black font-semibold">Đang tải danh sách sản phẩm...</div>
           )}
 
           {!loadingProducts && productsError && (
@@ -998,7 +997,7 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onNavigate }) => 
           )}
 
           {!loadingProducts && !productsError && filteredProducts.length === 0 && (
-            <div className="px-6 py-8 text-center text-slate-500 font-semibold">
+            <div className="px-6 py-8 text-center text-black font-semibold">
               {products.length === 0 ? 'Không có sản phẩm cho trạng thái đã chọn.' : 'Không có sản phẩm thuộc danh mục đã chọn.'}
             </div>
           )}
@@ -1176,11 +1175,10 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onNavigate }) => 
                     const isRejected = approval === 'Rejected';
                     return (
                       <>
-                        <span className={`px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest flex-shrink-0 ${
-                          isApproved ? 'bg-green-100 text-green-700 border border-green-200' :
-                          isRejected ? 'bg-red-100 text-red-700 border border-red-200' :
-                          'bg-yellow-100 text-yellow-700 border border-yellow-200'
-                        }`}>
+                        <span className={`px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest flex-shrink-0 ${isApproved ? 'bg-green-100 text-green-700 border border-green-200' :
+                            isRejected ? 'bg-red-100 text-red-700 border border-red-200' :
+                              'bg-yellow-100 text-yellow-700 border border-yellow-200'
+                          }`}>
                           {isApproved ? 'Đã Duyệt' : isRejected ? 'Từ Chối' : 'Chờ Duyệt'}
                         </span>
                         {!isApproved && (
@@ -1285,9 +1283,8 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onNavigate }) => 
                             onChange={e => setEditForm({ ...editForm, description: e.target.value.slice(0, 255) })}
                             maxLength={255}
                             rows={5}
-                            className={`w-full px-4 py-2.5 border-2 rounded-xl text-sm text-gray-700 focus:outline-none transition resize-none ${
-                              editForm.description.length >= 255 ? 'border-amber-400 bg-amber-50/10 focus:border-amber-500' : 'border-primary/30 bg-primary/5 focus:border-primary'
-                            }`}
+                            className={`w-full px-4 py-2.5 border-2 rounded-xl text-sm text-gray-700 focus:outline-none transition resize-none ${editForm.description.length >= 255 ? 'border-amber-400 bg-amber-50/10 focus:border-amber-500' : 'border-primary/30 bg-primary/5 focus:border-primary'
+                              }`}
                           />
                           {editForm.description.length >= 255 && (
                             <p className="text-[9px] text-amber-600 font-bold mt-1">Đã đạt giới hạn tối đa 255 ký tự.</p>
@@ -1341,7 +1338,7 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onNavigate }) => 
                           return (
                             <div className="text-center py-8 bg-gray-50 rounded-[1.5rem] border border-dashed border-gray-200">
                               <p className="text-xl mb-2 opacity-30">📦</p>
-                              <p className="text-slate-500 text-sm font-medium">Sản phẩm này chưa có biến thể nào.</p>
+                              <p className="text-black text-sm font-medium">Sản phẩm này chưa có biến thể nào.</p>
                             </div>
                           );
                         }
@@ -1798,14 +1795,14 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onNavigate }) => 
                         return (
                           <div className="space-y-4 text-sm">
                             <div className="flex items-center justify-between gap-2 bg-slate-50 border border-slate-200 rounded-xl p-3">
-                              <span className="text-slate-500 font-semibold">Kết luận</span>
+                              <span className="text-black font-semibold">Kết luận</span>
                               <span className={`px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-widest ${decisionInfo.className}`}>
                                 {decisionInfo.text}
                               </span>
                             </div>
 
                             <div className="bg-slate-50 border border-slate-200 rounded-xl p-3">
-                              <p className="text-slate-500 text-[11px] font-bold uppercase tracking-widest mb-2">Nhận xét chính</p>
+                              <p className="text-black text-[11px] font-bold uppercase tracking-widest mb-2">Nhận xét chính</p>
                               <p className="text-slate-700 leading-relaxed break-words">
                                 {visibleReasoning || 'Hiện chưa có mô tả từ AI.'}
                               </p>
@@ -1850,14 +1847,14 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onNavigate }) => 
 
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                               <div className="bg-slate-50 border border-slate-200 rounded-xl p-3">
-                                <p className="text-slate-500 text-[11px] font-bold uppercase tracking-widest">Cần duyệt thủ công</p>
+                                <p className="text-black text-[11px] font-bold uppercase tracking-widest">Cần duyệt thủ công</p>
                                 <p className="font-bold text-slate-800 mt-1">
                                   {summary.requiresManualReview === null ? 'Chưa rõ' : summary.requiresManualReview ? 'Có' : 'Không'}
                                 </p>
                               </div>
 
                               <div className="bg-slate-50 border border-slate-200 rounded-xl p-3">
-                                <p className="text-slate-500 text-[11px] font-bold uppercase tracking-widest">Độ tin cậy</p>
+                                <p className="text-black text-[11px] font-bold uppercase tracking-widest">Độ tin cậy</p>
                                 <p className="font-bold text-slate-800 mt-1">
                                   {summary.confidenceScore === null ? 'Chưa có' : `${summary.confidenceScore}`}
                                 </p>
@@ -1865,7 +1862,7 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onNavigate }) => 
 
                               {summary.screenedAt && (
                                 <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 sm:col-span-2">
-                                  <p className="text-slate-500 text-[11px] font-bold uppercase tracking-widest">Thời điểm AI quét</p>
+                                  <p className="text-black text-[11px] font-bold uppercase tracking-widest">Thời điểm AI quét</p>
                                   <p className="font-semibold text-slate-800 mt-1">{new Date(summary.screenedAt).toLocaleString('vi-VN')}</p>
                                 </div>
                               )}

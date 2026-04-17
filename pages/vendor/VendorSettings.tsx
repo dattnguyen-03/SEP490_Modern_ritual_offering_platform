@@ -877,12 +877,12 @@ const VendorSettings: React.FC<VendorSettingsProps> = ({ onNavigate }) => {
     try {
       const date = new Date(dateString);
       if (isNaN(date.getTime())) return 'N/A';
-      return date.toLocaleString('vi-VN', { 
-        year: 'numeric', 
-        month: '2-digit', 
-        day: '2-digit', 
-        hour: '2-digit', 
-        minute: '2-digit' 
+      return date.toLocaleString('vi-VN', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
       });
     } catch {
       return 'N/A';
@@ -968,7 +968,7 @@ const VendorSettings: React.FC<VendorSettingsProps> = ({ onNavigate }) => {
             </button> */}
             <div>
               <h1 className="text-4xl font-black text-slate-900 tracking-tight mb-2">Cài Đặt</h1>
-              <p className="text-slate-500 font-bold text-sm">Quản lý thông tin cửa hàng và thanh toán của bạn.</p>
+              <p className="text-black font-bold text-sm">Quản lý thông tin cửa hàng và thanh toán của bạn.</p>
             </div>
           </div>
         </div>
@@ -1213,9 +1213,9 @@ const VendorSettings: React.FC<VendorSettingsProps> = ({ onNavigate }) => {
                           <div className="space-y-1">
                             <label className="text-[10px] font-bold uppercase text-slate-400 tracking-widest block">Khu vực đã chọn</label>
                             <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
-                              <p><span className="font-semibold text-slate-500">Tỉnh:</span> {provinces.find(p => p.code === selectedProvince)?.name || '---'}</p>
-                              <p><span className="font-semibold text-slate-500">Quận/Huyện:</span> {districts.find(d => d.code === selectedDistrict)?.name || '---'}</p>
-                              <p><span className="font-semibold text-slate-500">Phường/Xã:</span> {wards.find(w => w.code === selectedWard)?.name || '---'}</p>
+                              <p><span className="font-semibold text-black">Tỉnh:</span> {provinces.find(p => p.code === selectedProvince)?.name || '---'}</p>
+                              <p><span className="font-semibold text-black">Quận/Huyện:</span> {districts.find(d => d.code === selectedDistrict)?.name || '---'}</p>
+                              <p><span className="font-semibold text-black">Phường/Xã:</span> {wards.find(w => w.code === selectedWard)?.name || '---'}</p>
                             </div>
                           </div>
                           <button
@@ -1245,7 +1245,7 @@ const VendorSettings: React.FC<VendorSettingsProps> = ({ onNavigate }) => {
                           className="w-full px-4 py-3 rounded-xl bg-white border border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none"
                         />
                         {loadingAddressSuggestions && (
-                          <p className="text-xs text-slate-500">Đang tìm gợi ý địa chỉ...</p>
+                          <p className="text-xs text-black">Đang tìm gợi ý địa chỉ...</p>
                         )}
                         {!loadingAddressSuggestions && addressSuggestions.length > 0 && (
                           <div className="max-h-52 overflow-auto rounded-xl border border-gray-200 bg-white shadow-sm">
@@ -1278,7 +1278,7 @@ const VendorSettings: React.FC<VendorSettingsProps> = ({ onNavigate }) => {
                             </button>
                           </div>
                           {mapPreviewLoading && (
-                            <p className="text-sm text-slate-500 mb-2">Đang tìm vị trí trên bản đồ...</p>
+                            <p className="text-sm text-black mb-2">Đang tìm vị trí trên bản đồ...</p>
                           )}
                           {!mapPreviewLoading && mapPreviewError && (
                             <p className="text-sm text-red-600 mb-2">{mapPreviewError}</p>
@@ -1299,7 +1299,7 @@ const VendorSettings: React.FC<VendorSettingsProps> = ({ onNavigate }) => {
                                   {mapConfirmLoading ? 'Đang xác nhận...' : 'Xác nhận vị trí đã chọn'}
                                 </button>
                               </div>
-                              <p className="mt-2 text-xs text-slate-500">
+                              <p className="mt-2 text-xs text-black">
                                 Nhấn vào bản đồ hoặc kéo ghim để chỉnh vị trí chính xác trước khi lưu.
                               </p>
                             </>
@@ -1665,7 +1665,7 @@ const VendorSettings: React.FC<VendorSettingsProps> = ({ onNavigate }) => {
               ) : (
                 <div className="space-y-8">
                   <div className="p-6 bg-blue-50 border-2 border-blue-200 rounded-xl flex items-center gap-4">
-                   
+
                     <div>
                       <h3 className="text-lg font-bold text-blue-900">Yêu cầu đang được xử lý</h3>
                       <p className="text-sm text-blue-800">Cửa hàng của bạn đang trong tiến trình thanh lý và đóng cửa.</p>

@@ -125,7 +125,7 @@ const ShippingConfigPage: React.FC<ShippingConfigPageProps> = ({ onNavigate }) =
             </button> */}
             <div>
               <h1 className="text-4xl font-black text-slate-900 tracking-tight mb-2">Vận Chuyển</h1>
-              <p className="text-slate-500 font-bold text-sm">Quản lý các thông số phí giao hàng cho đơn hàng của bạn.</p>
+              <p className="text-black font-bold text-sm">Quản lý các thông số phí giao hàng cho đơn hàng của bạn.</p>
             </div>
           </div>
 

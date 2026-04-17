@@ -2035,7 +2035,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigate }) => {
       return (
         <div className="bg-white rounded-[2.5rem] border border-gray-200 shadow-xl overflow-hidden relative z-10 p-12 text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-slate-600">Đang tải thông tin đăng ký...</p>
+          <p className="text-black">Đang tải thông tin đăng ký...</p>
         </div>
       );
     }
@@ -2096,16 +2096,16 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigate }) => {
                     </div>
                     <div>
                       <h5 className="font-bold text-slate-900">{vendorRegistration.shopName}</h5>
-                      <p className="text-sm text-slate-500 line-clamp-2">{vendorRegistration.shopDescription}</p>
+                      <p className="text-sm text-black line-clamp-2">{vendorRegistration.shopDescription}</p>
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     <div className="p-3 bg-gray-50 rounded-xl">
-                      <span className="block text-xs text-slate-400 font-bold uppercase">MST</span>
+                      <span className="block text-xs text-black font-bold uppercase">MST</span>
                       <span className="font-semibold">{vendorRegistration.taxCode}</span>
                     </div>
                     <div className="p-3 bg-gray-50 rounded-xl">
-                      <span className="block text-xs text-slate-400 font-bold uppercase">Loại hình</span>
+                      <span className="block text-xs text-black font-bold uppercase">Loại hình</span>
                       <span className="font-semibold">{
                         vendorRegistration.businessType === 'Individual' ? 'Cá nhân' :
                           (vendorRegistration.businessType === 'HouseholdBusiness' || vendorRegistration.businessType === 'HouseholdBussiness') ? 'Hộ gia đình kinh doanh' :
@@ -2114,7 +2114,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigate }) => {
                     </div>
                   </div>
                   <div className="p-3 bg-gray-50 rounded-xl text-sm">
-                    <span className="block text-xs text-slate-400 font-bold uppercase">Địa chỉ</span>
+                    <span className="block text-xs text-black font-bold uppercase">Địa chỉ</span>
                     <span className="font-semibold">{vendorRegistration.shopAddressText}</span>
                   </div>
                 </div>
@@ -2134,7 +2134,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigate }) => {
                             </div>
                             <div>
                               <h6 className="font-bold text-slate-800 text-sm">{doc.documentTypeName}</h6>
-                              <p className="text-[10px] text-slate-400">{new Date(doc.uploadedAt).toLocaleString('vi-VN')}</p>
+                              <p className="text-[10px] text-black">{new Date(doc.uploadedAt).toLocaleString('vi-VN')}</p>
                             </div>
                           </div>
                           <span className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase ${doc.status === 'Approved' ? 'bg-green-100 text-green-700' :
@@ -2239,12 +2239,12 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigate }) => {
                       }}
                     />
                   </label>
-                  <p className="text-xs text-slate-400 mt-4">Kích thước tối ưu 512x512px. JPG, PNG hoặc WEBP.</p>
+                  <p className="text-xs text-black mt-4">Kích thước tối ưu 512x512px. JPG, PNG hoặc WEBP.</p>
                 </div>
 
                 <div className="space-y-6">
                   <div className="space-y-2">
-                    <label className="text-xs font-bold uppercase text-slate-500 tracking-widest">Tên Cửa Hàng *</label>
+                    <label className="text-xs font-bold uppercase text-black tracking-widest">Tên Cửa Hàng *</label>
                     <input
                       type="text"
                       name="shopName"
@@ -2257,7 +2257,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigate }) => {
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-xs font-bold uppercase text-slate-500 tracking-widest">Loại hình kinh doanh *</label>
+                    <label className="text-xs font-bold uppercase text-black tracking-widest">Loại hình kinh doanh *</label>
                     <select
                       name="businessType"
                       value={registerForm.businessType}
@@ -2272,7 +2272,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigate }) => {
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-xs font-bold uppercase text-slate-500 tracking-widest">Mã số thuế / MST Cá nhân *</label>
+                    <label className="text-xs font-bold uppercase text-black tracking-widest">Mã số thuế / MST Cá nhân *</label>
                     <input
                       type="text"
                       name="taxCode"
@@ -2287,7 +2287,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigate }) => {
 
                 <div className="space-y-6">
                   <div className="space-y-2">
-                    <label className="text-xs font-bold uppercase text-slate-500 tracking-widest">Mô tả cửa hàng *</label>
+                    <label className="text-xs font-bold uppercase text-black tracking-widest">Mô tả cửa hàng *</label>
                     <textarea
                       name="shopDescription"
                       value={registerForm.shopDescription}
@@ -2300,7 +2300,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigate }) => {
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-xs font-bold uppercase text-slate-500 tracking-widest">Đơn Hàng tối đa/1 ngày *</label>
+                    <label className="text-xs font-bold uppercase text-black tracking-widest">Đơn Hàng tối đa/1 ngày *</label>
                     <input
                       type="number"
                       name="dailyCapacity"
@@ -2317,7 +2317,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigate }) => {
                   {!regIsMapSelectionLocked ? (
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                       <div className="space-y-2">
-                        <label className="text-xs font-bold uppercase text-slate-500 tracking-widest">Tỉnh/Thành phố *</label>
+                        <label className="text-xs font-bold uppercase text-black tracking-widest">Tỉnh/Thành phố *</label>
                         <select
                           value={regSelectedProvince || ''}
                           onChange={(e) => {
@@ -2334,7 +2334,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigate }) => {
                         </select>
                       </div>
                       <div className="space-y-2">
-                        <label className="text-xs font-bold uppercase text-slate-500 tracking-widest">Quận/Huyện *</label>
+                        <label className="text-xs font-bold uppercase text-black tracking-widest">Quận/Huyện *</label>
                         <select
                           value={regSelectedDistrict || ''}
                           onChange={(e) => {
@@ -2350,7 +2350,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigate }) => {
                         </select>
                       </div>
                       <div className="space-y-2">
-                        <label className="text-xs font-bold uppercase text-slate-500 tracking-widest">Phường/Xã *</label>
+                        <label className="text-xs font-bold uppercase text-black tracking-widest">Phường/Xã *</label>
                         <select
                           value={regSelectedWard || ''}
                           onChange={(e) => {
@@ -2376,7 +2376,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigate }) => {
                   )}
 
                   <div className="space-y-2 relative">
-                    <label className="text-xs font-bold uppercase text-slate-500 tracking-widest">Địa chỉ cụ thể *</label>
+                    <label className="text-xs font-bold uppercase text-black tracking-widest">Địa chỉ cụ thể *</label>
                     <input
                       type="text"
                       value={regDetailedAddress}
@@ -2406,7 +2406,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigate }) => {
 
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
-                      <label className="text-xs font-bold uppercase text-slate-500 tracking-widest">Vị trí trên bản đồ *</label>
+                      <label className="text-xs font-bold uppercase text-black tracking-widest">Vị trí trên bản đồ *</label>
                       <button type="button" onClick={handleRegUseCurrentLocation} className="text-xs font-bold text-primary underline">📍 Vị trí hiện tại</button>
                     </div>
                     <div className="rounded-2xl border border-gray-200 overflow-hidden h-[300px]">
@@ -2430,7 +2430,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigate }) => {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {registerForm.documents.map((doc, index) => (
                   <div key={doc.documentType} className="flex flex-col">
-                    <label className="text-xs font-bold uppercase text-slate-500 tracking-tight mb-3">
+                    <label className="text-xs font-bold uppercase text-black tracking-tight mb-3">
                       {doc.label} {doc.mandatory && <span className="text-red-500">*</span>}
                     </label>
                     <div className="relative h-48 rounded-2xl border-2 border-dashed border-gray-200 bg-gray-50 overflow-hidden flex flex-col items-center justify-center">
@@ -2498,7 +2498,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigate }) => {
               <h1 className="text-2xl md:text-4xl font-black text-slate-900 font-display italic tracking-tight">
                 {loading ? 'Đang tải...' : profile?.fullName || 'Người dùng mới'}
               </h1>
-              <p className="text-sm md:text-base text-slate-500 font-medium">{loading ? '...' : getCurrentUser()?.email || profile?.userId}</p>
+              <p className="text-sm md:text-base text-black font-medium">{loading ? '...' : getCurrentUser()?.email || profile?.userId}</p>
               <div className="flex flex-wrap justify-center sm:justify-start gap-2 mt-2">
                 {profile?.isVendor && (
                   <span className="px-4 py-1.5 bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest rounded-full shadow-sm">
@@ -2646,7 +2646,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigate }) => {
                       ? 'bg-primary text-white shadow-md'
                       : isProfileSetupRequired && tab !== 'info'
                         ? 'text-slate-300 cursor-not-allowed opacity-50'
-                        : 'text-slate-500 hover:text-primary'
+                        : 'text-black hover:text-primary'
                       }`}
                   >
                     {tab === 'info' && 'Thông tin cá nhân'}
@@ -2692,13 +2692,13 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigate }) => {
 
                           </label>
                         </div>
-                        <p className="text-xs text-slate-500">Click vào icon để thay đổi ảnh đại diện</p>
+                        <p className="text-xs text-black">Click vào icon để thay đổi ảnh đại diện</p>
                       </div>
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         {/* Full Name */}
                         <div className="space-y-2">
-                          <label className="text-xs font-bold uppercase text-slate-400 tracking-widest">
+                          <label className="text-xs font-bold uppercase text-black tracking-widest">
                             Họ và tên <span className="text-red-500">*</span>
                           </label>
                           <input
@@ -2713,7 +2713,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigate }) => {
 
                         {/* Phone Number */}
                         <div className="space-y-2">
-                          <label className="text-xs font-bold uppercase text-slate-400 tracking-widest">
+                          <label className="text-xs font-bold uppercase text-black tracking-widest">
                             Số điện thoại <span className="text-red-500">*</span>
                           </label>
                           <input
@@ -2728,7 +2728,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigate }) => {
 
                         {/* Gender */}
                         <div className="space-y-2">
-                          <label className="text-xs font-bold uppercase text-slate-400 tracking-widest">
+                          <label className="text-xs font-bold uppercase text-black tracking-widest">
                             Giới tính <span className="text-red-500">*</span>
                           </label>
                           <select
@@ -2746,7 +2746,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigate }) => {
 
                         {/* Date of Birth */}
                         <div className="space-y-2">
-                          <label className="text-xs font-bold uppercase text-slate-400 tracking-widest">
+                          <label className="text-xs font-bold uppercase text-black tracking-widest">
                             Ngày sinh <span className="text-red-500">*</span>
                           </label>
                           <input
@@ -2765,7 +2765,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigate }) => {
                         {customerAddresses.length > 0 && (
                           <div className="space-y-3">
                             <div className="flex items-center justify-between">
-                              <label className="text-xs font-bold uppercase text-slate-400 tracking-widest">
+                              <label className="text-xs font-bold uppercase text-black tracking-widest">
                                 Địa chỉ đã lưu
                               </label>
                               <button
@@ -2788,7 +2788,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigate }) => {
                                   }));
                                 }}
                                 className={`text-xs font-semibold ${selectedExistingAddressId === null
-                                  ? 'text-slate-400 cursor-default'
+                                  ? 'text-black cursor-default'
                                   : 'text-primary hover:underline'
                                   }`}
                               >
@@ -2962,7 +2962,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigate }) => {
                           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             {/* Province */}
                             <div className="space-y-2">
-                              <label className="text-xs font-bold uppercase text-slate-400 tracking-widest">
+                              <label className="text-xs font-bold uppercase text-black tracking-widest">
                                 Tỉnh/Thành phố <span className="text-red-500">*</span>
                               </label>
                               <select
@@ -3004,7 +3004,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigate }) => {
 
                             {/* District */}
                             <div className="space-y-2">
-                              <label className="text-xs font-bold uppercase text-slate-400 tracking-widest">
+                              <label className="text-xs font-bold uppercase text-black tracking-widest">
                                 Quận/Huyện <span className="text-red-500">*</span>
                               </label>
                               <select
@@ -3032,7 +3032,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigate }) => {
 
                             {/* Ward */}
                             <div className="space-y-2">
-                              <label className="text-xs font-bold uppercase text-slate-400 tracking-widest">
+                              <label className="text-xs font-bold uppercase text-black tracking-widest">
                                 Phường/Xã {wards.length > 0 ? <span className="text-red-500">*</span> : '(Tùy chọn)'}
                               </label>
                               <select
@@ -3064,11 +3064,11 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigate }) => {
                         ) : (
                           <div className="bg-primary/5 border border-primary/20 rounded-2xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
                             <div className="space-y-1">
-                              <label className="text-[10px] font-bold uppercase text-slate-400 tracking-widest block">Khu vực đã chọn</label>
+                              <label className="text-[10px] font-bold uppercase text-black tracking-widest block">Khu vực đã chọn</label>
                               <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
-                                <p><span className="font-semibold text-slate-500">Tỉnh:</span> {provinces.find(p => p.code === selectedProvince)?.name || '---'}</p>
-                                <p><span className="font-semibold text-slate-500">Quận/Huyện:</span> {districts.find(d => d.code === selectedDistrict)?.name || '---'}</p>
-                                <p><span className="font-semibold text-slate-500">Phường/Xã:</span> {wards.find(w => w.code === selectedWard)?.name || '---'}</p>
+                                <p><span className="font-semibold text-black">Tỉnh:</span> {provinces.find(p => p.code === selectedProvince)?.name || '---'}</p>
+                                <p><span className="font-semibold text-black">Quận/Huyện:</span> {districts.find(d => d.code === selectedDistrict)?.name || '---'}</p>
+                                <p><span className="font-semibold text-black">Phường/Xã:</span> {wards.find(w => w.code === selectedWard)?.name || '---'}</p>
                               </div>
                             </div>
                             <button
@@ -3083,10 +3083,10 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigate }) => {
 
                         {/* Detailed Address */}
                         <div className="space-y-2">
-                          <label className="text-xs font-bold uppercase text-slate-400 tracking-widest">
+                          <label className="text-xs font-bold uppercase text-black tracking-widest">
                             Địa chỉ cụ thể <span className="text-red-500">*</span>
                             {selectedDistrict && wards.length === 0 && !loadingWards && (
-                              <span className="text-xs normal-case text-slate-500"> (bao gồm phường/xã)</span>
+                              <span className="text-xs normal-case text-black"> (bao gồm phường/xã)</span>
                             )}
                           </label>
                           <input
@@ -3106,7 +3106,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigate }) => {
                             className="w-full px-4 py-3 rounded-xl bg-white border border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none"
                           />
                           {loadingAddressSuggestions && (
-                            <p className="text-xs text-slate-500">Đang tìm gợi ý địa chỉ...</p>
+                            <p className="text-xs text-black">Đang tìm gợi ý địa chỉ...</p>
                           )}
                           {!loadingAddressSuggestions && addressSuggestions.length > 0 && (
                             <div className="max-h-52 overflow-auto rounded-xl border border-gray-200 bg-white shadow-sm">
@@ -3125,7 +3125,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigate }) => {
                         </div>
 
                         <div className="space-y-2">
-                          <label className="text-xs font-bold uppercase text-slate-400 tracking-widest">
+                          <label className="text-xs font-bold uppercase text-black tracking-widest">
                             Bản đồ vị trí
                           </label>
                           <div className="rounded-xl border border-gray-200 bg-gray-50 p-3">
@@ -3139,7 +3139,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigate }) => {
                               </button>
                             </div>
                             {mapPreviewLoading && (
-                              <p className="text-sm text-slate-500">Đang tìm vị trí trên bản đồ...</p>
+                              <p className="text-sm text-black">Đang tìm vị trí trên bản đồ...</p>
                             )}
                             {!mapPreviewLoading && mapPreviewError && (
                               <p className="text-sm text-red-600">{mapPreviewError}</p>
@@ -3160,7 +3160,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigate }) => {
                                     {mapConfirmLoading ? 'Đang xác nhận...' : 'Xác nhận vị trí đã chọn'}
                                   </button>
                                 </div>
-                                <p className="mt-2 text-xs text-slate-500">
+                                <p className="mt-2 text-xs text-black">
                                   Nhấn vào bản đồ hoặc kéo ghim để chỉnh vị trí chính xác trước khi lưu.
                                 </p>
                               </>
@@ -3228,38 +3228,38 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigate }) => {
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                           {/* <div className="p-4 rounded-xl bg-gray-50 border border-gray-200">
-                      <span className="text-xs font-bold uppercase text-slate-400">Profile ID</span>
+                      <span className="text-xs font-bold uppercase text-black">Profile ID</span>
                       <p className="text-sm font-mono text-primary mt-1">{profile?.profileId}</p>
                     </div>
                     <div className="p-4 rounded-xl bg-gray-50 border border-gray-200">
-                      <span className="text-xs font-bold uppercase text-slate-400">User ID</span>
+                      <span className="text-xs font-bold uppercase text-black">User ID</span>
                       <p className="text-sm font-mono text-primary mt-1">{profile?.userId}</p>
                     </div> */}
                           <div className="p-4 rounded-xl bg-gray-50 border border-gray-200">
-                            <span className="text-xs font-bold uppercase text-slate-400">Họ và tên</span>
+                            <span className="text-xs font-bold uppercase text-black">Họ và tên</span>
                             <p className="text-lg font-bold text-primary mt-1">{profile?.fullName}</p>
                           </div>
                           <div className="p-4 rounded-xl bg-gray-50 border border-gray-200">
-                            <span className="text-xs font-bold uppercase text-slate-400">Email</span>
+                            <span className="text-xs font-bold uppercase text-black">Email</span>
                             <p className="text-lg font-bold text-primary mt-1">{getCurrentUser()?.email}</p>
                           </div>
                           <div className="p-4 rounded-xl bg-gray-50 border border-gray-200">
-                            <span className="text-xs font-bold uppercase text-slate-400">Số điện thoại</span>
+                            <span className="text-xs font-bold uppercase text-black">Số điện thoại</span>
                             <p className="text-lg font-bold text-primary mt-1">{profile?.phoneNumber}</p>
                           </div>
                           <div className="p-4 rounded-xl bg-gray-50 border border-gray-200">
-                            <span className="text-xs font-bold uppercase text-slate-400">Giới tính</span>
+                            <span className="text-xs font-bold uppercase text-black">Giới tính</span>
                             <p className="text-lg font-bold text-primary mt-1">{getVietnameseGender(profile?.gender)}</p>
                           </div>
                           <div className="p-4 rounded-xl bg-gray-50 border border-gray-200">
-                            <span className="text-xs font-bold uppercase text-slate-400">Ngày sinh</span>
+                            <span className="text-xs font-bold uppercase text-black">Ngày sinh</span>
                             <p className="text-lg font-bold text-primary mt-1">
                               {profile?.dateOfBirth ? new Date(profile.dateOfBirth).toLocaleDateString('vi-VN') : 'N/A'}
                             </p>
                           </div>
                           {profile?.isVendor && profile?.ratingAvg > 0 && (
                             <div className="p-4 rounded-xl bg-gray-50 border border-gray-200">
-                              <span className="text-xs font-bold uppercase text-slate-400">Đánh giá trung bình</span>
+                              <span className="text-xs font-bold uppercase text-black">Đánh giá trung bình</span>
                               <p className="text-lg font-bold text-primary mt-1">
                                 {profile?.ratingAvg.toFixed(1)}
                               </p>
@@ -3276,11 +3276,11 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigate }) => {
                           </h3>
                         </div>
                         {customerAddresses.length > 0 && (
-                          <p className="text-sm text-slate-500 mb-3">Đã tải {customerAddresses.length} địa chỉ từ tài khoản hiện tại.</p>
+                          <p className="text-sm text-black mb-3">Đã tải {customerAddresses.length} địa chỉ từ tài khoản hiện tại.</p>
                         )}
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                           <div className="md:col-span-3 p-4 rounded-xl bg-gray-50 border border-gray-200">
-                            <span className="text-xs font-bold uppercase text-slate-400">Địa chỉ đầy đủ</span>
+                            <span className="text-xs font-bold uppercase text-black">Địa chỉ đầy đủ</span>
                             <p className="text-lg font-bold text-primary mt-1">{profile?.addressText}</p>
                           </div>
                         </div>
@@ -3296,19 +3296,19 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigate }) => {
                           </div>
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="p-4 rounded-xl bg-gray-50 border border-gray-200">
-                              <span className="text-xs font-bold uppercase text-slate-400">Tên Shop</span>
+                              <span className="text-xs font-bold uppercase text-black">Tên Shop</span>
                               <p className="text-lg font-bold text-primary mt-1">{profile?.shopName || 'N/A'}</p>
                             </div>
                             <div className="p-4 rounded-xl bg-gray-50 border border-gray-200">
-                              <span className="text-xs font-bold uppercase text-slate-400">Số GPKD</span>
+                              <span className="text-xs font-bold uppercase text-black">Số GPKD</span>
                               <p className="text-lg font-bold text-primary mt-1">{profile?.businessLicenseNo || 'N/A'}</p>
                             </div>
                             <div className="p-4 rounded-xl bg-gray-50 border border-gray-200">
-                              <span className="text-xs font-bold uppercase text-slate-400">Trạng thái xác minh</span>
+                              <span className="text-xs font-bold uppercase text-black">Trạng thái xác minh</span>
                               <p className="text-lg font-bold text-primary mt-1">{profile?.verificationStatus || 'N/A'}</p>
                             </div>
                             <div className="p-4 rounded-xl bg-gray-50 border border-gray-200">
-                              <span className="text-xs font-bold uppercase text-slate-400">Đánh giá Shop</span>
+                              <span className="text-xs font-bold uppercase text-black">Đánh giá Shop</span>
                               <p className="text-lg font-bold text-primary mt-1"> {profile?.ratingAvg.toFixed(1)}</p>
                             </div>
                           </div>
@@ -3324,20 +3324,20 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigate }) => {
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                           <div className="p-4 rounded-xl bg-gray-50 border border-gray-200">
-                            <span className="text-xs font-bold uppercase text-slate-400">Ngày tạo</span>
+                            <span className="text-xs font-bold uppercase text-black">Ngày tạo</span>
                             <p className="text-lg font-bold text-primary mt-1">
                               {profile?.createdAt ? new Date(profile.createdAt).toLocaleString('vi-VN') : 'N/A'}
                             </p>
                           </div>
                           <div className="p-4 rounded-xl bg-gray-50 border border-gray-200">
-                            <span className="text-xs font-bold uppercase text-slate-400">Cập nhật lần cuối</span>
+                            <span className="text-xs font-bold uppercase text-black">Cập nhật lần cuối</span>
                             <p className="text-lg font-bold text-primary mt-1">
                               {profile?.updatedAt ? new Date(profile.updatedAt).toLocaleString('vi-VN') : 'N/A'}
                             </p>
                           </div>
                           {/* {profile?.avatarUrl && (
                       // <div className="md:col-span-2 p-4 rounded-xl bg-gray-50 border border-gray-200">
-                      //   <span className="text-xs font-bold uppercase text-slate-400">Avatar URL</span>
+                      //   <span className="text-xs font-bold uppercase text-black">Avatar URL</span>
                       //   <p className="text-sm font-mono text-primary mt-1 break-all">{profile.avatarUrl}</p>
                       // </div>
                     )} */}
@@ -3363,7 +3363,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigate }) => {
                         {showChangePassword ? (
                           <form onSubmit={handleChangePassword} className="space-y-4 bg-gray-50 p-6 rounded-xl border border-gray-200">
                             <div className="space-y-2">
-                              <label className="text-xs font-bold uppercase text-slate-400 tracking-widest">
+                              <label className="text-xs font-bold uppercase text-black tracking-widest">
                                 Mật khẩu hiện tại <span className="text-red-500">*</span>
                               </label>
                               <div className="relative">
@@ -3379,7 +3379,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigate }) => {
                                   type="button"
                                   onClick={() => setPasswordVisibility((prev) => ({ ...prev, old: !prev.old }))}
                                   disabled={passwordLogoutPending}
-                                  className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-primary hover:underline disabled:text-slate-400 disabled:no-underline"
+                                  className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-primary hover:underline disabled:text-black disabled:no-underline"
                                 >
                                   {passwordVisibility.old ? 'Ẩn' : 'Hiện'}
                                 </button>
@@ -3387,7 +3387,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigate }) => {
                             </div>
 
                             <div className="space-y-2">
-                              <label className="text-xs font-bold uppercase text-slate-400 tracking-widest">
+                              <label className="text-xs font-bold uppercase text-black tracking-widest">
                                 Mật khẩu mới <span className="text-red-500">*</span>
                               </label>
                               <div className="relative">
@@ -3404,12 +3404,12 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigate }) => {
                                   type="button"
                                   onClick={() => setPasswordVisibility((prev) => ({ ...prev, next: !prev.next }))}
                                   disabled={passwordLogoutPending}
-                                  className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-primary hover:underline disabled:text-slate-400 disabled:no-underline"
+                                  className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-primary hover:underline disabled:text-black disabled:no-underline"
                                 >
                                   {passwordVisibility.next ? 'Ẩn' : 'Hiện'}
                                 </button>
                               </div>
-                              <p className="text-xs text-slate-500">Yêu cầu mật khẩu:
+                              <p className="text-xs text-black">Yêu cầu mật khẩu:
 
                                 •
                                 Tối thiểu 6 ký tự
@@ -3425,7 +3425,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigate }) => {
                             </div>
 
                             <div className="space-y-2">
-                              <label className="text-xs font-bold uppercase text-slate-400 tracking-widest">
+                              <label className="text-xs font-bold uppercase text-black tracking-widest">
                                 Xác nhận mật khẩu mới <span className="text-red-500">*</span>
                               </label>
                               <div className="relative">
@@ -3441,7 +3441,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigate }) => {
                                   type="button"
                                   onClick={() => setPasswordVisibility((prev) => ({ ...prev, confirm: !prev.confirm }))}
                                   disabled={passwordLogoutPending}
-                                  className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-primary hover:underline disabled:text-slate-400 disabled:no-underline"
+                                  className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-primary hover:underline disabled:text-black disabled:no-underline"
                                 >
                                   {passwordVisibility.confirm ? 'Ẩn' : 'Hiện'}
                                 </button>
@@ -3488,7 +3488,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigate }) => {
                             </div>
                           </form>
                         ) : (
-                          <div className="text-center py-6 text-slate-500">
+                          <div className="text-center py-6 text-black">
                             <p className="text-sm">Nhấn nút "Đổi mật khẩu" để thay đổi mật khẩu của bạn</p>
                           </div>
                         )}
@@ -3505,7 +3505,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigate }) => {
                       <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 mb-4">
                         <div>
                           <h3 className="text-lg font-bold text-primary mb-1">{review.product}</h3>
-                          <p className="text-sm text-slate-500">{review.date}</p>
+                          <p className="text-sm text-black">{review.date}</p>
                         </div>
                         <div className="flex items-center gap-1">
                           {[...Array(review.rating)].map((_, i) => (
@@ -3513,12 +3513,12 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigate }) => {
                           ))}
                         </div>
                       </div>
-                      <p className="text-slate-600 leading-relaxed">{review.comment}</p>
+                      <p className="text-black leading-relaxed">{review.comment}</p>
                       <div className="flex gap-4 mt-6 pt-6 border-t border-gray-200">
                         <button className="flex items-center gap-2 text-sm font-bold text-primary hover:text-primary/70 transition-all">
                           👍 Hữu ích (2)
                         </button>
-                        <button className="flex items-center gap-2 text-sm font-bold text-slate-400 hover:text-primary transition-all">
+                        <button className="flex items-center gap-2 text-sm font-bold text-black hover:text-primary transition-all">
                           ✎ Chỉnh sửa
                         </button>
                       </div>

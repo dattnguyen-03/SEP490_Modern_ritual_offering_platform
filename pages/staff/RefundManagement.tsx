@@ -129,7 +129,7 @@ const RefundManagement: React.FC<Props> = ({ onNavigate }) => {
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="text-center">
           <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-primary mb-4" />
-          <p className="text-slate-500 font-medium">Đang tải danh sách yêu cầu hoàn tiền...</p>
+          <p className="text-black font-medium">Đang tải danh sách yêu cầu hoàn tiền...</p>
         </div>
       </div>
     );
@@ -196,8 +196,8 @@ const RefundManagement: React.FC<Props> = ({ onNavigate }) => {
             key={tab.id}
             onClick={() => setFilterTab(tab.id)}
             className={`whitespace-nowrap px-5 py-3 rounded-t-xl font-bold text-sm transition-all border-b-2 ${filterTab === tab.id
-                ? 'border-primary text-primary bg-primary/5'
-                : 'border-transparent text-slate-500 hover:text-slate-800 hover:bg-gray-100'
+              ? 'border-primary text-primary bg-primary/5'
+              : 'border-transparent text-black hover:text-slate-800 hover:bg-gray-100'
               }`}
           >
             {tab.label}

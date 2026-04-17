@@ -434,7 +434,7 @@ const CheckoutPage: React.FC<{ onNavigate: (path: string) => void }> = ({ onNavi
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
-              <label className="text-xs font-bold uppercase text-slate-400">Họ và tên</label>
+              <label className="text-xs font-bold uppercase text-black">Họ và tên</label>
               <input
                 type="text"
                 defaultValue={fullName}
@@ -443,12 +443,12 @@ const CheckoutPage: React.FC<{ onNavigate: (path: string) => void }> = ({ onNavi
               />
             </div>
             <div className="space-y-2">
-              <label className="text-xs font-bold uppercase text-slate-400">Số điện thoại</label>
+              <label className="text-xs font-bold uppercase text-black">Số điện thoại</label>
               <input type="tel" defaultValue={phoneNumber} placeholder="Nhập số điện thoại" className="w-full bg-ritual-bg border-gold/10 rounded-2xl p-4 focus:ring-primary focus:border-primary" />
             </div>
             <div className="md:col-span-2 space-y-2">
               <div className="flex justify-between items-center">
-                <label className="text-xs font-bold uppercase text-slate-400">Địa chỉ nhận hàng</label>
+                <label className="text-xs font-bold uppercase text-black">Địa chỉ nhận hàng</label>
                 {addresses.length > 0 && (
                   <button
                     type="button"
@@ -463,15 +463,15 @@ const CheckoutPage: React.FC<{ onNavigate: (path: string) => void }> = ({ onNavi
 
               {showAddressSelector ? (
                 <div className="space-y-3 mt-4 animate-in fade-in slide-in-from-top-2 duration-300">
-                  <p className="text-xs text-slate-500 italic pb-2">Chọn một địa chỉ từ danh sách của bạn:</p>
+                  <p className="text-xs text-black italic pb-2">Chọn một địa chỉ từ danh sách của bạn:</p>
                   <div className="grid grid-cols-1 gap-3 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
                     {addresses.map((addr) => (
                       <div
                         key={addr.addressId}
                         onClick={() => !selectingAddress && handleSelectAddress(addr.addressId)}
                         className={`p-4 rounded-2xl border-2 transition-all cursor-pointer flex justify-between items-start group ${summary.deliveryAddress?.includes(addr.addressText)
-                            ? 'border-primary bg-primary/5'
-                            : 'border-gray-100 hover:border-primary/30 hover:bg-ritual-bg'
+                          ? 'border-primary bg-primary/5'
+                          : 'border-gray-100 hover:border-primary/30 hover:bg-ritual-bg'
                           } ${selectingAddress ? 'opacity-50 cursor-not-allowed' : ''}`}
                       >
                         <div className="flex-1">
@@ -491,7 +491,7 @@ const CheckoutPage: React.FC<{ onNavigate: (path: string) => void }> = ({ onNavi
                   <button
                     type="button"
                     onClick={() => navigate('/profile?tab=address')}
-                    className="w-full py-3 px-4 rounded-xl border border-dashed border-gray-300 text-slate-500 text-sm hover:text-primary hover:border-primary transition-all flex items-center justify-center gap-2"
+                    className="w-full py-3 px-4 rounded-xl border border-dashed border-gray-300 text-black text-sm hover:text-primary hover:border-primary transition-all flex items-center justify-center gap-2"
                   >
                     <span className="material-symbols-outlined text-sm">add_circle</span>
                     Thêm địa chỉ mới
@@ -522,7 +522,7 @@ const CheckoutPage: React.FC<{ onNavigate: (path: string) => void }> = ({ onNavi
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             <div className="space-y-2">
-              <label className="text-xs font-bold uppercase text-slate-400">Ngày giao hàng</label>
+              <label className="text-xs font-bold uppercase text-black">Ngày giao hàng</label>
               <input
                 type="date"
                 value={deliveryDate}
@@ -533,7 +533,7 @@ const CheckoutPage: React.FC<{ onNavigate: (path: string) => void }> = ({ onNavi
               />
             </div>
             <div className="space-y-2">
-              <label className="text-xs font-bold uppercase text-slate-400">Giờ giao hàng</label>
+              <label className="text-xs font-bold uppercase text-black">Giờ giao hàng</label>
               <input
                 type="time"
                 value={deliveryTimeSlot}
@@ -542,7 +542,7 @@ const CheckoutPage: React.FC<{ onNavigate: (path: string) => void }> = ({ onNavi
               />
             </div>
           </div>
-          {/* <div className="p-4 bg-gray-50 rounded-xl border border-gray-200 text-sm text-slate-600">
+          {/* <div className="p-4 bg-gray-50 rounded-xl border border-gray-200 text-sm text-black">
             <div className="flex gap-2 mb-2">
               <span className="font-bold text-primary">Mẹo:</span>
             </div>
@@ -600,7 +600,7 @@ const CheckoutPage: React.FC<{ onNavigate: (path: string) => void }> = ({ onNavi
                 />
                 <div className="ml-4">
                   <p className="font-bold text-slate-900">{m.label}</p>
-                  <p className="text-xs text-slate-400">{m.desc}</p>
+                  <p className="text-xs text-black">{m.desc}</p>
                 </div>
               </label>
             ))}
@@ -631,9 +631,9 @@ const CheckoutPage: React.FC<{ onNavigate: (path: string) => void }> = ({ onNavi
                   <h4 className="text-sm font-bold text-slate-800 leading-snug line-clamp-2">{item.packageName}</h4>
                   <div className="flex items-center justify-between mt-1">
                     <div className="flex items-center gap-2">
-                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{item.variantName}</span>
+                      <span className="text-[10px] font-bold text-black uppercase tracking-wider">{item.variantName}</span>
                       <span className="w-1 h-1 rounded-full bg-slate-200"></span>
-                      <span className="text-[10px] font-bold text-slate-500">SL: {item.quantity}</span>
+                      <span className="text-[10px] font-bold text-black">SL: {item.quantity}</span>
                     </div>
                     <span className="text-[10px] font-bold text-slate-800">{(item.unitPrice || 0).toLocaleString()}đ</span>
                   </div>
@@ -658,7 +658,7 @@ const CheckoutPage: React.FC<{ onNavigate: (path: string) => void }> = ({ onNavi
                         <div key={idx} className="flex items-center justify-between text-[9px] text-emerald-600 font-bold">
                           <div className="flex items-center gap-1.5 flex-1 min-w-0">
                             <span className="material-symbols-outlined text-[12px]">check_circle</span>
-                            <span className="truncate">{addOn.itemName} <span className="text-slate-400">x{addOn.quantity}</span></span>
+                            <span className="truncate">{addOn.itemName} <span className="text-black">x{addOn.quantity}</span></span>
                           </div>
                           <span className="ml-2 whitespace-nowrap">
                             +{(addOn.lineTotal || (addOn.retailPrice * addOn.quantity)).toLocaleString()}đ
@@ -682,12 +682,12 @@ const CheckoutPage: React.FC<{ onNavigate: (path: string) => void }> = ({ onNavi
           {/* Totals */}
           <div className="space-y-4 pt-6 border-t border-slate-100">
             <div className="flex justify-between items-center text-sm">
-              <span className="text-slate-500 font-medium">Tạm tính ({summary.totalItems} món)</span>
+              <span className="text-black font-medium">Tạm tính ({summary.totalItems} món)</span>
               <span className="text-slate-900 font-bold">{(summary.subTotal || 0).toLocaleString()}đ</span>
             </div>
 
             <div className="flex justify-between items-center text-sm">
-              <span className="text-slate-500 font-medium">Phí giao hàng</span>
+              <span className="text-black font-medium">Phí giao hàng</span>
               <span className={`font-bold ${summary.shippingFee === 0 ? 'text-emerald-500' : 'text-slate-900'}`}>
                 {summary.shippingFee === 0 ? 'Miễn phí' : `+${summary.shippingFee.toLocaleString()}đ`}
               </span>
@@ -695,7 +695,7 @@ const CheckoutPage: React.FC<{ onNavigate: (path: string) => void }> = ({ onNavi
 
             {summary.totalDiscount > 0 && (
               <div className="flex justify-between items-center text-sm">
-                <span className="text-slate-500 font-medium">Khuyến mãi</span>
+                <span className="text-black font-medium">Khuyến mãi</span>
                 <span className="text-emerald-500 font-bold">-{(summary.totalDiscount || 0).toLocaleString()}đ</span>
               </div>
             )}
@@ -703,21 +703,21 @@ const CheckoutPage: React.FC<{ onNavigate: (path: string) => void }> = ({ onNavi
             {summary.deliveryAddress && (
               <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
                 <div className="flex items-center gap-2 mb-1">
-                  <span className="material-symbols-outlined text-[14px] text-slate-400">location_on</span>
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Giao tới</span>
+                  <span className="material-symbols-outlined text-[14px] text-black">location_on</span>
+                  <span className="text-[10px] font-bold text-black uppercase tracking-widest">Giao tới</span>
                 </div>
-                <p className="text-[11px] text-slate-600 line-clamp-2 leading-relaxed">{summary.deliveryAddress}</p>
+                <p className="text-[11px] text-black line-clamp-2 leading-relaxed">{summary.deliveryAddress}</p>
               </div>
             )}
 
             <div className="pt-6 mt-2">
               <div className="flex justify-between items-end mb-1">
-                <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Tổng thanh toán</span>
+                <span className="text-xs font-bold text-black uppercase tracking-widest">Tổng thanh toán</span>
                 <div className="text-right">
                   <p className="text-3xl font-black text-primary tracking-tighter leading-none">
                     {(summary.totalAmount || 0).toLocaleString()}đ
                   </p>
-                  <p className="text-[9px] text-slate-400 font-medium italic mt-1">(Đã bao gồm phí dịch vụ & VAT)</p>
+                  <p className="text-[9px] text-black font-medium italic mt-1">(Đã bao gồm phí dịch vụ & VAT)</p>
                 </div>
               </div>
             </div>
@@ -748,10 +748,10 @@ const CheckoutPage: React.FC<{ onNavigate: (path: string) => void }> = ({ onNavi
                 onClick={handleCheckout}
                 disabled={processing || !deliveryDate || hasExceededDistance}
                 className={`w-full py-4 rounded-xl font-bold uppercase tracking-widest text-sm transition-all shadow-lg active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed ${hasExceededDistance
-                    ? 'bg-slate-300 text-slate-500 shadow-none'
-                    : (processing || !deliveryDate
-                      ? 'bg-slate-500 text-white cursor-not-allowed shadow-none'
-                      : 'bg-primary text-white shadow-primary/20 hover:shadow-primary/30 hover:-translate-y-0.5')
+                  ? 'bg-slate-300 text-black shadow-none'
+                  : (processing || !deliveryDate
+                    ? 'bg-slate-500 text-white cursor-not-allowed shadow-none'
+                    : 'bg-primary text-white shadow-primary/20 hover:shadow-primary/30 hover:-translate-y-0.5')
                   }`}
               >
                 {processing ? (
@@ -765,7 +765,7 @@ const CheckoutPage: React.FC<{ onNavigate: (path: string) => void }> = ({ onNavi
               <button
                 type="button"
                 onClick={() => navigate('/cart')}
-                className="w-full py-3.5 rounded-xl font-bold text-slate-500 text-xs hover:bg-slate-50 hover:text-slate-700 transition-all border border-transparent hover:border-slate-200"
+                className="w-full py-3.5 rounded-xl font-bold text-black text-xs hover:bg-slate-50 hover:text-slate-700 transition-all border border-transparent hover:border-slate-200"
               >
                 Quay về giỏ hàng
               </button>

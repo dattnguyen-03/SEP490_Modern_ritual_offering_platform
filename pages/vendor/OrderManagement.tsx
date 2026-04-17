@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { orderService, VendorOrder, Order } from '../../services/orderService';
+import { orderService, VendorOrder, Order, VendorOrderItem } from '../../services/orderService';
 import { getProfile } from '../../services/auth';
 import VendorRefundTab from './VendorRefundTab';
 import VendorReviewTab from './VendorReviewTab';
@@ -194,6 +194,7 @@ const OrderManagement: React.FC<OrderManagementProps> = ({ onNavigate: _onNaviga
 
   type EnrichedOrderData = Partial<VendorOrder> & {
     itemImageByItemId?: Record<string, string | null | undefined>;
+    items?: VendorOrderItem[];
   };
 
   // ── orders state ────────────────────────────────────────────────────────────
@@ -357,7 +358,7 @@ const OrderManagement: React.FC<OrderManagementProps> = ({ onNavigate: _onNaviga
       console.log(`🔍 Enriching ${ordersToEnrich.length} orders...`);
 
       const results = await Promise.allSettled(
-        ordersToEnrich.map(o => orderService.getOrderDetails(o.orderId))
+        ordersToEnrich.map(o => orderService.getVendorOrderDetails(o.orderId))
       );
 
       const newEnrichments: Record<string, EnrichedOrderData> = { ...enrichedData };
@@ -375,6 +376,7 @@ const OrderManagement: React.FC<OrderManagementProps> = ({ onNavigate: _onNaviga
             customerAvatar: res.value.customerAvatar || (res.value.customer as any)?.avatarUrl || '',
             customerPhone: res.value.customerPhone || res.value.customer?.phoneNumber,
             itemImageByItemId,
+            items: res.value.items as unknown as VendorOrderItem[],
           };
         }
       });
@@ -411,7 +413,7 @@ const OrderManagement: React.FC<OrderManagementProps> = ({ onNavigate: _onNaviga
         await orderService.updateOrderStatus(selectedOrder.orderId, newStatus, statusReason, deliveryProofImages);
       }
       const [detail, list] = await Promise.all([
-        orderService.getOrderDetails(selectedOrder.orderId),
+        orderService.getVendorOrderDetails(selectedOrder.orderId),
         orderService.getVendorOrders(),
       ]);
       setSelectedOrder(detail);
@@ -437,7 +439,7 @@ const OrderManagement: React.FC<OrderManagementProps> = ({ onNavigate: _onNaviga
     setDetailLoading(true);
     setStatusError(null);
     try {
-      const detail = await orderService.getOrderDetails(orderId);
+      const detail = await orderService.getVendorOrderDetails(orderId);
       if (!detail) {
         throw new Error("Không tìm thấy dữ liệu đơn hàng.");
       }
@@ -517,7 +519,7 @@ const OrderManagement: React.FC<OrderManagementProps> = ({ onNavigate: _onNaviga
       <div className="flex items-center justify-center min-h-[60vh] bg-white">
         <div className="text-center">
           <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-primary mb-4" />
-          <p className="text-slate-500 font-medium">Đang tải danh sách đơn hàng...</p>
+          <p className="text-black font-medium">Đang tải danh sách đơn hàng...</p>
         </div>
       </div>
     );
@@ -551,7 +553,7 @@ const OrderManagement: React.FC<OrderManagementProps> = ({ onNavigate: _onNaviga
             </button> */}
             <div>
               <h1 className="text-4xl font-black text-slate-900 tracking-tight mb-2">Đơn Hàng</h1>
-              <p className="text-slate-500 font-bold text-sm">Theo dõi và xử lý các đơn hàng của bạn.</p>
+              <p className="text-black font-bold text-sm">Theo dõi và xử lý các đơn hàng của bạn.</p>
             </div>
           </div>
         </div>
@@ -565,7 +567,7 @@ const OrderManagement: React.FC<OrderManagementProps> = ({ onNavigate: _onNaviga
             { label: 'Yêu cầu hoàn', value: pendingRefunds, color: 'text-orange-500' },
           ].map(s => (
             <div key={s.label} className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm">
-              <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">{s.label}</p>
+              <p className="text-xs font-bold text-black uppercase tracking-widest mb-1">{s.label}</p>
               <p className={`text-2xl font-black ${s.color}`}>{s.value}</p>
             </div>
           ))}
@@ -578,7 +580,7 @@ const OrderManagement: React.FC<OrderManagementProps> = ({ onNavigate: _onNaviga
               onClick={() => setMainTab(id)}
               className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-bold text-sm transition-all ${mainTab === id
                 ? 'bg-primary text-white shadow-md shadow-primary/20'
-                : 'text-slate-500 hover:text-slate-800 hover:bg-gray-50'
+                : 'text-black hover:text-slate-800 hover:bg-gray-50'
                 }`}
             >
               {id === 'refunds' && pendingRefunds > 0 && (
@@ -598,7 +600,7 @@ const OrderManagement: React.FC<OrderManagementProps> = ({ onNavigate: _onNaviga
             <div className="mb-5 rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-[1fr_1fr_auto] gap-4 items-end">
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-[11px] font-black uppercase tracking-widest text-slate-500">Từ ngày</label>
+                  <label className="text-[11px] font-black uppercase tracking-widest text-black">Từ ngày</label>
                   <div className="w-full border border-gray-200 rounded-xl bg-white focus-within:ring-2 focus-within:ring-primary/30 focus-within:border-primary flex items-center overflow-hidden shadow-[inset_0_1px_2px_rgba(15,23,42,0.03)]">
                     <input
                       type="text"
@@ -611,7 +613,7 @@ const OrderManagement: React.FC<OrderManagementProps> = ({ onNavigate: _onNaviga
                     <button
                       type="button"
                       onClick={() => openNativeDatePicker(fromDateInputRef.current)}
-                      className="px-3 py-2.5 border-l border-gray-200 text-slate-500 hover:bg-gray-50 transition-colors"
+                      className="px-3 py-2.5 border-l border-gray-200 text-black hover:bg-gray-50 transition-colors"
                       aria-label="Chọn ngày bắt đầu"
                     >
                       <span className="material-symbols-outlined text-[18px]">calendar_month</span>
@@ -630,7 +632,7 @@ const OrderManagement: React.FC<OrderManagementProps> = ({ onNavigate: _onNaviga
                 </div>
 
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-[11px] font-black uppercase tracking-widest text-slate-500">Đến ngày</label>
+                  <label className="text-[11px] font-black uppercase tracking-widest text-black">Đến ngày</label>
                   <div className="w-full border border-gray-200 rounded-xl bg-white focus-within:ring-2 focus-within:ring-primary/30 focus-within:border-primary flex items-center overflow-hidden shadow-[inset_0_1px_2px_rgba(15,23,42,0.03)]">
                     <input
                       type="text"
@@ -643,7 +645,7 @@ const OrderManagement: React.FC<OrderManagementProps> = ({ onNavigate: _onNaviga
                     <button
                       type="button"
                       onClick={() => openNativeDatePicker(toDateInputRef.current)}
-                      className="px-3 py-2.5 border-l border-gray-200 text-slate-500 hover:bg-gray-50 transition-colors"
+                      className="px-3 py-2.5 border-l border-gray-200 text-black hover:bg-gray-50 transition-colors"
                       aria-label="Chọn ngày kết thúc"
                     >
                       <span className="material-symbols-outlined text-[18px]">calendar_month</span>
@@ -664,14 +666,14 @@ const OrderManagement: React.FC<OrderManagementProps> = ({ onNavigate: _onNaviga
 
                 <button
                   onClick={() => applyDatePreset('clear')}
-                  className="h-[42px] px-5 rounded-xl text-sm font-black text-slate-600 border border-gray-200 bg-white hover:bg-gray-50 transition whitespace-nowrap"
+                  className="h-[42px] px-5 rounded-xl text-sm font-black text-black border border-gray-200 bg-white hover:bg-gray-50 transition whitespace-nowrap"
                 >
                   Xóa lọc ngày
                 </button>
               </div>
 
               <div className="flex flex-wrap items-center gap-2 mt-4 pt-3 border-t border-slate-100">
-                <span className="text-[11px] font-black uppercase tracking-widest text-slate-500 mr-1">Lọc nhanh</span>
+                <span className="text-[11px] font-black uppercase tracking-widest text-black mr-1">Lọc nhanh</span>
                 <button
                   onClick={() => applyDatePreset('today')}
                   className="px-3 py-1.5 rounded-lg text-xs font-black border border-gray-200 text-slate-700 bg-white hover:bg-gray-50 transition"
@@ -705,7 +707,7 @@ const OrderManagement: React.FC<OrderManagementProps> = ({ onNavigate: _onNaviga
                 <button key={tab.id} onClick={() => setFilterStatus(tab.id)}
                   className={`whitespace-nowrap px-5 py-3 rounded-t-xl font-bold text-sm transition-all border-b-2 ${filterStatus === tab.id
                     ? 'border-primary text-primary bg-primary/5'
-                    : 'border-transparent text-slate-500 hover:text-slate-800 hover:bg-gray-100'
+                    : 'border-transparent text-black hover:text-slate-800 hover:bg-gray-100'
                     }`}>
                   {tab.label}
                 </button>
@@ -745,10 +747,10 @@ const OrderManagement: React.FC<OrderManagementProps> = ({ onNavigate: _onNaviga
                                   </div>
                                 )} */}
                                 <div>
-                                  <span className="text-xs font-bold uppercase text-slate-400 tracking-widest block mb-0.5">Khách hàng</span>
+                                  <span className="text-xs font-bold uppercase text-black tracking-widest block mb-0.5">Khách hàng</span>
                                   <span className="text-gray-900 font-bold text-lg">{displayName}</span>
                                   {displayPhone && (
-                                    <span className="text-xs text-slate-500 block">{displayPhone}</span>
+                                    <span className="text-xs text-black block">{displayPhone}</span>
                                   )}
                                 </div>
                               </div>
@@ -756,13 +758,13 @@ const OrderManagement: React.FC<OrderManagementProps> = ({ onNavigate: _onNaviga
                               <div className="hidden md:block w-px h-8 bg-gray-200" />
 
                               <div>
-                                <span className="text-xs font-bold uppercase text-slate-400 tracking-widest block mb-1">Cửa hàng</span>
+                                <span className="text-xs font-bold uppercase text-black tracking-widest block mb-1">Cửa hàng</span>
                                 <span className="text-gray-900 font-semibold">{vendorShopName || order.vendorName || 'N/A'}</span>
                               </div>
 
                               <div className="hidden md:block w-px h-8 bg-gray-200" />
                               <div>
-                                <span className="text-xs font-bold uppercase text-slate-400 tracking-widest block mb-1">Ngày đặt</span>
+                                <span className="text-xs font-bold uppercase text-black tracking-widest block mb-1">Ngày đặt</span>
                                 <span className="text-gray-900 font-medium">{formatDateTimeVi(order.createdAt)}</span>
                               </div>
                             </div>
@@ -771,9 +773,9 @@ const OrderManagement: React.FC<OrderManagementProps> = ({ onNavigate: _onNaviga
                               <span className={`px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest shadow-sm ${getStatusBadge(order.orderStatus).badge}`}>
                                 {getStatusBadge(order.orderStatus).label}
                               </span>
-                              <div className="flex items-center gap-1.5 text-slate-400">
+                              <div className="flex items-center gap-1.5 text-black">
                                 <span className="text-[11px] font-bold uppercase tracking-wider">Giao hàng:</span>
-                                <span className="text-xs font-semibold text-slate-600">
+                                <span className="text-xs font-semibold text-black">
                                   {formatDateVi(order.deliveryDate)} lúc {order.deliveryTime?.slice(0, 5) || '00:00'}
                                 </span>
                               </div>
@@ -785,42 +787,69 @@ const OrderManagement: React.FC<OrderManagementProps> = ({ onNavigate: _onNaviga
                       {/* Card body – items */}
                       <div className="p-6 md:p-8">
                         <div className="space-y-4">
-                          {(order.items || []).map(item => (
-                            <div key={item.itemId} className="flex gap-4 items-center">
-                              <div className="size-16 rounded-xl bg-gray-100 border border-gray-200 flex-shrink-0 overflow-hidden">
-                                <img
-                                  src={toImageSrc(enrichment.itemImageByItemId?.[String(item.itemId)] ?? item.imageUrl)}
-                                  alt={item.packageName}
-                                  className="w-full h-full object-cover"
-                                  onError={(e) => {
-                                    const img = e.currentTarget;
-                                    if (img.src !== fallbackProductImage) img.src = fallbackProductImage;
-                                  }}
-                                />
+                          {(() => {
+                            const displayItems = (enrichment.items || order.items || []) as VendorOrderItem[];
+                            return displayItems.map(item => (
+                              <div key={item.itemId} className="flex gap-4 items-start py-2 border-b border-gray-50 last:border-0 translate-y-2">
+                                <div className="size-16 rounded-xl bg-gray-100 border border-gray-200 flex-shrink-0 overflow-hidden">
+                                  <img
+                                    src={toImageSrc(enrichment.itemImageByItemId?.[String(item.itemId)] ?? item.imageUrl)}
+                                    alt={item.packageName}
+                                    className="w-full h-full object-cover"
+                                    onError={(e) => {
+                                      const img = e.currentTarget;
+                                      if (img.src !== fallbackProductImage) img.src = fallbackProductImage;
+                                    }}
+                                  />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <h5 className="font-bold text-gray-800 text-base">{item.packageName}</h5>
+                                  <p className="text-sm text-black mt-0.5">Gói: {item.variantName} × {item.quantity}</p>
+
+                                  {/* Swaps in list card */}
+                                  {Array.isArray(item.swaps) && item.swaps.length > 0 && (
+                                    <div className="mt-1 space-y-0.5">
+                                      {item.swaps.map((swap, si) => (
+                                        <div key={si} className="flex items-center gap-1 text-[10px] text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded">
+                                          <span className="material-symbols-outlined text-[12px]">swap_horiz</span>
+                                          <span className="truncate">{swap.replacementDescription || `${swap.originalItemName} → ${swap.replacementItemName}`}</span>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  )}
+
+                                  {/* Add-ons in list card */}
+                                  {Array.isArray(item.addOns) && item.addOns.length > 0 && (
+                                    <div className="mt-1 space-y-0.5">
+                                      {item.addOns.map((addOn, ai) => (
+                                        <div key={ai} className="flex items-center gap-1 text-[10px] text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded">
+                                          <span className="material-symbols-outlined text-[12px]">add_circle</span>
+                                          <span className="truncate">{addOn.addOnName || addOn.itemName} x{addOn.quantity}</span>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  )}
+
+                                  {item.decorationNote && (
+                                    <p className="text-[11px] text-amber-600 mt-1 italic leading-tight">Ghi chú: {item.decorationNote}</p>
+                                  )}
+                                  {item.isRequestRefund && (
+                                    <div className="mt-1 flex">
+                                      <span className="px-1.5 py-0.5 bg-orange-50 text-orange-600 rounded text-[9px] font-black uppercase tracking-tighter border border-orange-100 flex items-center gap-1">
+                                        <svg className="w-2 h-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="4">
+                                          <path strokeLinecap="round" strokeLinejoin="round" d="M16 15v-1a4 4 0 00-4-4H8m0 0l3 3m-3-3l3-3" />
+                                        </svg>
+                                        Khách hoàn tiền
+                                      </span>
+                                    </div>
+                                  )}
+                                </div>
+                                <div className="text-right flex-shrink-0">
+                                  <p className="font-bold text-primary text-base">{formatVnd(item.lineTotal)}</p>
+                                </div>
                               </div>
-                              <div className="flex-1 min-w-0">
-                                <h5 className="font-bold text-gray-800 text-base">{item.packageName}</h5>
-                                <p className="text-sm text-slate-500 mt-0.5">Gói: {item.variantName}</p>
-                                <p className="text-sm font-medium mt-0.5">x{item.quantity}</p>
-                                {item.decorationNote && (
-                                  <p className="text-xs text-amber-600 mt-0.5 italic">{item.decorationNote}</p>
-                                )}
-                                {item.isRequestRefund && (
-                                  <div className="mt-1 flex">
-                                    <span className="px-1.5 py-0.5 bg-orange-50 text-orange-600 rounded text-[9px] font-black uppercase tracking-tighter border border-orange-100 flex items-center gap-1">
-                                      <svg className="w-2 h-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="4">
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M16 15v-1a4 4 0 00-4-4H8m0 0l3 3m-3-3l3-3" />
-                                      </svg>
-                                      Khách hoàn tiền
-                                    </span>
-                                  </div>
-                                )}
-                              </div>
-                              <div className="text-right flex-shrink-0">
-                                <p className="font-bold text-primary text-base">{formatVnd(item.lineTotal)}</p>
-                              </div>
-                            </div>
-                          ))}
+                            ));
+                          })()}
                         </div>
 
                         {/* Delivery address */}
@@ -838,7 +867,7 @@ const OrderManagement: React.FC<OrderManagementProps> = ({ onNavigate: _onNaviga
                             <span className="text-2xl font-black text-primary">{formatVnd(order.totalAmount)}</span>
                           </div>
                           {order.finalAmount && order.finalAmount !== order.totalAmount && (
-                            <p className="text-xs text-slate-400 mt-1">Sơ bộ: {formatVnd(order.totalAmount)} · Thực nhận: {formatVnd(order.finalAmount)}</p>
+                            <p className="text-xs text-black mt-1">Sơ bộ: {formatVnd(order.totalAmount)} · Thực nhận: {formatVnd(order.finalAmount)}</p>
                           )}
                         </div>
                         <button
@@ -857,7 +886,7 @@ const OrderManagement: React.FC<OrderManagementProps> = ({ onNavigate: _onNaviga
 
             {filteredOrders.length > itemsPerPage && (
               <div className="mt-6 flex flex-col md:flex-row items-center justify-between gap-3 border border-gray-200 rounded-2xl bg-white px-4 md:px-6 py-4">
-                <p className="text-sm text-slate-600">
+                <p className="text-sm text-black">
                   Hiển thị{' '}
                   <span className="font-semibold">{(safeCurrentPage - 1) * itemsPerPage + 1}</span>
                   {' - '}
@@ -917,7 +946,7 @@ const OrderManagement: React.FC<OrderManagementProps> = ({ onNavigate: _onNaviga
         <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50">
           <div className="bg-white rounded-2xl p-8 shadow-2xl text-center">
             <div className="inline-block animate-spin rounded-full h-10 w-10 border-t-4 border-b-4 border-primary mb-3" />
-            <p className="text-slate-500 font-medium">Đang tải chi tiết đơn hàng...</p>
+            <p className="text-black font-medium">Đang tải chi tiết đơn hàng...</p>
           </div>
         </div>
       )}
@@ -987,8 +1016,8 @@ const OrderManagement: React.FC<OrderManagementProps> = ({ onNavigate: _onNaviga
                   </h3>
                   <div className="space-y-3 max-h-[260px] overflow-y-auto pr-1">
                     {(selectedOrder.items || []).map(item => (
-                      <div key={item.itemId} className="flex gap-3 items-center">
-                        <div className="size-12 rounded-xl bg-gray-100 border border-gray-200 flex-shrink-0 overflow-hidden">
+                      <div key={item.itemId} className="flex gap-4 p-4 bg-gray-50/50 rounded-2xl border border-gray-100">
+                        <div className="size-20 rounded-xl bg-white border border-gray-200 flex-shrink-0 overflow-hidden shadow-sm">
                           <img
                             src={toImageSrc(item.imageUrl)}
                             alt={item.packageName}
@@ -999,24 +1028,74 @@ const OrderManagement: React.FC<OrderManagementProps> = ({ onNavigate: _onNaviga
                             }}
                           />
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="font-bold text-gray-800 truncate">{item.packageName}</p>
-                          <p className="text-sm text-slate-500">{item.variantName} × {item.quantity}</p>
-                          {item.decorationNote && (
-                            <p className="text-xs text-amber-600 italic mt-0.5">{item.decorationNote}</p>
-                          )}
-                          {item.isRequestRefund && (
-                            <div className="mt-1.5 flex">
-                              <span className="px-1.5 py-0.5 bg-orange-50 text-orange-600 rounded text-[9px] font-black uppercase tracking-tighter border border-orange-100 flex items-center gap-1">
-                                <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="4">
-                                  <path strokeLinecap="round" strokeLinejoin="round" d="M16 15v-1a4 4 0 00-4-4H8m0 0l3 3m-3-3l3-3" />
-                                </svg>
-                                Khách hoàn tiền
-                              </span>
+
+                        <div className="flex-1 min-w-0 flex flex-col">
+                          <div className="flex justify-between items-start mb-1">
+                            <div>
+                              <h4 className="font-bold text-gray-900 leading-tight mb-0.5">{item.packageName}</h4>
+                              <p className="text-[13px] text-black font-medium">{item.variantName} × {item.quantity}</p>
+                            </div>
+                            <p className="text-[12px] font-old text-blue-500">+{formatVnd(item.price)}</p>
+                          </div>
+
+                          {/* Swaps/Replacements */}
+                          {Array.isArray(item.swaps) && item.swaps.length > 0 && (
+                            <div className="mt-2 space-y-1.5">
+                              {item.swaps.map((swap, si) => (
+                                <div key={si} className="flex items-start gap-2 text-[11px] bg-amber-50 rounded-lg p-2 border border-amber-100/50">
+                                  <span className="material-symbols-outlined text-amber-500 text-[16px]">swap_horiz</span>
+                                  <div className="flex-1 min-w-0">
+                                    <p className="font-bold text-amber-900 leading-none mb-1">Thay đổi vật phẩm</p>
+                                    <div className="flex justify-between items-center gap-2">
+                                      <p className="text-amber-800 leading-tight truncate">
+                                        {swap.replacementDescription || `${swap.originalItemName} → ${swap.replacementItemName}`}
+                                      </p>
+                                      {swap.surcharge > 0 && <span className="font-black text-amber-600 flex-shrink-0">+{formatVnd(swap.surcharge)}</span>}
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
                             </div>
                           )}
+
+                          {/* Add-ons/Extra Items */}
+                          {Array.isArray(item.addOns) && item.addOns.length > 0 && (
+                            <div className="mt-2 space-y-1.5">
+                              {item.addOns.map((addOn, ai) => (
+                                <div key={ai} className="flex items-start gap-2 text-[11px] bg-emerald-50 rounded-lg p-2 border border-emerald-100/50">
+                                  <span className="material-symbols-outlined text-emerald-500 text-[16px]">add_circle</span>
+                                  <div className="flex-1">
+                                    <p className="font-bold text-emerald-900 leading-none mb-1">Vật phẩm thêm</p>
+                                    <div className="flex justify-between items-center">
+                                      <p className="text-emerald-800">{addOn.addOnName || addOn.itemName} <span className="font-black text-[10px] ml-1">×{addOn.quantity}</span></p>
+                                      {addOn.lineTotal > 0 && <span className="font-black text-emerald-600">+{formatVnd(addOn.lineTotal)}</span>}
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+
+                          {item.decorationNote && (
+                            <div className="mt-3 px-3 py-2 bg-slate-100 rounded-lg border-l-4 border-slate-300">
+                              <p className="text-[11px] text-black font-black uppercase tracking-wider mb-0.5">Yêu cầu trang trí</p>
+                              <p className="text-xs text-slate-700 italic">"{item.decorationNote}"</p>
+                            </div>
+                          )}
+
+                          {item.isRequestRefund && (
+                            <div className="mt-2 text-rose-600 bg-rose-50 px-2 py-1 rounded text-[10px] font-black uppercase tracking-widest border border-rose-100 w-fit flex items-center gap-1.5">
+                              <span className="material-symbols-outlined text-[14px]">undo</span>
+                              Khách yêu cầu hoàn tiền
+                            </div>
+                          )}
+
+                          {/* Item Total */}
+                          <div className="mt-4 pt-3 border-t border-gray-200 flex justify-between items-center">
+                            <span className="text-[10px] text-black-400 font-black uppercase tracking-[0.2em]">Tổng sản phẩm này:</span>
+                            <span className="text-lg font-black text-primary">{formatVnd(item.lineTotal)}</span>
+                          </div>
                         </div>
-                        <p className="font-bold text-primary flex-shrink-0 text-sm">{formatVnd(item.lineTotal)}</p>
                       </div>
                     ))}
                   </div>
@@ -1080,22 +1159,22 @@ const OrderManagement: React.FC<OrderManagementProps> = ({ onNavigate: _onNaviga
 
                       {Array.isArray((selectedOrder.delivery as any).preparationProofImages)
                         && (selectedOrder.delivery as any).preparationProofImages.length > 0 ? (
-                          (() => {
-                            const prepProofUrl = (selectedOrder.delivery as any).preparationProofImages[0] as string;
-                            return (
-                              <div className="mt-2">
-                                <a
-                                  href={prepProofUrl}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                  className="inline-flex items-center text-sm font-semibold text-primary hover:underline"
-                                >
-                                  Xem ảnh chuẩn bị
-                                </a>
-                              </div>
-                            );
-                          })()
-                        ) : null}
+                        (() => {
+                          const prepProofUrl = (selectedOrder.delivery as any).preparationProofImages[0] as string;
+                          return (
+                            <div className="mt-2">
+                              <a
+                                href={prepProofUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="inline-flex items-center text-sm font-semibold text-primary hover:underline"
+                              >
+                                Xem ảnh chuẩn bị
+                              </a>
+                            </div>
+                          );
+                        })()
+                      ) : null}
                     </div>
                   )}
 
@@ -1133,7 +1212,7 @@ const OrderManagement: React.FC<OrderManagementProps> = ({ onNavigate: _onNaviga
                         )}
                         {(newStatus === 'Delivered' || newStatus === 'Delivering') && (
                           <div className="space-y-2">
-                            <label className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                            <label className="text-xs font-bold uppercase tracking-wider text-black">
                               {newStatus === 'Delivered' ? 'Ảnh chứng minh (Đã giao)' : 'Ảnh chuẩn bị mâm cúng'}
                             </label>
                             <input
@@ -1141,10 +1220,10 @@ const OrderManagement: React.FC<OrderManagementProps> = ({ onNavigate: _onNaviga
                               accept="image/*"
                               multiple
                               onChange={(e) => setDeliveryProofImages(Array.from(e.target.files || []))}
-                              className="w-full text-sm text-slate-600 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200"
+                              className="w-full text-sm text-black file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200"
                             />
                             {deliveryProofImages.length > 0 && (
-                              <p className="text-xs text-slate-500">Đã chọn {deliveryProofImages.length} ảnh</p>
+                              <p className="text-xs text-black">Đã chọn {deliveryProofImages.length} ảnh</p>
                             )}
                           </div>
                         )}
@@ -1173,23 +1252,27 @@ const OrderManagement: React.FC<OrderManagementProps> = ({ onNavigate: _onNaviga
                         { label: 'Tạm tính', value: formatVnd(selectedOrder.pricing?.subTotal) },
                         { label: 'Phí giao', value: formatVnd(selectedOrder.pricing?.shippingFee) },
                         { label: 'Giảm giá', value: formatVnd(selectedOrder.pricing?.discountAmount) },
-                        { label: 'TT đơn hàng', value: getStatusBadge(selectedOrder.orderStatus).label },
-                        { label: 'TT thanh toán', value: getPaymentStatusLabel(selectedOrder.payment?.paymentStatus) },
+                        { label: 'Tổng đơn hàng', value: formatVnd(selectedOrder.pricing?.totalAmount), isBold: true },
+                        { label: 'Hoa hồng sàn', value: `-${selectedOrder.pricing?.commissionRate}%`, color: 'text-rose-500' },
+                        { label: 'Phí dịch vụ', value: `-${formatVnd(selectedOrder.pricing?.platformFee)}`, color: 'text-rose-500' },
                       ].map(row => (
-                        <div key={row.label} className="flex justify-between px-4 py-2.5 bg-white">
-                          <span className="text-gray-500 text-[13px]">{row.label}</span>
-                          <span className="font-semibold text-gray-800 text-right">{row.value}</span>
+                        <div key={row.label} className={`flex justify-between px-4 py-2.5 bg-white ${(row as any).isBold ? 'border-t border-gray-50 bg-gray-50/30' : ''}`}>
+                          <span className={`${(row as any).color || 'text-gray-500'} text-[13px] font-medium`}>{row.label}</span>
+                          <span className={`font-semibold ${(row as any).color || 'text-gray-800'} text-right`}>{row.value}</span>
                         </div>
                       ))}
-                      <div className="flex justify-between px-4 py-3 bg-slate-50">
-                        <span className="font-bold text-gray-700">Tổng cộng</span>
-                        <span className="text-xl font-black text-primary">{formatVnd(selectedOrder.pricing?.finalAmount ?? selectedOrder.pricing?.totalAmount)}</span>
+                      <div className="flex justify-between px-4 py-3 bg-primary/5 border-t border-primary/10">
+                        <span className="font-bold text-gray-700">Thực nhận (Net)</span>
+                        <span className="text-xl font-black text-primary">{formatVnd(selectedOrder.pricing?.vendorNetAmount)}</span>
                       </div>
-                      <p className="text-xs text-green-600 font-semibold text-right px-4 py-2 bg-white">
-                        Thực nhận: {formatVnd(selectedOrder.pricing?.vendorNetAmount)}
-                      </p>
+                      <div className="px-4 py-2 bg-white border-t border-gray-50">
+                        <div className="flex justify-between text-[11px] text-gray-400">
+                          <span>Trạng thái đơn:</span>
+                          <span className="font-bold">{getStatusBadge(selectedOrder.orderStatus).label}</span>
+                        </div>
+                      </div>
                       {selectedOrder.payment?.paidAt && (
-                        <p className="text-xs text-slate-500 text-right px-4 py-2 bg-white">Thanh toán lúc: {formatDateTimeVi(selectedOrder.payment.paidAt)}</p>
+                        <p className="text-xs text-black text-right px-4 py-2 bg-white">Thanh toán lúc: {formatDateTimeVi(selectedOrder.payment.paidAt)}</p>
                       )}
                     </div>
 

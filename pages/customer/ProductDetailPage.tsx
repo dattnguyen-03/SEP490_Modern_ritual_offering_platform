@@ -429,7 +429,7 @@ const ProductDetailPage: React.FC<{ onNavigate: (path: string) => void }> = ({ o
 
   return (
     <div className="max-w-7xl mx-auto px-6 md:px-10 py-6 md:py-12">
-      <nav className="flex flex-wrap items-center gap-2 mb-6 md:mb-10 text-[11px] md:text-[13px] font-medium text-slate-400">
+      <nav className="flex flex-wrap items-center gap-2 mb-6 md:mb-10 text-[11px] md:text-[13px] font-medium text-black">
         <button onClick={() => onNavigate('/')} className="hover:text-primary">Trang chủ</button>
         <span className="text-xs">›</span>
         <button onClick={() => onNavigate('/shop')} className="hover:text-primary">Danh mục</button>
@@ -499,14 +499,14 @@ const ProductDetailPage: React.FC<{ onNavigate: (path: string) => void }> = ({ o
                   : product.price).toLocaleString()}đ
               </p>
               {product.originalPrice && (
-                <p className="text-lg text-slate-400 line-through">{product.originalPrice.toLocaleString()}đ</p>
+                <p className="text-lg text-black line-through">{product.originalPrice.toLocaleString()}đ</p>
               )}
             </div>
             <div className="flex flex-wrap items-center gap-4">
               <div className="flex items-center gap-1.5">
                 <span className="text-gold">★</span>
                 <span className="text-sm font-bold text-slate-800">
-                  {product.rating} <span className="text-slate-400 font-medium">({reviewsToDisplay.length} đánh giá)</span>
+                  {product.rating} <span className="text-black font-medium">({reviewsToDisplay.length} đánh giá)</span>
                 </span>
               </div>
               {product.totalSold !== undefined && product.totalSold > 0 && (
@@ -522,7 +522,7 @@ const ProductDetailPage: React.FC<{ onNavigate: (path: string) => void }> = ({ o
 
           <div className="p-6 md:p-8 bg-white rounded-[2rem] border border-gold/10 shadow-xl space-y-6 md:space-y-8">
             <div>
-              <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 block mb-4">Gói lễ vật</label>
+              <label className="text-[10px] font-black uppercase tracking-[0.2em] text-black block mb-4">Gói lễ vật</label>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 {product.variants?.map((variant, index) => (
                   <button
@@ -551,14 +551,14 @@ const ProductDetailPage: React.FC<{ onNavigate: (path: string) => void }> = ({ o
                     className={`p-3 md:p-4 rounded-2xl border-2 text-center transition-all ${selectedVariantIndex === index ? 'border-primary bg-primary/5 shadow-md shadow-primary/5' : 'border-slate-50 hover:border-gold hover:bg-gold/5'}`}
                   >
                     <p className={`text-xs font-bold leading-tight mb-1 ${selectedVariantIndex === index ? 'text-primary' : 'text-slate-700'}`}>{variant.tier}</p>
-                    <p className="text-[10px] text-slate-400 font-medium">{variant.price.toLocaleString()}đ</p>
+                    <p className="text-[10px] text-black font-medium">{variant.price.toLocaleString()}đ</p>
                   </button>
                 ))}
               </div>
             </div>
 
             <div className="pt-6 border-t border-gold/10">
-              <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 block mb-4">Lễ vật bao gồm</label>
+              <label className="text-[10px] font-black uppercase tracking-[0.2em] text-black block mb-4">Lễ vật bao gồm</label>
               {selectedVariantDescription && (
                 <p className="text-xs font-medium text-slate-600 mb-5 leading-relaxed bg-gray-50 p-4 rounded-xl italic">"{selectedVariantDescription}"</p>
               )}
@@ -575,7 +575,7 @@ const ProductDetailPage: React.FC<{ onNavigate: (path: string) => void }> = ({ o
             </div>
 
             <div className="pt-6 border-t border-gold/10">
-              <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 block mb-4">Số lượng</label>
+              <label className="text-[10px] font-black uppercase tracking-[0.2em] text-black block mb-4">Số lượng</label>
               <div className="flex items-center gap-4">
                 <div className="flex items-center bg-gray-100 rounded-2xl p-1">
                   <button
@@ -598,14 +598,14 @@ const ProductDetailPage: React.FC<{ onNavigate: (path: string) => void }> = ({ o
                     +
                   </button>
                 </div>
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest italic hidden sm:block">Giao tận nơi</p>
+                <p className="text-[10px] font-bold text-black uppercase tracking-widest italic hidden sm:block">Giao tận nơi</p>
               </div>
             </div>
 
             {/* Available Swaps Section */}
             {selectedVariantIndex !== null && product.variants?.[selectedVariantIndex]?.availableSwaps && product.variants[selectedVariantIndex].availableSwaps!.length > 0 && (
               <div className="pt-6 border-t border-gold/10">
-                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 block mb-4">Tùy chọn thay đổi (Swaps)</label>
+                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-black block mb-4">Tùy chọn thay đổi (Swaps)</label>
                 <div className="space-y-3">
                   {product.variants[selectedVariantIndex].availableSwaps!.map((swap) => (
                     <div
@@ -644,7 +644,7 @@ const ProductDetailPage: React.FC<{ onNavigate: (path: string) => void }> = ({ o
             {/* Available Add-ons Section */}
             {product.availableAddOns && product.availableAddOns.length > 0 && (
               <div className="pt-6 border-t border-gold/10">
-                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 block mb-4">Mua thêm lễ vật</label>
+                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-black block mb-4">Mua thêm lễ vật</label>
                 <div className="space-y-3">
                   {product.availableAddOns.map((addOn) => (
                     <div
@@ -681,7 +681,7 @@ const ProductDetailPage: React.FC<{ onNavigate: (path: string) => void }> = ({ o
             {/* Updated Price Calculation */}
             <div className="pt-6 border-t border-gold/10">
               <div className="flex justify-between items-center mb-2">
-                <span className="text-xs font-bold text-slate-400">Giá gói:</span>
+                <span className="text-xs font-bold text-black">Giá gói:</span>
                 <span className="text-xs font-bold text-slate-700">
                   {((product.variants && selectedVariantIndex !== null && product.variants[selectedVariantIndex]
                     ? product.variants[selectedVariantIndex].price
@@ -912,8 +912,8 @@ const ProductDetailPage: React.FC<{ onNavigate: (path: string) => void }> = ({ o
                                 <span key={star} className="text-sm" style={{ color: star <= review.rating ? '#FFD700' : '#cbd5e1' }}>★</span>
                               ))}
                             </div>
-                            <span className="text-xs text-slate-400">• {new Date(review.createdAt).toLocaleDateString('vi-VN')}</span>
-                            {review.variantName && <span className="text-[10px] text-slate-400 font-bold ml-2 italic">({review.variantName})</span>}
+                            <span className="text-xs text-black">• {new Date(review.createdAt).toLocaleDateString('vi-VN')}</span>
+                            {review.variantName && <span className="text-[10px] text-black font-bold ml-2 italic">({review.variantName})</span>}
                           </div>
                         </div>
                         <div className="flex items-center gap-3">
@@ -922,7 +922,7 @@ const ProductDetailPage: React.FC<{ onNavigate: (path: string) => void }> = ({ o
                             <div className="relative">
                               <button
                                 onClick={() => setActiveReviewMenu(activeReviewMenu === String(review.reviewId) ? null : String(review.reviewId))}
-                                className="p-1.5 hover:bg-slate-100 rounded-full transition-colors text-slate-400 hover:text-slate-600"
+                                className="p-1.5 hover:bg-slate-100 rounded-full transition-colors text-black hover:text-slate-600"
                                 title="Quản lý"
                               >
                                 <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -935,7 +935,7 @@ const ProductDetailPage: React.FC<{ onNavigate: (path: string) => void }> = ({ o
                               {activeReviewMenu === review.reviewId && (
                                 <div className="absolute right-0 mt-2 w-48 bg-white rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.1)] border border-gray-100 z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
                                   <div className="px-4 py-2 bg-slate-50 border-b border-slate-100">
-                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Quản lý đánh giá</p>
+                                    <p className="text-[10px] font-black text-black uppercase tracking-widest">Quản lý đánh giá</p>
                                   </div>
                                   <button
                                     onClick={() => handleToggleVisibility(String(review.reviewId), !!review.isVisible)}

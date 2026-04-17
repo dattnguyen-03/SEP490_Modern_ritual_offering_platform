@@ -902,7 +902,7 @@ const Layout: React.FC<LayoutProps> = ({ children, activeRoute, onNavigate, onLo
             <div className="flex items-center gap-3 lg:gap-8 xl:gap-10 min-w-0">
               <button
                 onClick={() => setIsMobileMenuOpen(true)}
-                className="lg:hidden p-2 -ml-2 text-slate-600 hover:text-primary transition-colors focus:outline-none"
+                className="lg:hidden p-2 -ml-2 text-black hover:text-primary transition-colors focus:outline-none"
                 aria-label="Toggle menu"
               >
                 <span className="material-symbols-outlined text-3xl">menu</span>
@@ -935,7 +935,7 @@ const Layout: React.FC<LayoutProps> = ({ children, activeRoute, onNavigate, onLo
                     >
                       <button
                         onClick={() => item.path && handleMainNavClick(item.path)}
-                        className={`text-sm font-semibold transition-colors border-b-2 py-1 flex items-center gap-1 whitespace-nowrap ${item.path === activeRoute ? 'text-primary border-primary' : 'text-slate-600 border-transparent hover:text-primary hover:border-primary'
+                        className={`text-sm font-semibold transition-colors border-b-2 py-1 flex items-center gap-1 whitespace-nowrap ${item.path === activeRoute ? 'text-primary border-primary' : 'text-black border-transparent hover:text-primary hover:border-primary'
                           }`}
                       >
                         {item.label}
@@ -954,7 +954,7 @@ const Layout: React.FC<LayoutProps> = ({ children, activeRoute, onNavigate, onLo
                                     onNavigate(submenuItem.path);
                                     setOpenDropdown(null);
                                   }}
-                                  className={`w-full text-left text-sm text-slate-600 hover:bg-primary/5 hover:text-primary transition-colors rounded-xl font-medium ${(item.submenu?.length ?? 0) > 5 ? 'py-2 px-3 flex items-center gap-2' : 'py-3 px-4 mb-1 last:mb-0'}`}
+                                  className={`w-full text-left text-sm text-black hover:bg-primary/5 hover:text-primary transition-colors rounded-xl font-medium ${(item.submenu?.length ?? 0) > 5 ? 'py-2 px-3 flex items-center gap-2' : 'py-3 px-4 mb-1 last:mb-0'}`}
                                 >
                                   {(item.submenu?.length ?? 0) > 5 && idx === 0 && (
                                     <span className="material-symbols-outlined text-primary text-base">apps</span>
@@ -976,7 +976,7 @@ const Layout: React.FC<LayoutProps> = ({ children, activeRoute, onNavigate, onLo
               <button
                 id="theme-toggle-btn"
                 onClick={toggleTheme}
-                className="flex items-center justify-center w-10 h-10 rounded-full border border-gray-200 dark:border-white/10 text-slate-600 dark:text-slate-300 hover:border-primary hover:text-primary dark:hover:text-yellow-400 dark:hover:border-yellow-400/50 transition-all bg-white dark:bg-white/5 shadow-sm"
+                className="flex items-center justify-center w-10 h-10 rounded-full border border-gray-200 dark:border-white/10 text-black dark:text-slate-300 hover:border-primary hover:text-primary dark:hover:text-yellow-400 dark:hover:border-yellow-400/50 transition-all bg-white dark:bg-white/5 shadow-sm"
                 title={theme === 'dark' ? 'Chuyển sang sáng' : 'Chuyển sang tối'}
                 aria-label="Toggle dark mode"
               >
@@ -1001,7 +1001,7 @@ const Layout: React.FC<LayoutProps> = ({ children, activeRoute, onNavigate, onLo
                   {!isBackofficeRole && (
                     <button
                       onClick={() => onNavigate('/messages')}
-                      className="relative flex items-center justify-center w-10 h-10 rounded-full border border-gray-200 text-slate-600 hover:border-primary hover:text-primary transition-all bg-white shadow-sm"
+                      className="relative flex items-center justify-center w-10 h-10 rounded-full border border-gray-200 text-black hover:border-primary hover:text-primary transition-all bg-white shadow-sm"
                       title="Tin nhắn"
                     >
                       <svg
@@ -1041,7 +1041,7 @@ const Layout: React.FC<LayoutProps> = ({ children, activeRoute, onNavigate, onLo
                           loadNotifications();
                         }
                       }}
-                      className="relative flex items-center justify-center w-10 h-10 rounded-full border border-gray-200 text-slate-600 hover:border-primary hover:text-primary transition-all bg-white shadow-sm"
+                      className="relative flex items-center justify-center w-10 h-10 rounded-full border border-gray-200 text-black hover:border-primary hover:text-primary transition-all bg-white shadow-sm"
                       title="Thông báo"
                     >
                       <svg
@@ -1072,7 +1072,7 @@ const Layout: React.FC<LayoutProps> = ({ children, activeRoute, onNavigate, onLo
                         <div className="px-5 pt-4 pb-3 border-b border-gray-100 flex items-center justify-between bg-gradient-to-r from-amber-50 via-white to-amber-50">
                           <div>
                             <p className="text-[11px] font-black uppercase tracking-[0.2em] text-amber-700">Thông báo</p>
-                            <p className="text-xs text-slate-500 mt-0.5">Cập nhật mới nhất về đơn hàng và đánh giá</p>
+                            <p className="text-xs text-black mt-0.5">Cập nhật mới nhất về đơn hàng và đánh giá</p>
                           </div>
                           <button
                             onClick={() => {
@@ -1087,11 +1087,11 @@ const Layout: React.FC<LayoutProps> = ({ children, activeRoute, onNavigate, onLo
 
                         <div className="max-h-80 overflow-y-auto divide-y divide-gray-100 scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent">
                           {notificationLoading && filteredNotifications.length === 0 && (
-                            <div className="px-5 py-6 text-sm text-slate-500">Đang tải thông báo...</div>
+                            <div className="px-5 py-6 text-sm text-black">Đang tải thông báo...</div>
                           )}
 
                           {!notificationLoading && filteredNotifications.length === 0 && (
-                            <div className="px-5 py-6 text-sm text-slate-500">Hiện chưa có thông báo nào.</div>
+                            <div className="px-5 py-6 text-sm text-black">Hiện chưa có thông báo nào.</div>
                           )}
 
                           {filteredNotifications.map((item) => (
@@ -1127,10 +1127,10 @@ const Layout: React.FC<LayoutProps> = ({ children, activeRoute, onNavigate, onLo
                                 <p className="text-xs font-bold text-slate-800 mb-1 truncate">
                                   {item.title}
                                 </p>
-                                <p className="text-xs text-slate-500 leading-snug line-clamp-2">
+                                <p className="text-xs text-black leading-snug line-clamp-2">
                                   {item.message}
                                 </p>
-                                <div className="mt-2 flex items-center justify-between text-[11px] text-slate-400">
+                                <div className="mt-2 flex items-center justify-between text-[11px] text-black">
                                   <span>{new Date(item.createdAt).toLocaleString('vi-VN')}</span>
                                   {(item.type === 'orderplaced' || item.type === 'order') && (
                                     <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 font-semibold">
@@ -1202,11 +1202,11 @@ const Layout: React.FC<LayoutProps> = ({ children, activeRoute, onNavigate, onLo
                         <div className="flex justify-between items-center mb-4">
                           <div className="flex items-center gap-2">
                             <div className="size-2 rounded-full bg-green-500"></div>
-                            <span className="text-[10px] font-black text-slate-600 uppercase tracking-[0.2em]">Số dư khả dụng</span>
+                            <span className="text-[10px] font-black text-black uppercase tracking-[0.2em]">Số dư khả dụng</span>
                           </div>
                           <button
                             onClick={(e) => { e.stopPropagation(); fetchWalletBalance(); }}
-                            className={`p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-primary transition-all duration-500 ${walletLoading ? 'animate-spin text-primary' : ''}`}
+                            className={`p-1.5 rounded-lg hover:bg-slate-100 text-black hover:text-primary transition-all duration-500 ${walletLoading ? 'animate-spin text-primary' : ''}`}
                             title="Làm mới"
                           >
                             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1223,7 +1223,7 @@ const Layout: React.FC<LayoutProps> = ({ children, activeRoute, onNavigate, onLo
                               <span className="text-3xl font-black text-primary tracking-tight">
                                 {formatCurrency(availableBalance)}
                               </span>
-                              <span className="text-xs font-bold text-slate-400 mb-1">VND</span>
+                              <span className="text-xs font-bold text-black mb-1">VND</span>
                             </div>
                           )}
                         </div>
@@ -1469,7 +1469,7 @@ const Layout: React.FC<LayoutProps> = ({ children, activeRoute, onNavigate, onLo
             <h2 className="text-xl font-display font-black text-primary italic">VIET RITUAL</h2>
             <button
               onClick={() => setIsMobileMenuOpen(false)}
-              className="p-2 text-slate-400 hover:text-primary"
+              className="p-2 text-black hover:text-primary"
             >
               <span className="material-symbols-outlined">close</span>
             </button>
@@ -1485,7 +1485,7 @@ const Layout: React.FC<LayoutProps> = ({ children, activeRoute, onNavigate, onLo
                     </div>
                     <div>
                       <p className="text-sm font-black text-primary truncate max-w-[160px]">{userName}</p>
-                      <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-0.5">Thành viên</p>
+                      <p className="text-[10px] font-bold text-black uppercase tracking-widest mt-0.5">Thành viên</p>
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-2">
@@ -1525,7 +1525,7 @@ const Layout: React.FC<LayoutProps> = ({ children, activeRoute, onNavigate, onLo
 
               {!isBackofficeRole && (
                 <div className="space-y-1">
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4 pl-2">Khám phá</p>
+                  <p className="text-[10px] font-black text-black uppercase tracking-[0.2em] mb-4 pl-2">Khám phá</p>
                   {getNavItems().map((item) => (
                     <div key={item.label} className="space-y-1">
                       <button
@@ -1537,7 +1537,7 @@ const Layout: React.FC<LayoutProps> = ({ children, activeRoute, onNavigate, onLo
                             setOpenDropdown(openDropdown === item.label ? null : item.label);
                           }
                         }}
-                        className={`w-full flex items-center justify-between px-4 py-3 rounded-xl font-bold text-sm transition-colors ${activeRoute === item.path ? 'bg-primary text-white' : 'text-slate-600 hover:bg-slate-50'}`}
+                        className={`w-full flex items-center justify-between px-4 py-3 rounded-xl font-bold text-sm transition-colors ${activeRoute === item.path ? 'bg-primary text-white' : 'text-black hover:bg-slate-50'}`}
                       >
                         <span>{item.label}</span>
                         {item.submenu && (
@@ -1552,7 +1552,7 @@ const Layout: React.FC<LayoutProps> = ({ children, activeRoute, onNavigate, onLo
                             <button
                               key={idx}
                               onClick={() => { onNavigate(sub.path); setIsMobileMenuOpen(false); }}
-                              className="w-full text-left px-4 py-2.5 text-xs text-slate-500 hover:text-primary transition-colors"
+                              className="w-full text-left px-4 py-2.5 text-xs text-black hover:text-primary transition-colors"
                             >
                               - {sub.label}
                             </button>
@@ -1566,24 +1566,24 @@ const Layout: React.FC<LayoutProps> = ({ children, activeRoute, onNavigate, onLo
 
               {!isBackofficeRole && (
                 <div className="space-y-1 pt-4 border-t border-gray-100">
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4 pl-2">Cá nhân</p>
+                  <p className="text-[10px] font-black text-black uppercase tracking-[0.2em] mb-4 pl-2">Cá nhân</p>
                   <button
                     onClick={() => { onNavigate('/cart'); setIsMobileMenuOpen(false); }}
-                    className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 font-bold text-sm hover:bg-slate-50"
+                    className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-black font-bold text-sm hover:bg-slate-50"
                   >
                     <span className="material-symbols-outlined text-xl">shopping_cart</span>
                     <span>Giỏ hàng ({cartCount})</span>
                   </button>
                   <button
                     onClick={() => { setIsWalletDropdownOpen(true); setIsMobileMenuOpen(false); }}
-                    className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 font-bold text-sm hover:bg-slate-50"
+                    className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-black font-bold text-sm hover:bg-slate-50"
                   >
                     <span className="material-symbols-outlined text-xl">account_balance_wallet</span>
                     <span>Ví của tôi</span>
                   </button>
                   <button
                     onClick={() => { onNavigate('/profile/orders'); setIsMobileMenuOpen(false); }}
-                    className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 font-bold text-sm hover:bg-slate-50"
+                    className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-black font-bold text-sm hover:bg-slate-50"
                   >
                     <span className="material-symbols-outlined text-xl">list_alt</span>
                     <span>Đơn hàng của tôi</span>
@@ -1598,7 +1598,7 @@ const Layout: React.FC<LayoutProps> = ({ children, activeRoute, onNavigate, onLo
               <span className="material-symbols-outlined text-xl">call</span>
               <span className="text-lg">Hotline: 1900 8888</span>
             </div>
-            <p className="text-[10px] font-bold text-slate-400 italic">Hỗ trợ khách hàng 24/7</p>
+            <p className="text-[10px] font-bold text-black italic">Hỗ trợ khách hàng 24/7</p>
           </div>
         </div>
       </div>

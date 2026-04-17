@@ -39,7 +39,7 @@ const ProductListPage: React.FC<{ onNavigate: (route: AppRoute | string) => void
   const allNearProducts = products
     .filter(p => p.distanceKm !== undefined && p.distanceKm <= nearProductsThreshold)
     .sort((a, b) => (a.distanceKm || 0) - (b.distanceKm || 0));
-  
+
   const nearProducts = showAllNearProducts ? allNearProducts : allNearProducts.slice(0, 3);
 
   const getProductDetailPath = (rawId: string): string => {
@@ -235,10 +235,10 @@ const ProductListPage: React.FC<{ onNavigate: (route: AppRoute | string) => void
                 <span key={i} className={`text-[10px] ${i < Math.floor(p.rating) ? 'text-gold' : 'text-slate-200'}`}>★</span>
               ))}
             </div>
-            <span className="text-[11px] font-black text-slate-400">({p.reviews})</span>
+            <span className="text-[11px] font-black text-black">({p.reviews})</span>
           </div>
           {p.totalSold !== undefined && p.totalSold > 0 && (
-            <span className="text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-1 rounded-lg">
+            <span className="text-[10px] font-bold text-black bg-slate-100 px-2 py-1 rounded-lg">
               Đã bán {p.totalSold}
             </span>
           )}
@@ -248,10 +248,10 @@ const ProductListPage: React.FC<{ onNavigate: (route: AppRoute | string) => void
 
         <div className="flex items-center justify-between mb-5 md:mb-6">
           <div className="flex items-center gap-2 mt-3 md:mt-4">
-            <span className="font-bold text-slate-600 text-[11px] truncate max-w-[120px] leading-tight">{p.vendorName}</span>
+            <span className="font-bold text-black text-[11px] truncate max-w-[120px] leading-tight">{p.vendorName}</span>
           </div>
           {p.distanceKm !== undefined && (
-            <div className="flex items-center gap-1 text-slate-400 bg-slate-50 px-2 py-1 rounded-lg">
+            <div className="flex items-center gap-1 text-black bg-slate-50 px-2 py-1 rounded-lg">
               <span className="material-symbols-outlined text-[12px]">distance</span>
               <span className="text-[10px] font-bold">{p.distanceKm}km</span>
             </div>
@@ -260,7 +260,7 @@ const ProductListPage: React.FC<{ onNavigate: (route: AppRoute | string) => void
 
         <div className="pt-5 mt-auto border-t border-gold/5 flex items-center justify-between">
           <div>
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Giá từ</p>
+            <p className="text-[10px] font-black text-black uppercase tracking-widest mb-0.5">Giá từ</p>
             <p className="text-lg md:text-2xl font-black text-primary tracking-tight">{p.price.toLocaleString()}đ</p>
           </div>
           <button
@@ -342,7 +342,7 @@ const ProductListPage: React.FC<{ onNavigate: (route: AppRoute | string) => void
                 onClick={() => setActiveFilter('All')}
                 className={`w-full text-left px-5 py-3.5 rounded-2xl text-sm font-bold transition-all duration-300 ease-out hover:scale-[1.02] active:scale-[0.98] ${activeFilter === 'All'
                   ? 'border-2 border-primary bg-primary/5 text-primary shadow-md'
-                  : 'text-slate-600 hover:bg-gold/10 hover:pl-7'
+                  : 'text-black hover:bg-gold/10 hover:pl-7'
                   }`}
               >
                 Tất cả dịp lễ
@@ -355,7 +355,7 @@ const ProductListPage: React.FC<{ onNavigate: (route: AppRoute | string) => void
                   }}
                   className={`w-full text-left px-5 py-3.5 rounded-2xl text-sm font-bold transition-all duration-300 ease-out hover:scale-[1.02] active:scale-[0.98] ${activeFilter === cat.name
                     ? 'border-2 border-primary bg-primary/5 text-primary shadow-md'
-                    : 'text-slate-600 hover:bg-gold/10 hover:pl-7'
+                    : 'text-black hover:bg-gold/10 hover:pl-7'
                     }`}
                 >
                   {cat.name}
@@ -364,7 +364,7 @@ const ProductListPage: React.FC<{ onNavigate: (route: AppRoute | string) => void
               {categories.filter(c => c.isActive).length > 6 && (
                 <button
                   onClick={() => setShowAllCategories(!showAllCategories)}
-                  className="w-full flex items-center justify-center gap-2 px-5 py-3 rounded-2xl text-sm font-bold text-slate-500 hover:text-primary hover:bg-gold/10 transition-all duration-300"
+                  className="w-full flex items-center justify-center gap-2 px-5 py-3 rounded-2xl text-sm font-bold text-black hover:text-primary hover:bg-gold/10 transition-all duration-300"
                 >
                   <span className="material-symbols-outlined text-sm">
                     {showAllCategories ? 'remove' : 'add'}
@@ -386,7 +386,7 @@ const ProductListPage: React.FC<{ onNavigate: (route: AppRoute | string) => void
                   checked={priceRanges.p1}
                   onChange={() => setPriceRanges({ ...priceRanges, p1: !priceRanges.p1 })}
                 />
-                <label htmlFor="p1" className="text-sm text-slate-600">Dưới 1.000.000đ</label>
+                <label htmlFor="p1" className="text-sm text-black">Dưới 1.000.000đ</label>
               </div>
               <div className="flex items-center gap-3">
                 <input
@@ -396,7 +396,7 @@ const ProductListPage: React.FC<{ onNavigate: (route: AppRoute | string) => void
                   checked={priceRanges.p2}
                   onChange={() => setPriceRanges({ ...priceRanges, p2: !priceRanges.p2 })}
                 />
-                <label htmlFor="p2" className="text-sm text-slate-600">1.000.000đ - 3.000.000đ</label>
+                <label htmlFor="p2" className="text-sm text-black">1.000.000đ - 3.000.000đ</label>
               </div>
               <div className="flex items-center gap-3">
                 <input
@@ -406,7 +406,7 @@ const ProductListPage: React.FC<{ onNavigate: (route: AppRoute | string) => void
                   checked={priceRanges.p3}
                   onChange={() => setPriceRanges({ ...priceRanges, p3: !priceRanges.p3 })}
                 />
-                <label htmlFor="p3" className="text-sm text-slate-600">3.000.000đ - 5.000.000đ</label>
+                <label htmlFor="p3" className="text-sm text-black">3.000.000đ - 5.000.000đ</label>
               </div>
               <div className="flex items-center gap-3">
                 <input
@@ -416,7 +416,7 @@ const ProductListPage: React.FC<{ onNavigate: (route: AppRoute | string) => void
                   checked={priceRanges.p4}
                   onChange={() => setPriceRanges({ ...priceRanges, p4: !priceRanges.p4 })}
                 />
-                <label htmlFor="p4" className="text-sm text-slate-600">Trên 5.000.000đ</label>
+                <label htmlFor="p4" className="text-sm text-black">Trên 5.000.000đ</label>
               </div>
             </div>
           </div>
@@ -436,7 +436,7 @@ const ProductListPage: React.FC<{ onNavigate: (route: AppRoute | string) => void
                     <span key={i} className="text-xs" style={{ color: '#FFD700' }}>★</span>
                   ))}
                 </div>
-                <span className="text-xs text-slate-500">(5 sao)</span>
+                <span className="text-xs text-black">(5 sao)</span>
               </label>
               <label className="flex items-center gap-2 cursor-pointer">
                 <input
@@ -450,7 +450,7 @@ const ProductListPage: React.FC<{ onNavigate: (route: AppRoute | string) => void
                     <span key={i} className="text-xs" style={{ color: '#FFD700' }}>★</span>
                   ))}
                 </div>
-                <span className="text-xs text-slate-500">(4 sao)</span>
+                <span className="text-xs text-black">(4 sao)</span>
               </label>
               <label className="flex items-center gap-2 cursor-pointer">
                 <input
@@ -464,7 +464,7 @@ const ProductListPage: React.FC<{ onNavigate: (route: AppRoute | string) => void
                     <span key={i} className="text-xs" style={{ color: '#FFD700' }}>★</span>
                   ))}
                 </div>
-                <span className="text-xs text-slate-500">(3 sao)</span>
+                <span className="text-xs text-black">(3 sao)</span>
               </label>
             </div>
           </div>
@@ -474,11 +474,11 @@ const ProductListPage: React.FC<{ onNavigate: (route: AppRoute | string) => void
             <div className="space-y-2">
               <label className="flex items-center gap-2 cursor-pointer">
                 <input type="checkbox" defaultChecked className="rounded text-primary" />
-                <span className="text-sm text-slate-600">Còn hàng</span>
+                <span className="text-sm text-black">Còn hàng</span>
               </label>
               <label className="flex items-center gap-2 cursor-pointer">
                 <input type="checkbox" className="rounded text-primary" />
-                <span className="text-sm text-slate-600">Sắp có hàng</span>
+                <span className="text-sm text-black">Sắp có hàng</span>
               </label>
             </div>
           </div>
@@ -511,7 +511,7 @@ const ProductListPage: React.FC<{ onNavigate: (route: AppRoute | string) => void
                   {allNearProducts.length > 3 && (
                     <button
                       onClick={() => setShowAllNearProducts(!showAllNearProducts)}
-                      className="group flex items-center gap-2 px-5 py-2.5 bg-white border border-gold/10 text-slate-600 rounded-2xl text-xs font-black uppercase tracking-widest shadow-sm hover:bg-primary hover:text-white hover:border-primary transition-all duration-300"
+                      className="group flex items-center gap-2 px-5 py-2.5 bg-white border border-gold/10 text-black rounded-2xl text-xs font-black uppercase tracking-widest shadow-sm hover:bg-primary hover:text-white hover:border-primary transition-all duration-300"
                     >
                       <span>{showAllNearProducts ? 'Thu gọn' : `Xem thêm (${allNearProducts.length - 3})`}</span>
                       <span className="material-symbols-outlined text-sm group-hover:rotate-180 transition-transform duration-500">
@@ -535,7 +535,7 @@ const ProductListPage: React.FC<{ onNavigate: (route: AppRoute | string) => void
               <div className="flex flex-col sm:flex-row sm:items-center gap-6 w-full">
                 <div className="shrink-0 hidden sm:block">
                   <h2 className="text-2xl font-black text-slate-900 tracking-tight">Tất cả</h2>
-                  <p className="text-slate-400 text-[11px] font-black uppercase tracking-widest">{filteredProducts.length} sản phẩm</p>
+                  <p className="text-black text-[11px] font-black uppercase tracking-widest">{filteredProducts.length} sản phẩm</p>
                 </div>
                 <div className="relative flex-1 group">
                   <input
@@ -543,16 +543,16 @@ const ProductListPage: React.FC<{ onNavigate: (route: AppRoute | string) => void
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Tìm theo mâm cúng, dịp lễ, cửa hàng..."
-                    className="w-full rounded-[2rem] border-2 border-slate-100 bg-gray-50/50 py-4 pl-14 pr-6 text-sm text-slate-700 placeholder:text-slate-400 focus:border-primary focus:bg-white focus:outline-none focus:ring-8 focus:ring-primary/5 transition-all duration-300"
+                    className="w-full rounded-[2rem] border-2 border-slate-100 bg-gray-50/50 py-4 pl-14 pr-6 text-sm text-slate-700 placeholder:text-black focus:border-primary focus:bg-white focus:outline-none focus:ring-8 focus:ring-primary/5 transition-all duration-300"
                   />
-                  <span className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors">
+                  <span className="absolute left-5 top-1/2 -translate-y-1/2 text-black group-focus-within:text-primary transition-colors">
                     <span className="material-symbols-outlined text-2xl">search</span>
                   </span>
                 </div>
               </div>
               <div className="flex items-center justify-between sm:justify-end gap-6 w-full lg:w-auto pt-4 lg:pt-0 border-t lg:border-t-0 border-slate-100">
                 <div className="flex items-center gap-3">
-                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Sắp xếp</span>
+                  <span className="text-[10px] font-black text-black uppercase tracking-widest">Sắp xếp</span>
                   <select
                     className="bg-gray-50 hover:bg-white border-2 border-slate-100 rounded-2xl text-[12px] font-black focus:ring-8 focus:ring-primary/5 focus:border-primary py-2.5 px-4 pr-10 transition-all cursor-pointer"
                     value={sortBy}
@@ -572,7 +572,7 @@ const ProductListPage: React.FC<{ onNavigate: (route: AppRoute | string) => void
                   <span className="material-symbols-outlined text-4xl text-gold/40">sentiment_dissatisfied</span>
                 </div>
                 <h3 className="text-xl font-bold text-slate-800 mb-2">Không tìm thấy sản phẩm</h3>
-                <p className="text-slate-500 max-w-xs mx-auto text-sm leading-relaxed">Chúng tôi chưa có sản phẩm nào phùers hợp với tiêu chí của bạn. Hãy thử thay đổi bộ lọc.</p>
+                <p className="text-black max-w-xs mx-auto text-sm leading-relaxed">Chúng tôi chưa có sản phẩm nào phùers hợp với tiêu chí của bạn. Hãy thử thay đổi bộ lọc.</p>
               </div>
             )}
 
@@ -598,7 +598,7 @@ const ProductListPage: React.FC<{ onNavigate: (route: AppRoute | string) => void
                     onClick={() => setCurrentPage(i + 1)}
                     className={`w-10 h-10 rounded-xl font-bold transition-all ${currentPage === i + 1
                       ? 'bg-primary text-white shadow-lg shadow-primary/20 scale-110'
-                      : 'hover:bg-primary/5 text-slate-600 active:scale-95'}`}
+                      : 'hover:bg-primary/5 text-black active:scale-95'}`}
                   >
                     {i + 1}
                   </button>

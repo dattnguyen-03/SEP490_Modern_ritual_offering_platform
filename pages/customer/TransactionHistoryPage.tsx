@@ -271,7 +271,7 @@ const TransactionHistoryPage: React.FC<TransactionHistoryPageProps> = () => {
       <div className="mb-6 flex items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-black text-slate-900">Lịch sử giao dịch ví</h1>
-          <p className="text-sm text-slate-500 mt-1">
+          <p className="text-sm text-black mt-1">
             Theo dõi chi tiết các khoản nạp, thanh toán và hoàn tiền trong tài khoản của bạn.
           </p>
         </div>
@@ -281,7 +281,7 @@ const TransactionHistoryPage: React.FC<TransactionHistoryPageProps> = () => {
       <div className="bg-white border border-slate-200 rounded-2xl p-4 md:p-5 mb-6 shadow-sm">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div>
-            <label className="block text-xs font-semibold text-slate-500 mb-1 uppercase tracking-widest">
+            <label className="block text-xs font-semibold text-black mb-1 uppercase tracking-widest">
               Loại giao dịch
             </label>
             <select
@@ -299,7 +299,7 @@ const TransactionHistoryPage: React.FC<TransactionHistoryPageProps> = () => {
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-500 mb-1 uppercase tracking-widest">
+            <label className="block text-xs font-semibold text-black mb-1 uppercase tracking-widest">
               Trạng thái
             </label>
             <select
@@ -315,7 +315,7 @@ const TransactionHistoryPage: React.FC<TransactionHistoryPageProps> = () => {
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-500 mb-1 uppercase tracking-widest">
+            <label className="block text-xs font-semibold text-black mb-1 uppercase tracking-widest">
               Từ ngày
             </label>
             <input
@@ -327,7 +327,7 @@ const TransactionHistoryPage: React.FC<TransactionHistoryPageProps> = () => {
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-500 mb-1 uppercase tracking-widest">
+            <label className="block text-xs font-semibold text-black mb-1 uppercase tracking-widest">
               Đến ngày
             </label>
             <input
@@ -345,7 +345,7 @@ const TransactionHistoryPage: React.FC<TransactionHistoryPageProps> = () => {
               type="button"
               onClick={handleClearFilters}
               disabled={loading}
-              className="inline-flex items-center px-6 py-2 rounded-xl text-sm font-bold border-2 border-slate-100 text-slate-500 hover:bg-slate-50 hover:border-slate-200 transition-all disabled:opacity-60"
+              className="inline-flex items-center px-6 py-2 rounded-xl text-sm font-bold border-2 border-slate-100 text-black hover:bg-slate-50 hover:border-slate-200 transition-all disabled:opacity-60"
             >
               <span className="material-symbols-outlined text-sm mr-2">restart_alt</span>
               Làm mới bộ lọc
@@ -376,7 +376,7 @@ const TransactionHistoryPage: React.FC<TransactionHistoryPageProps> = () => {
       {/* List */}
       <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
         {transactions.length === 0 && !loading ? (
-          <div className="p-8 text-center text-slate-500 text-sm">
+          <div className="p-8 text-center text-black text-sm">
             Chưa có giao dịch nào trong khoảng thời gian đã chọn.
           </div>
         ) : (
@@ -394,7 +394,7 @@ const TransactionHistoryPage: React.FC<TransactionHistoryPageProps> = () => {
                 >
                   <div className="flex-1 min-w-0">
                     <div className="flex flex-wrap items-center gap-2 mb-1">
-                      <span className="text-xs font-semibold uppercase tracking-widest text-slate-400">
+                      <span className="text-xs font-semibold uppercase tracking-widest text-black">
                         {getTransactionTypeLabel(tx.type, tx.amount)}
                       </span>
                       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold border whitespace-nowrap ${statusClass}`}>
@@ -404,9 +404,9 @@ const TransactionHistoryPage: React.FC<TransactionHistoryPageProps> = () => {
                     <p className="text-sm font-medium text-slate-900 truncate">
                       {tx.description || 'Không có mô tả'}
                     </p>
-                    <p className="text-xs text-slate-500 mt-1">
+                    <p className="text-xs text-black mt-1">
                       {formatDateTimeVi(tx.createdAt)}
-                      {tx.id && <span className="ml-2 text-slate-400">• Mã GD: {tx.id}</span>}
+                      {tx.id && <span className="ml-2 text-black">• Mã GD: {tx.id}</span>}
                     </p>
                   </div>
 
@@ -418,7 +418,7 @@ const TransactionHistoryPage: React.FC<TransactionHistoryPageProps> = () => {
                       {incoming ? '+' : '-'}{formatCurrency(tx.amount)}
                     </p>
                     {/* {Number.isFinite(tx.balanceAfter ?? NaN) && (
-                      <p className="mt-1 text-xs text-slate-500">
+                      <p className="mt-1 text-xs text-black">
                         Số dư sau giao dịch: {formatCurrency((tx.balanceAfter as number) ?? 0)}
                       </p>
                     )} */}
@@ -441,15 +441,15 @@ const TransactionHistoryPage: React.FC<TransactionHistoryPageProps> = () => {
           >
             <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between gap-3">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-widest text-slate-400">Chi tiết giao dịch</p>
+                <p className="text-xs font-semibold uppercase tracking-widest text-black">Chi tiết giao dịch</p>
                 <h2 className="text-lg font-black text-slate-900">{getTransactionTypeLabel(detailTx.type, detailTx.amount)}</h2>
-                <p className="text-xs text-slate-500 mt-1">
+                <p className="text-xs text-black mt-1">
                   Mã giao dịch: <span className="font-mono text-slate-700">{detailTx.id}</span>
                 </p>
               </div>
               <button
                 onClick={() => setDetailOpen(false)}
-                className="w-9 h-9 rounded-full border border-slate-200 flex items-center justify-center text-slate-500 hover:bg-slate-50 hover:text-slate-700 transition-colors"
+                className="w-9 h-9 rounded-full border border-slate-200 flex items-center justify-center text-black hover:bg-slate-50 hover:text-slate-700 transition-colors"
               >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
@@ -459,7 +459,7 @@ const TransactionHistoryPage: React.FC<TransactionHistoryPageProps> = () => {
 
             <div className="px-6 py-4 space-y-4 text-sm text-slate-700">
               {detailLoading && (
-                <p className="text-xs text-slate-500">Đang tải thêm thông tin giao dịch...</p>
+                <p className="text-xs text-black">Đang tải thêm thông tin giao dịch...</p>
               )}
               {detailError && (
                 <p className="text-xs text-rose-600 font-medium">{detailError}</p>
@@ -467,49 +467,49 @@ const TransactionHistoryPage: React.FC<TransactionHistoryPageProps> = () => {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <p className="text-xs text-slate-400 uppercase tracking-widest mb-1">Số tiền</p>
+                  <p className="text-xs text-black uppercase tracking-widest mb-1">Số tiền</p>
                   <p className="text-base font-extrabold text-slate-900">
                     {isIncomingTransaction(detailTx) ? '+' : '-'}{formatCurrency(detailTx.amount)}
                   </p>
                 </div>
                 <div>
-                  <p className="text-xs text-slate-400 uppercase tracking-widest mb-1">Trạng thái</p>
+                  <p className="text-xs text-black uppercase tracking-widest mb-1">Trạng thái</p>
                   <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold border whitespace-nowrap ${getTransactionStatusClass(detailTx.status)}`}>
                     {getTransactionStatusLabel(detailTx.status)}
                   </span>
                 </div>
                 <div>
-                  <p className="text-xs text-slate-400 uppercase tracking-widest mb-1">Thời gian</p>
+                  <p className="text-xs text-black uppercase tracking-widest mb-1">Thời gian</p>
                   <p>{formatDateTimeVi(detailTx.createdAt)}</p>
                 </div>
                 {detailTx.walletId && (
                   <div>
-                    <p className="text-xs text-slate-400 uppercase tracking-widest mb-1">Wallet ID</p>
+                    <p className="text-xs text-black uppercase tracking-widest mb-1">Wallet ID</p>
                     <p className="font-mono text-xs">{detailTx.walletId}</p>
                   </div>
                 )}
                 {detailTx.walletType && (
                   <div>
-                    <p className="text-xs text-slate-400 uppercase tracking-widest mb-1">Loại ví</p>
+                    <p className="text-xs text-black uppercase tracking-widest mb-1">Loại ví</p>
                     <p>{detailTx.walletType}</p>
                   </div>
                 )}
                 {Number.isFinite(detailTx.balanceBefore ?? NaN) && (
                   <div>
-                    <p className="text-xs text-slate-400 uppercase tracking-widest mb-1">Số dư trước GD</p>
+                    <p className="text-xs text-black uppercase tracking-widest mb-1">Số dư trước GD</p>
                     <p>{formatCurrency((detailTx.balanceBefore as number) ?? 0)}</p>
                   </div>
                 )}
                 {/* {Number.isFinite(detailTx.balanceAfter ?? NaN) && (
                   <div>
-                    <p className="text-xs text-slate-400 uppercase tracking-widest mb-1">Số dư sau GD</p>
+                    <p className="text-xs text-black uppercase tracking-widest mb-1">Số dư sau GD</p>
                     <p>{formatCurrency((detailTx.balanceAfter as number) ?? 0)}</p>
                   </div>
                 )} */}
               </div>
 
               <div>
-                <p className="text-xs text-slate-400 uppercase tracking-widest mb-1">Mô tả</p>
+                <p className="text-xs text-black uppercase tracking-widest mb-1">Mô tả</p>
                 <p className="text-sm text-slate-700 whitespace-pre-line">
                   {detailTx.description || 'Không có mô tả'}
                 </p>
@@ -517,9 +517,9 @@ const TransactionHistoryPage: React.FC<TransactionHistoryPageProps> = () => {
 
               {(parentTransactionId || relatedChain.length > 0 || relatedTransactions.length > 0) && (
                 <div className="border-t border-dashed border-slate-200 pt-4 mt-2">
-                  <p className="text-xs text-slate-400 uppercase tracking-widest mb-2">Chuỗi giao dịch liên quan</p>
+                  <p className="text-xs text-black uppercase tracking-widest mb-2">Chuỗi giao dịch liên quan</p>
                   {parentTransactionId && (
-                    <p className="text-xs text-slate-600 mb-3">
+                    <p className="text-xs text-black mb-3">
                       Giao dịch cha: <span className="font-mono">{parentTransactionId}</span>
                     </p>
                   )}
@@ -551,7 +551,7 @@ const TransactionHistoryPage: React.FC<TransactionHistoryPageProps> = () => {
                             >
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2 mb-0.5">
-                                  <span className="text-[11px] font-semibold uppercase tracking-widest text-slate-400">
+                                  <span className="text-[11px] font-semibold uppercase tracking-widest text-black">
                                     {getTransactionTypeLabel(rt.type, rt.amount)}
                                   </span>
                                   <span
@@ -566,10 +566,10 @@ const TransactionHistoryPage: React.FC<TransactionHistoryPageProps> = () => {
                                 <p className="truncate text-[13px] text-slate-700">
                                   {rt.description || 'Không có mô tả'}
                                 </p>
-                                <p className="mt-0.5 text-[11px] text-slate-500">
+                                <p className="mt-0.5 text-[11px] text-black">
                                   {formatDateTimeVi(rt.createdAt)}
                                   {rt.id && (
-                                    <span className="ml-2 font-mono text-[10px] text-slate-400">{rt.id}</span>
+                                    <span className="ml-2 font-mono text-[10px] text-black">{rt.id}</span>
                                   )}
                                 </p>
                               </div>
@@ -586,7 +586,7 @@ const TransactionHistoryPage: React.FC<TransactionHistoryPageProps> = () => {
                         })}
                     </div>
                   ) : relatedTransactions.length > 0 ? (
-                    <ul className="space-y-1 text-xs text-slate-600">
+                    <ul className="space-y-1 text-xs text-black">
                       {relatedTransactions.map((rt, idx) => (
                         <li key={rt.transactionId || rt.id || idx}>
                           <span className="font-mono">{rt.transactionId || rt.id || 'N/A'}</span>
@@ -600,7 +600,7 @@ const TransactionHistoryPage: React.FC<TransactionHistoryPageProps> = () => {
                       ))}
                     </ul>
                   ) : (
-                    <p className="text-xs text-slate-500">Không có giao dịch liên quan.</p>
+                    <p className="text-xs text-black">Không có giao dịch liên quan.</p>
                   )}
                 </div>
               )}

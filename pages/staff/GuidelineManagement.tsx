@@ -133,7 +133,7 @@ const GuidelineManagement: React.FC = () => {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white p-8 rounded-[2.5rem] border border-gold/10 shadow-xl shadow-slate-200/50">
         <div>
           <h1 className="text-3xl font-black text-slate-800 tracking-tight">Quản lý Cẩm nang Văn hóa</h1>
-          <p className="text-slate-500 font-medium mt-1">Lưu trữ và bổ sung kiến thức tâm linh chuẩn truyền thống</p>
+          <p className="text-black font-medium mt-1">Lưu trữ và bổ sung kiến thức tâm linh chuẩn truyền thống</p>
         </div>
         <button
           onClick={() => setShowModal(true)}
@@ -216,7 +216,7 @@ const GuidelineManagement: React.FC = () => {
                       </span>
                     </div>
                   </td>
-                  <td className="px-8 py-6 text-sm font-bold text-slate-500">
+                  <td className="px-8 py-6 text-sm font-bold text-black">
                     {new Date(g.createdAt).toLocaleDateString('vi-VN')}
                   </td>
                   <td className="px-8 py-6 text-right">

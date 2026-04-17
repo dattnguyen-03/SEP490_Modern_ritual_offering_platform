@@ -14,10 +14,14 @@ export interface OrderItemAddOn {
 }
 
 export interface OrderItemSwap {
+    orderItemSwapId?: string;
     swapId?: number | string;
     originalItemName?: string;
     replacementItemName?: string;
+    replacementDescription?: string;
+    addOnName?: string;
     surcharge?: number;
+    isRefunded?: boolean;
 }
 
 export interface OrderItem {
@@ -127,6 +131,8 @@ export interface VendorOrderItem {
     decorationNote?: string;
     imageUrl?: string;
     isRequestRefund?: boolean;
+    addOns?: OrderItemAddOn[];
+    swaps?: OrderItemSwap[];
 }
 
 export interface VendorOrder {
@@ -494,7 +500,7 @@ class OrderService {
     // Get details for a specific order
     async getOrderDetails(orderId: string): Promise<Order | null> {
         try {
-            const response = await fetch(`${API_BASE_URL}/orders/${orderId}`, {
+            const response = await fetch(`${API_BASE_URL}/orders/customer/${orderId}`, {
                 method: 'GET',
                 headers: this.getHeaders('GET'),
             });
@@ -552,8 +558,14 @@ class OrderService {
                                 null,
                             isRequestRefund: !!item.isRequestRefund,
                             // Preserve add-ons and swaps from backend
-                            addOns: Array.isArray((item as any).addOns) ? (item as any).addOns : [],
-                            swaps: Array.isArray((item as any).swaps) ? (item as any).swaps : [],
+                            addOns: Array.isArray((item as any).addOns) ? (item as any).addOns.map((ao: any) => ({
+                                ...ao,
+                                addOnName: ao.addOnName || ao.itemName
+                            })) : [],
+                            swaps: Array.isArray((item as any).swaps) ? (item as any).swaps.map((sw: any) => ({
+                                ...sw,
+                                orderItemSwapId: sw.orderItemSwapId || sw.id
+                            })) : [],
                             addOnSubTotal: Number((item as any).addOnSubTotal) || 0,
                             swapSubTotal: Number((item as any).swapSubTotal) || 0,
                         };
@@ -832,6 +844,140 @@ class OrderService {
             return [];
         } catch (error) {
             console.error("Failed to fetch Vendor Orders:", error);
+            throw error;
+        }
+    }
+
+    // Get details for a specific order as a vendor
+    async getVendorOrderDetails(orderId: string): Promise<Order | null> {
+        try {
+            const url = `${API_BASE_URL}/orders/vendor/${orderId}`;
+            const response = await fetch(url, {
+                method: 'GET',
+                headers: this.getHeaders('GET'),
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text().catch(() => '');
+                console.error(`Vendor Order Detail API Error (ID: ${orderId}, Status: ${response.status}):`, errorText);
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            const isSuccess = data?.isSuccess || data?.isSucceeded || data?.statusCode === 'OK';
+
+            if (isSuccess && data.result) {
+                const raw = data.result;
+                
+                // Map items with support for add-ons and swaps
+                const items: OrderItem[] = Array.isArray(raw.items)
+                    ? raw.items.map((item: any) => {
+                        const quantity = Number(item.quantity) || 0;
+                        const lineTotal = Number(item.lineTotal) || 0;
+                        const unitPrice = Number(item.unitPrice ?? item.price) || (quantity > 0 ? lineTotal / quantity : 0);
+
+                        return {
+                            itemId: item.itemId || item.id || `item-${Math.random().toString(36).slice(2, 10)}`,
+                            variantId: item.variantId ?? '',
+                            variantName: item.variantName || 'N/A',
+                            variantSubTotal: Number(item.variantSubTotal) || 0,
+                            packageName: item.packageName || 'N/A',
+                            quantity,
+                            price: unitPrice,
+                            lineTotal,
+                            decorationNote: item.decorationNote || '',
+                            packageId: item.packageId || item.productId || '',
+                            imageUrl: item.imageUrl || null,
+                            isRequestRefund: !!item.isRequestRefund,
+                            addOns: Array.isArray(item.addOns) ? (item.addOns as any[]).map((ao: any) => ({
+                                ...ao,
+                                addOnName: ao.addOnName || ao.itemName
+                            })) : [],
+                            swaps: Array.isArray(item.swaps) ? (item.swaps as any[]).map((sw: any) => ({
+                                ...sw,
+                                orderItemSwapId: sw.orderItemSwapId || sw.id
+                            })) : [],
+                            addOnSubTotal: Number(item.addOnSubTotal) || 0,
+                            swapSubTotal: Number(item.swapSubTotal) || 0,
+                        };
+                    })
+                    : [];
+
+                // Normalizing pricing data
+                const subTotal = Number(raw.pricing?.subTotal) || items.reduce((sum, item) => sum + item.lineTotal, 0);
+                const shippingFee = Number(raw.pricing?.shippingFee) || 0;
+                const totalAmount = Number(raw.pricing?.finalAmount ?? raw.pricing?.totalAmount) || (subTotal + shippingFee);
+                
+                const vendorPricing = raw.vendorPricingDetails || {};
+                const commissionRate = this.normalizeCommissionRate(vendorPricing.commissionRate);
+                const platformFee = Number(vendorPricing.platformFee) || (subTotal * commissionRate);
+                const vendorNetAmount = Number(vendorPricing.vendorNetAmount) || (totalAmount - platformFee);
+
+                const order: Order = {
+                    orderId: raw.orderId || orderId,
+                    orderStatus: raw.orderStatus || 'Pending',
+                    trackingLists: Array.isArray(raw.trackingLists) ? raw.trackingLists : [],
+                    customer: {
+                        profileId: raw.customer?.customerId || raw.customer?.profileId || '',
+                        fullName: raw.customer?.customerName || raw.customer?.fullName || 'Khách hàng',
+                        email: raw.customer?.email || '',
+                        phoneNumber: raw.customer?.customerPhone || raw.customer?.phoneNumber || '',
+                        avatarUrl: raw.customer?.avatarUrl || null,
+                    },
+                    customerName: raw.customer?.customerName || raw.customer?.fullName || 'Khách hàng',
+                    customerPhone: raw.customer?.customerPhone || raw.customer?.phoneNumber || '',
+                    vendor: {
+                        profileId: raw.vendor?.profileId || null,
+                        shopName: raw.vendor?.shopName || 'Shop',
+                        email: raw.vendor?.email || '',
+                        phoneNumber: raw.vendor?.phoneNumber || '',
+                        address: raw.vendor?.address || '',
+                    },
+                    delivery: {
+                        deliveryDate: raw.delivery?.deliveryDate || '',
+                        deliveryTime: raw.delivery?.deliveryTime || '',
+                        deliveryAddress: raw.delivery?.deliveryAddress || 'N/A',
+                        shippingDistanceKm: Number(raw.delivery?.shippingDistanceKm) || 0,
+                        deliveryProofImageUrl: Array.isArray(raw.delivery?.deliveryProofImageUrl) ? raw.delivery.deliveryProofImageUrl[0] : raw.delivery?.deliveryProofImageUrl,
+                        preparationProofImages: Array.isArray(raw.delivery?.preparationProofImageUrl) ? raw.delivery.preparationProofImageUrl : [],
+                    },
+                    items,
+                    pricing: {
+                        subTotal,
+                        shippingFee,
+                        totalAmount,
+                        finalAmount: totalAmount,
+                        commissionRate,
+                        platformFee,
+                        vendorNetAmount,
+                    },
+                    payment: {
+                        paymentMethod: raw.payment?.paymentMethod || 'N/A',
+                        paymentStatus: raw.payment?.paymentStatus || 'Pending',
+                        paidAt: raw.payment?.paidAt || null,
+                        transactionId: raw.payment?.transactionId || vendorPricing.transactionId || null,
+                        isPaidToVendor: typeof vendorPricing.isPaidToVendor === 'boolean' ? vendorPricing.isPaidToVendor : null,
+                        paidToVendorDate: vendorPricing.paidToVendorDate || null,
+                    },
+                    vendorPricingDetails: {
+                        commissionRate,
+                        platformFee,
+                        vendorNetAmount,
+                        isPaidToVendor: typeof vendorPricing.isPaidToVendor === 'boolean' ? vendorPricing.isPaidToVendor : null,
+                        paidToVendorDate: vendorPricing.paidToVendorDate || null,
+                        transactionId: vendorPricing.transactionId || null,
+                    },
+                    createdAt: raw.createdAt || new Date().toISOString(),
+                    updatedAt: raw.updatedAt || null,
+                    cancelReason: raw.cancelReason || null,
+                    refundAmount: Number(raw.refundAmount) || 0,
+                };
+
+                return order;
+            }
+            return null;
+        } catch (error) {
+            console.error("Failed to get Vendor Order Details:", error);
             throw error;
         }
     }

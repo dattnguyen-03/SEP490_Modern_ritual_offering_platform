@@ -220,10 +220,10 @@ const CartPage: React.FC<{ onNavigate: (path: string) => void }> = ({ onNavigate
       const targetItem = cart?.cartItems.find(i => Number(i.cartItemId) === Number(cartItemId));
       if (!targetItem) throw new Error("Item not found");
 
-      let apiAddOns: { cartItemAddOnId?: number; addOnId: number; quantity: number }[] = targetItem.addOns.map(a => ({ 
+      let apiAddOns: { cartItemAddOnId?: number; addOnId: number; quantity: number }[] = targetItem.addOns.map(a => ({
         cartItemAddOnId: a.cartItemAddOnId,
-        addOnId: a.addOnId, 
-        quantity: a.quantity 
+        addOnId: a.addOnId,
+        quantity: a.quantity
       }));
       if (isRemoving) {
         apiAddOns = apiAddOns.filter(a => Number(a.addOnId) !== Number(addOnId));
@@ -393,9 +393,9 @@ const CartPage: React.FC<{ onNavigate: (path: string) => void }> = ({ onNavigate
         quantity: editingItem.quantity,
         swaps: selectedSwapIds.map(id => {
           const existing = editingItem.swaps.find(s => s.swapId === id);
-          return { 
+          return {
             cartItemSwapId: existing?.cartItemSwapId,
-            swapId: id 
+            swapId: id
           };
         }),
         addOns: selectedAddOns.map(a => {
@@ -457,7 +457,7 @@ const CartPage: React.FC<{ onNavigate: (path: string) => void }> = ({ onNavigate
                   </svg>
                 )}
               </div>
-              <span className="text-xs font-bold text-slate-500">Chọn tất cả ({cartItems.length})</span>
+              <span className="text-xs font-bold text-black">Chọn tất cả ({cartItems.length})</span>
             </div>
           )}
         </div>
@@ -488,8 +488,8 @@ const CartPage: React.FC<{ onNavigate: (path: string) => void }> = ({ onNavigate
 
           {(cartItems.length === 0) ? (
             <div className="bg-white p-12 rounded-2xl border border-slate-100 text-center">
-              <p className="text-slate-500 mb-6 font-medium">Giỏ hàng của bạn hiện đang trống</p>
-              <button 
+              <p className="text-black mb-6 font-medium">Giỏ hàng của bạn hiện đang trống</p>
+              <button
                 onClick={() => onNavigate('/shop')}
                 className="bg-primary text-white px-8 py-3 rounded-xl font-bold hover:shadow-lg transition-all hover:-translate-y-1"
               >
@@ -500,7 +500,7 @@ const CartPage: React.FC<{ onNavigate: (path: string) => void }> = ({ onNavigate
             cart.vendors.map(vendor => (
               <div key={vendor.vendorId} className="space-y-4">
                 <div className="flex items-center gap-2 px-2">
-                  <span className="material-symbols-outlined text-slate-400 text-lg">storefront</span>
+                  <span className="material-symbols-outlined text-black text-lg">storefront</span>
                   <h2 className="font-bold text-slate-800 text-sm uppercase tracking-wider">{vendor.vendorName}</h2>
                 </div>
 
@@ -542,7 +542,7 @@ const CartPage: React.FC<{ onNavigate: (path: string) => void }> = ({ onNavigate
                             <div className="flex justify-between items-start gap-4">
                               <div>
                                 <h3 className="text-sm font-bold text-slate-800 line-clamp-2">{item.packageName}</h3>
-                                <span className="inline-block px-1.5 py-0.5 bg-slate-100 text-slate-500 text-[9px] font-bold uppercase rounded mt-1">
+                                <span className="inline-block px-1.5 py-0.5 bg-slate-100 text-black text-[9px] font-bold uppercase rounded mt-1">
                                   {item.variantName}
                                 </span>
                               </div>
@@ -552,39 +552,39 @@ const CartPage: React.FC<{ onNavigate: (path: string) => void }> = ({ onNavigate
                             {/* Nested Details */}
                             {(item.swaps.length > 0 || item.addOns.length > 0) && (
                               <div className="mt-2 space-y-1 px-2 border-l-2 border-slate-100 ml-1">
-                                  {item.swaps.map(swap => (
-                                    <div key={swap.cartItemSwapId} className="flex items-center gap-2 text-[10px]">
-                                      <span className="material-symbols-outlined text-[12px] text-primary">check_circle</span>
-                                      <span className="text-slate-600 font-medium">
-                                        {swap.replacementDescription || swap.replacementItemName || 'Thay thế'}
-                                      </span>
-                                      <span className="ml-auto font-bold text-slate-400">+{swap.surcharge > 0 ? (swap.surcharge * item.quantity).toLocaleString() : '0'}đ</span>
-                                    </div>
-                                  ))}
+                                {item.swaps.map(swap => (
+                                  <div key={swap.cartItemSwapId} className="flex items-center gap-2 text-[10px]">
+                                    <span className="material-symbols-outlined text-[12px] text-primary">check_circle</span>
+                                    <span className="text-black font-medium">
+                                      {swap.replacementDescription || swap.replacementItemName || 'Thay thế'}
+                                    </span>
+                                    <span className="ml-auto font-bold text-black">+{swap.surcharge > 0 ? (swap.surcharge * item.quantity).toLocaleString() : '0'}đ</span>
+                                  </div>
+                                ))}
                                 {item.addOns.map(addOn => (
                                   <div key={addOn.cartItemAddOnId} className="flex items-center gap-2 text-[10px]">
                                     <span className="material-symbols-outlined text-[12px] text-primary">check_circle</span>
                                     <div className="flex-1 min-w-0 flex items-center gap-2">
-                                      <span className="text-slate-600 font-medium truncate">{addOn.itemName}</span>
+                                      <span className="text-black font-medium truncate">{addOn.itemName}</span>
                                       <div className="flex items-center gap-1.5 px-1 bg-slate-50/80 rounded border border-slate-100 flex-shrink-0">
                                         <button
                                           onClick={() => updateAddOnQuantity(item.cartItemId, addOn.addOnId, addOn.quantity - 1)}
                                           disabled={isUpdating}
-                                          className="text-[12px] text-slate-400 hover:text-red-500 transition-colors px-0.5"
+                                          className="text-[12px] text-black hover:text-red-500 transition-colors px-0.5"
                                         >−</button>
-                                        <span className="text-[9px] text-slate-500 font-bold min-w-[12px] text-center">x{addOn.quantity}</span>
+                                        <span className="text-[9px] text-black font-bold min-w-[12px] text-center">x{addOn.quantity}</span>
                                         <button
                                           onClick={() => updateAddOnQuantity(item.cartItemId, addOn.addOnId, addOn.quantity + 1)}
                                           disabled={isUpdating}
-                                          className="text-[12px] text-slate-400 hover:text-primary transition-colors px-0.5"
+                                          className="text-[12px] text-black hover:text-primary transition-colors px-0.5"
                                         >+</button>
                                       </div>
                                     </div>
-                                    <span className="font-bold text-slate-400 shrink-0">+{addOn.lineTotal.toLocaleString()}đ</span>
+                                    <span className="font-bold text-black shrink-0">+{addOn.lineTotal.toLocaleString()}đ</span>
                                   </div>
                                 ))}
                                 <div className="flex justify-end pt-1 mt-1 border-t border-slate-50">
-                                  <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider italic">Tạm tính mục này: {item.lineTotal.toLocaleString()}đ</span>
+                                  <span className="text-[9px] font-bold text-black uppercase tracking-wider italic">Tạm tính mục này: {item.lineTotal.toLocaleString()}đ</span>
                                 </div>
                               </div>
                             )}
@@ -594,7 +594,7 @@ const CartPage: React.FC<{ onNavigate: (path: string) => void }> = ({ onNavigate
                                 <button
                                   onClick={() => updateQuantity(item.cartItemId, item.quantity - 1)}
                                   disabled={isUpdating}
-                                  className="w-6 h-6 flex items-center justify-center text-slate-400 hover:text-primary transition-colors disabled:opacity-30"
+                                  className="w-6 h-6 flex items-center justify-center text-black hover:text-primary transition-colors disabled:opacity-30"
                                 >
                                   −
                                 </button>
@@ -602,7 +602,7 @@ const CartPage: React.FC<{ onNavigate: (path: string) => void }> = ({ onNavigate
                                 <button
                                   onClick={() => updateQuantity(item.cartItemId, item.quantity + 1)}
                                   disabled={isUpdating || item.quantity >= MAX_CART_ITEM_QUANTITY}
-                                  className="w-6 h-6 flex items-center justify-center text-slate-400 hover:text-primary transition-colors disabled:opacity-30"
+                                  className="w-6 h-6 flex items-center justify-center text-black hover:text-primary transition-colors disabled:opacity-30"
                                 >
                                   +
                                 </button>
@@ -611,14 +611,14 @@ const CartPage: React.FC<{ onNavigate: (path: string) => void }> = ({ onNavigate
                                 <button
                                   onClick={() => handleOpenEdit(item)}
                                   disabled={isUpdating}
-                                  className="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-primary transition-colors"
+                                  className="w-8 h-8 flex items-center justify-center text-black hover:text-primary transition-colors"
                                   title="Chỉnh sửa lựa chọn"
                                 >
                                 </button>
                                 <button
                                   onClick={() => removeItem(item.cartItemId)}
                                   disabled={isUpdating}
-                                  className="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-red-500 transition-colors"
+                                  className="w-8 h-8 flex items-center justify-center text-black hover:text-red-500 transition-colors"
                                   title="Xóa món"
                                 >
                                   <span className="material-symbols-outlined text-[18px]">delete</span>
@@ -642,16 +642,16 @@ const CartPage: React.FC<{ onNavigate: (path: string) => void }> = ({ onNavigate
             <h2 className="text-lg font-bold text-slate-800 mb-6">Tóm tắt đơn hàng</h2>
 
             <div className="space-y-3 pb-6 border-b border-gold/10">
-              <div className="flex justify-between text-slate-600">
+              <div className="flex justify-between text-black">
                 <span>Tạm tính</span>
                 <span className="font-semibold">{subtotal.toLocaleString()}đ</span>
               </div>
-              <div className="flex justify-between text-slate-600">
+              <div className="flex justify-between text-black">
                 <span>Phí vận chuyển</span>
                 <span className="font-semibold">{shipping.toLocaleString()}đ</span>
               </div>
               {discount > 0 && (
-                <div className="flex justify-between text-slate-600">
+                <div className="flex justify-between text-black">
                   <span>Giảm giá</span>
                   <span className="font-semibold text-green-600">-{discount.toLocaleString()}đ</span>
                 </div>
@@ -709,12 +709,12 @@ const CartPage: React.FC<{ onNavigate: (path: string) => void }> = ({ onNavigate
 
             <button
               onClick={() => onNavigate('/shop')}
-              className="w-full border border-slate-200 text-slate-500 py-2 rounded-lg font-bold text-xs hover:bg-slate-50 transition-all"
+              className="w-full border border-slate-200 text-black py-2 rounded-lg font-bold text-xs hover:bg-slate-50 transition-all"
             >
               Tiếp tục mua sắm
             </button>
 
-            {/* <div className="mt-6 p-4 bg-gold/10 rounded-lg text-sm text-slate-600 space-y-2">
+            {/* <div className="mt-6 p-4 bg-gold/10 rounded-lg text-sm text-black space-y-2">
               <p className="font-bold text-primary">Thông tin đơn hàng</p>
               <p>✓ Giao hàng trong 24 giờ</p>
               <p>✓ Miễn phí đổi trả trong 7 ngày</p>
@@ -732,11 +732,11 @@ const CartPage: React.FC<{ onNavigate: (path: string) => void }> = ({ onNavigate
             <div className="p-6 md:p-8 bg-ritual-bg border-b border-gold/10 flex justify-between items-center">
               <div>
                 <h3 className="text-xl font-bold text-slate-800">Cập nhật lựa chọn</h3>
-                <p className="text-xs text-slate-500 mt-1 uppercase tracking-wider">{editingItem.packageName}</p>
+                <p className="text-xs text-black mt-1 uppercase tracking-wider">{editingItem.packageName}</p>
               </div>
               <button
                 onClick={() => setEditingItem(null)}
-                className="size-8 rounded-full bg-white flex items-center justify-center text-slate-400 hover:text-red-500 transition-colors shadow-sm"
+                className="size-8 rounded-full bg-white flex items-center justify-center text-black hover:text-red-500 transition-colors shadow-sm"
               >
                 <span className="material-symbols-outlined text-sm">close</span>
               </button>
@@ -745,23 +745,23 @@ const CartPage: React.FC<{ onNavigate: (path: string) => void }> = ({ onNavigate
             {editLoading ? (
               <div className="p-16 text-center">
                 <div className="inline-block animate-spin rounded-full h-10 w-10 border-4 border-primary border-t-transparent mb-4"></div>
-                <p className="text-slate-500 text-sm">Đang tải cấu hình...</p>
+                <p className="text-black text-sm">Đang tải cấu hình...</p>
               </div>
             ) : (
               <div className="p-6 md:p-8 space-y-8 max-h-[60vh] overflow-y-auto custom-scrollbar">
                 {/* Variants (Internal read-only for now) */}
                 <div className="space-y-3">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Phiên bản</label>
+                  <label className="text-[10px] font-bold text-black uppercase tracking-[0.2em]">Phiên bản</label>
                   <div className="p-4 bg-primary/5 border border-primary/20 rounded-2xl flex justify-between items-center">
                     <span className="text-sm font-bold text-primary">{editingItem.variantName}</span>
-                    <span className="text-[10px] font-bold text-slate-400">Không thể đổi phiên bản tại đây</span>
+                    <span className="text-[10px] font-bold text-black">Không thể đổi phiên bản tại đây</span>
                   </div>
                 </div>
 
                 {/* Swaps */}
                 {fullPackageData?.packageVariants?.find(v => v.variantId === selectedVariantId)?.availableSwaps?.length ? (
                   <div className="space-y-4">
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Thay đổi món lễ (Swaps)</label>
+                    <label className="text-[10px] font-bold text-black uppercase tracking-[0.2em]">Thay đổi món lễ (Swaps)</label>
                     <div className="space-y-3">
                       {fullPackageData.packageVariants.find(v => v.variantId === selectedVariantId)?.availableSwaps?.map((swap) => {
                         const isSelected = selectedSwapIds.includes(swap.swapId);
@@ -777,7 +777,7 @@ const CartPage: React.FC<{ onNavigate: (path: string) => void }> = ({ onNavigate
                           >
                             <div className="flex-1">
                               <p className="text-xs font-bold text-slate-700">{swap.replacementItemName}</p>
-                              <p className="text-[10px] text-slate-400 mt-1 italic">Thay thế: {swap.originalItemName}</p>
+                              <p className="text-[10px] text-black mt-1 italic">Thay thế: {swap.originalItemName}</p>
                             </div>
                             <div className="text-right">
                               <p className="text-xs font-bold text-primary">+{swap.surcharge.toLocaleString()}đ</p>
@@ -792,7 +792,7 @@ const CartPage: React.FC<{ onNavigate: (path: string) => void }> = ({ onNavigate
                 {/* Add-ons */}
                 {fullPackageData?.availableAddOns?.length ? (
                   <div className="space-y-4">
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Món cúng kèm (Add-ons)</label>
+                    <label className="text-[10px] font-bold text-black uppercase tracking-[0.2em]">Món cúng kèm (Add-ons)</label>
                     <div className="space-y-3">
                       {fullPackageData.availableAddOns.map((addon) => {
                         const current = selectedAddOns.find(a => a.addOnId === addon.addOnId);
@@ -820,14 +820,14 @@ const CartPage: React.FC<{ onNavigate: (path: string) => void }> = ({ onNavigate
                               <button
                                 onClick={() => updateAddOn(quantity - 1)}
                                 disabled={quantity === 0}
-                                className="size-6 flex items-center justify-center text-slate-400 hover:text-red-500 disabled:opacity-30"
+                                className="size-6 flex items-center justify-center text-black hover:text-red-500 disabled:opacity-30"
                               >
                                 −
                               </button>
                               <span className="text-xs font-bold w-4 text-center">{quantity}</span>
                               <button
                                 onClick={() => updateAddOn(quantity + 1)}
-                                className="size-6 flex items-center justify-center text-slate-400 hover:text-emerald-500"
+                                className="size-6 flex items-center justify-center text-black hover:text-emerald-500"
                               >
                                 +
                               </button>
@@ -845,7 +845,7 @@ const CartPage: React.FC<{ onNavigate: (path: string) => void }> = ({ onNavigate
               <button
                 onClick={() => setEditingItem(null)}
                 disabled={updating !== null}
-                className="flex-1 py-4 text-sm font-bold text-slate-500 hover:bg-slate-100 rounded-2xl transition-all"
+                className="flex-1 py-4 text-sm font-bold text-black hover:bg-slate-100 rounded-2xl transition-all"
               >
                 Hủy bỏ
               </button>

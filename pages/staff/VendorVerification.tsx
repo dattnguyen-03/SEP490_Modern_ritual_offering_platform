@@ -77,7 +77,7 @@ const VendorVerificationPage: React.FC<Props> = ({ onNavigate }) => {
     try {
       setIsProcessing(true);
       let success = false;
-      
+
       if (status === 3) {
         success = await staffService.approveVendor(selectedProfile.profileId, actionNote);
         if (success) toast.success('Đã duyệt yêu cầu xác minh.');
@@ -110,18 +110,17 @@ const VendorVerificationPage: React.FC<Props> = ({ onNavigate }) => {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
         <div>
           <h1 className="text-3xl font-black text-slate-900 tracking-tight">Xác minh nhà cung cấp</h1>
-          <p className="text-slate-500 font-medium">Quản lý và phê duyệt hồ sơ đăng ký bán hàng.</p>
+          <p className="text-black font-medium">Quản lý và phê duyệt hồ sơ đăng ký bán hàng.</p>
         </div>
         <div className="flex items-center gap-2 bg-white p-1.5 rounded-2xl shadow-sm border border-slate-200">
           {tabs.map((tab) => (
             <button
               key={tab.value}
               onClick={() => setFilterStatus(tab.value)}
-              className={`px-6 py-2.5 rounded-xl font-bold text-sm transition-all ${
-                filterStatus === tab.value
+              className={`px-6 py-2.5 rounded-xl font-bold text-sm transition-all ${filterStatus === tab.value
                   ? 'bg-slate-900 text-white shadow-lg shadow-slate-200'
-                  : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'
-              }`}
+                  : 'text-black hover:text-slate-900 hover:bg-slate-50'
+                }`}
             >
               {tab.label}
             </button>
@@ -132,7 +131,7 @@ const VendorVerificationPage: React.FC<Props> = ({ onNavigate }) => {
       {loading ? (
         <div className="flex flex-col items-center justify-center min-h-[400px]">
           <div className="w-12 h-12 border-4 border-slate-200 border-t-slate-900 rounded-full animate-spin mb-4" />
-          <p className="text-slate-500 font-bold">Đang tải danh sách...</p>
+          <p className="text-black font-bold">Đang tải danh sách...</p>
         </div>
       ) : verifications.length === 0 ? (
         <div className="bg-white p-20 rounded-3xl border-2 border-dashed border-slate-200 text-center">
@@ -170,7 +169,7 @@ const VendorVerificationPage: React.FC<Props> = ({ onNavigate }) => {
                           </div>
                           <div>
                             <p className="font-bold text-slate-800 line-clamp-1">{v.shopName}</p>
-                            <p className="text-xs text-slate-500">{v.fullName} · {v.phoneNumber}</p>
+                            <p className="text-xs text-black">{v.fullName} · {v.phoneNumber}</p>
                           </div>
                         </div>
                       </td>
@@ -185,7 +184,7 @@ const VendorVerificationPage: React.FC<Props> = ({ onNavigate }) => {
                           <span className="text-xs text-slate-400">tài liệu</span>
                         </div>
                       </td>
-                      <td className="px-6 py-5 text-sm text-slate-500">
+                      <td className="px-6 py-5 text-sm text-black">
                         {formatDateVi(v.createdAt)}
                       </td>
                       <td className="px-6 py-5 text-center">
@@ -219,7 +218,7 @@ const VendorVerificationPage: React.FC<Props> = ({ onNavigate }) => {
                 <button
                   onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                   disabled={currentPage === 1}
-                  className="px-4 py-2 bg-white rounded-xl flex items-center justify-center text-slate-500 hover:bg-black hover:text-white transition-all shadow-sm disabled:opacity-30 disabled:hover:bg-white disabled:hover:text-slate-500 border border-slate-200 text-[10px] font-bold uppercase tracking-widest"
+                  className="px-4 py-2 bg-white rounded-xl flex items-center justify-center text-black hover:bg-black hover:text-white transition-all shadow-sm disabled:opacity-30 disabled:hover:bg-white disabled:hover:text-black border border-slate-200 text-[10px] font-bold uppercase tracking-widest"
                 >
                   Trước
                 </button>
@@ -228,7 +227,7 @@ const VendorVerificationPage: React.FC<Props> = ({ onNavigate }) => {
                     <button
                       key={pageNum}
                       onClick={() => setCurrentPage(pageNum)}
-                      className={`w-10 h-10 rounded-xl font-bold text-[10px] transition-all ${currentPage === pageNum ? 'bg-black text-white' : 'bg-white text-slate-500 hover:bg-slate-50 shadow-sm border border-slate-100'}`}
+                      className={`w-10 h-10 rounded-xl font-bold text-[10px] transition-all ${currentPage === pageNum ? 'bg-black text-white' : 'bg-white text-black hover:bg-slate-50 shadow-sm border border-slate-100'}`}
                     >
                       {pageNum}
                     </button>
@@ -237,7 +236,7 @@ const VendorVerificationPage: React.FC<Props> = ({ onNavigate }) => {
                 <button
                   onClick={() => setCurrentPage(prev => Math.min(Math.ceil(verifications.length / ITEMS_PER_PAGE), prev + 1))}
                   disabled={currentPage === Math.ceil(verifications.length / ITEMS_PER_PAGE)}
-                  className="px-4 py-2 bg-white rounded-xl flex items-center justify-center text-slate-500 hover:bg-black hover:text-white transition-all shadow-sm disabled:opacity-30 disabled:hover:bg-white disabled:hover:text-slate-500 border border-slate-200 text-[10px] font-bold uppercase tracking-widest"
+                  className="px-4 py-2 bg-white rounded-xl flex items-center justify-center text-black hover:bg-black hover:text-white transition-all shadow-sm disabled:opacity-30 disabled:hover:bg-white disabled:hover:text-black border border-slate-200 text-[10px] font-bold uppercase tracking-widest"
                 >
                   Sau
                 </button>
@@ -263,10 +262,10 @@ const VendorVerificationPage: React.FC<Props> = ({ onNavigate }) => {
                 </div>
                 <div>
                   <h2 className="text-2xl font-black text-slate-900 italic tracking-tight uppercase">{selectedProfile.shopName}</h2>
-                  <p className="text-slate-500 font-bold">Xác minh danh tính Vendor</p>
+                  <p className="text-black font-bold">Xác minh danh tính Vendor</p>
                 </div>
               </div>
-              <button 
+              <button
                 onClick={() => setSelectedProfile(null)}
                 className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-400 hover:text-slate-900 hover:bg-slate-100 transition-colors shadow-inner"
               >
@@ -341,11 +340,11 @@ const VendorVerificationPage: React.FC<Props> = ({ onNavigate }) => {
                         <div key={doc.documentId} className="group relative bg-slate-50 p-4 rounded-2xl border border-slate-100 hover:border-slate-900 hover:bg-white transition-all shadow-sm">
                           <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">{doc.documentTypeName}</label>
                           <div className="flex items-center justify-end gap-3">
-                            <button 
-                                onClick={() => setImageModal(doc.fileUrl)}
-                                className="px-3 py-1.5 bg-slate-900 text-white rounded-lg text-[10px] font-black uppercase tracking-tighter hover:bg-primary transition-colors"
+                            <button
+                              onClick={() => setImageModal(doc.fileUrl)}
+                              className="px-3 py-1.5 bg-slate-900 text-white rounded-lg text-[10px] font-black uppercase tracking-tighter hover:bg-primary transition-colors"
                             >
-                                Xem ảnh
+                              Xem ảnh
                             </button>
                           </div>
                         </div>

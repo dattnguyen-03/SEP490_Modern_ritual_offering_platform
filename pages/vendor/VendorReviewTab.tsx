@@ -64,7 +64,7 @@ const VendorReviewTab: React.FC = () => {
         return (
             <div className="flex flex-col items-center justify-center py-12">
                 <div className="w-10 h-10 animate-spin rounded-full border-4 border-primary border-t-transparent mb-4"></div>
-                <p className="text-slate-500 font-medium">Đang tải đánh giá...</p>
+                <p className="text-black font-medium">Đang tải đánh giá...</p>
             </div>
         );
     }
@@ -75,7 +75,7 @@ const VendorReviewTab: React.FC = () => {
                 <div className="flex items-center gap-4">
                     <h3 className="text-xl font-bold text-gray-800">Đánh giá từ khách hàng</h3>
                     <div className="flex items-center gap-2 bg-slate-100 rounded-lg p-1 px-3 border border-slate-200">
-                        {/* <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Hiện</span>
+                        {/* <span className="text-[10px] font-black text-black uppercase tracking-widest">Hiện</span>
                         <select 
                             value={itemsPerPage}
                             onChange={(e) => {
@@ -89,7 +89,7 @@ const VendorReviewTab: React.FC = () => {
                         </select> */}
                     </div>
                 </div>
-                <span className="text-sm font-medium text-slate-500">{reviews.length} đánh giá</span>
+                <span className="text-sm font-medium text-black">{reviews.length} đánh giá</span>
             </div>
 
             {(() => {
@@ -100,7 +100,7 @@ const VendorReviewTab: React.FC = () => {
                     return (
                         <div className="text-center py-12 bg-white rounded-3xl border border-gray-200 shadow-sm">
                             <div className="text-6xl mb-4">⭐</div>
-                            <p className="text-slate-500 font-medium">Bạn chưa có đánh giá nào.</p>
+                            <p className="text-black font-medium">Bạn chưa có đánh giá nào.</p>
                         </div>
                     );
                 }
@@ -186,7 +186,7 @@ const VendorReviewTab: React.FC = () => {
                                                 {/* Reply Form */}
                                                 {replyingTo === review.reviewId && (
                                                     <div className="mt-4 space-y-3 bg-gray-50 p-6 rounded-2xl border border-gray-200 animate-in fade-in slide-in-from-top-2">
-                                                        <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">Viết phản hồi</p>
+                                                        <p className="text-xs font-bold text-black uppercase tracking-widest">Viết phản hồi</p>
                                                         <textarea
                                                             value={replyText}
                                                             onChange={(e) => setReplyText(e.target.value)}
@@ -207,7 +207,7 @@ const VendorReviewTab: React.FC = () => {
                                                                     setReplyText('');
                                                                 }}
                                                                 disabled={submitting}
-                                                                className="px-6 py-2.5 border-2 border-slate-300 text-slate-500 font-bold rounded-lg hover:bg-gray-100 transition-all uppercase tracking-widest text-sm"
+                                                                className="px-6 py-2.5 border-2 border-slate-300 text-black font-bold rounded-lg hover:bg-gray-100 transition-all uppercase tracking-widest text-sm"
                                                             >
                                                                 Hủy
                                                             </button>
@@ -233,7 +233,7 @@ const VendorReviewTab: React.FC = () => {
                                     <button
                                         onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                                         disabled={currentPage === 1}
-                                        className="px-4 py-2 bg-white rounded-xl flex items-center justify-center text-slate-500 hover:bg-black hover:text-white transition-all shadow-sm disabled:opacity-30 disabled:hover:bg-white disabled:hover:text-slate-500 border border-slate-200 text-[10px] font-bold uppercase tracking-widest"
+                                        className="px-4 py-2 bg-white rounded-xl flex items-center justify-center text-black hover:bg-black hover:text-white transition-all shadow-sm disabled:opacity-30 disabled:hover:bg-white disabled:hover:text-black border border-slate-200 text-[10px] font-bold uppercase tracking-widest"
                                     >
                                         Trước
                                     </button>
@@ -242,7 +242,7 @@ const VendorReviewTab: React.FC = () => {
                                             <button
                                                 key={pageNum}
                                                 onClick={() => setCurrentPage(pageNum)}
-                                                className={`w-10 h-10 rounded-xl font-bold text-[10px] transition-all ${currentPage === pageNum ? 'bg-black text-white shadow-lg' : 'bg-white text-slate-500 hover:bg-slate-50 border border-slate-200'}`}
+                                                className={`w-10 h-10 rounded-xl font-bold text-[10px] transition-all ${currentPage === pageNum ? 'bg-black text-white shadow-lg' : 'bg-white text-black hover:bg-slate-50 border border-slate-200'}`}
                                             >
                                                 {pageNum}
                                             </button>
@@ -251,7 +251,7 @@ const VendorReviewTab: React.FC = () => {
                                     <button
                                         onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                                         disabled={currentPage === totalPages}
-                                        className="px-4 py-2 bg-white rounded-xl flex items-center justify-center text-slate-500 hover:bg-black hover:text-white transition-all shadow-sm disabled:opacity-30 disabled:hover:bg-white disabled:hover:text-slate-500 border border-slate-200 text-[10px] font-bold uppercase tracking-widest"
+                                        className="px-4 py-2 bg-white rounded-xl flex items-center justify-center text-black hover:bg-black hover:text-white transition-all shadow-sm disabled:opacity-30 disabled:hover:bg-white disabled:hover:text-black border border-slate-200 text-[10px] font-bold uppercase tracking-widest"
                                     >
                                         Sau
                                     </button>

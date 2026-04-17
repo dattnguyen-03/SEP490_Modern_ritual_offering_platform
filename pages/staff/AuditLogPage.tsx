@@ -123,7 +123,7 @@ const AuditLogPage: React.FC<AuditLogPageProps> = ({ onNavigate, userRole }) => 
     if (act.includes('delete') || act.includes('remove')) return 'bg-rose-100 text-rose-700';
     if (act.includes('approve') || act.includes('verify')) return 'bg-blue-100 text-blue-700';
     if (act.includes('reject') || act.includes('cancel')) return 'bg-slate-100 text-slate-700';
-    return 'bg-slate-100 text-slate-600';
+    return 'bg-slate-100 text-black';
   };
 
   const parseJson = (str: string | undefined) => {
@@ -216,7 +216,7 @@ const AuditLogPage: React.FC<AuditLogPageProps> = ({ onNavigate, userRole }) => 
             </button> */}
             <div>
               <h1 className="text-4xl font-black text-slate-900 tracking-tight mb-2">Nhật ký hệ thống</h1>
-              <p className="text-slate-500 font-bold text-sm uppercase tracking-widest flex items-center gap-2">
+              <p className="text-black font-bold text-sm uppercase tracking-widest flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
                 Giám sát & Nhật ký vận hành
               </p>
@@ -224,7 +224,7 @@ const AuditLogPage: React.FC<AuditLogPageProps> = ({ onNavigate, userRole }) => 
           </div>
           <button
             onClick={fetchLogs}
-            className="px-6 py-3 bg-white border border-slate-200 rounded-xl font-black text-[10px] uppercase tracking-widest text-slate-500 hover:bg-slate-50 transition-all shadow-sm flex items-center gap-2"
+            className="px-6 py-3 bg-white border border-slate-200 rounded-xl font-black text-[10px] uppercase tracking-widest text-black hover:bg-slate-50 transition-all shadow-sm flex items-center gap-2"
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -237,7 +237,7 @@ const AuditLogPage: React.FC<AuditLogPageProps> = ({ onNavigate, userRole }) => 
         <div className="bg-white rounded-[2.5rem] p-8 border border-slate-200 shadow-sm mb-8">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-6">
             <div className="space-y-2">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">Hành động</label>
+              <label className="text-[10px] font-black text-black uppercase tracking-widest ml-4">Hành động</label>
               <select
                 className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 focus:ring-2 focus:ring-black transition-all cursor-pointer"
                 value={filter.action || ''}
@@ -253,7 +253,7 @@ const AuditLogPage: React.FC<AuditLogPageProps> = ({ onNavigate, userRole }) => 
               </select>
             </div>
             <div className="space-y-2">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">Đối tượng</label>
+              <label className="text-[10px] font-black text-black uppercase tracking-widest ml-4">Đối tượng</label>
               <select
                 className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 focus:ring-2 focus:ring-black transition-all cursor-pointer"
                 value={filter.entityType || ''}
@@ -269,7 +269,7 @@ const AuditLogPage: React.FC<AuditLogPageProps> = ({ onNavigate, userRole }) => 
               </select>
             </div>
             <div className="space-y-2">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">Vai trò</label>
+              <label className="text-[10px] font-black text-black uppercase tracking-widest ml-4">Vai trò</label>
               <select
                 className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 focus:ring-2 focus:ring-black transition-all cursor-pointer"
                 value={roleFilter}
@@ -287,7 +287,7 @@ const AuditLogPage: React.FC<AuditLogPageProps> = ({ onNavigate, userRole }) => 
               </select>
             </div>
             {/* <div className="space-y-2">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">Người thực hiện</label>
+              <label className="text-[10px] font-black text-black uppercase tracking-widest ml-4">Người thực hiện</label>
               <select
                 className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 focus:ring-2 focus:ring-black transition-all cursor-pointer"
                 value={filter.performedBy || ''}
@@ -303,7 +303,7 @@ const AuditLogPage: React.FC<AuditLogPageProps> = ({ onNavigate, userRole }) => 
               </select>
             </div> */}
             <div className="space-y-2">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">Từ ngày</label>
+              <label className="text-[10px] font-black text-black uppercase tracking-widest ml-4">Từ ngày</label>
               <input
                 type="date"
                 className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 focus:ring-2 focus:ring-black transition-all cursor-pointer"
@@ -312,7 +312,7 @@ const AuditLogPage: React.FC<AuditLogPageProps> = ({ onNavigate, userRole }) => 
               />
             </div>
             <div className="space-y-2">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">Đến ngày</label>
+              <label className="text-[10px] font-black text-black uppercase tracking-widest ml-4">Đến ngày</label>
               <input
                 type="date"
                 className="w-full bg-slate-50 border-none rounded-xl px-4 py-3 text-sm font-bold text-slate-700 focus:ring-2 focus:ring-black transition-all cursor-pointer"
@@ -327,7 +327,7 @@ const AuditLogPage: React.FC<AuditLogPageProps> = ({ onNavigate, userRole }) => 
                   setRoleFilter('');
                   setCurrentPage(1);
                 }}
-                className="w-full h-[46px] bg-slate-100 text-slate-400 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-rose-50 hover:text-rose-600 transition-all"
+                className="w-full h-[46px] bg-slate-100 text-black rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-rose-50 hover:text-rose-600 transition-all"
               >
                 Xóa lọc
               </button>
@@ -341,12 +341,12 @@ const AuditLogPage: React.FC<AuditLogPageProps> = ({ onNavigate, userRole }) => 
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-white">
-                  <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400">Thời gian</th>
-                  <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400">Hành động</th>
-                  <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400">Đối tượng</th>
-                  <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400">Thực hiện bởi</th>
-                  <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400">Chi tiết</th>
-                  <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400"></th>
+                  <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-black">Thời gian</th>
+                  <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-black">Hành động</th>
+                  <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-black">Đối tượng</th>
+                  <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-black">Thực hiện bởi</th>
+                  <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-black">Chi tiết</th>
+                  <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-black"></th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50">
@@ -359,7 +359,7 @@ const AuditLogPage: React.FC<AuditLogPageProps> = ({ onNavigate, userRole }) => 
                 ) : logs.length === 0 ? (
                   <tr>
                     <td colSpan={6} className="px-8 py-20 text-center">
-                      <p className="text-slate-400 font-bold">Không tìm thấy dữ liệu nhật ký.</p>
+                      <p className="text-black font-bold">Không tìm thấy dữ liệu nhật ký.</p>
                     </td>
                   </tr>
                 ) : (
@@ -367,30 +367,30 @@ const AuditLogPage: React.FC<AuditLogPageProps> = ({ onNavigate, userRole }) => 
                     <tr key={log.auditId} className="hover:bg-white transition-colors group">
                       <td className="px-8 py-6 whitespace-nowrap">
                         <p className="text-sm font-bold text-slate-900">{new Date(log.timestamp).toLocaleDateString('vi-VN')}</p>
-                        <p className="text-[10px] text-slate-400 font-black tabular-nums">{new Date(log.timestamp).toLocaleTimeString('vi-VN')}</p>
+                        <p className="text-[10px] text-black font-black tabular-nums">{new Date(log.timestamp).toLocaleTimeString('vi-VN')}</p>
                       </td>
                       <td className="px-8 py-6">
                         <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${getActionStyle(log.action)}`}>
                           {ACTION_LABELS[log.action] || log.action}
                         </span>
-                        <p className="text-[8px] text-slate-400 font-black mt-1 uppercase tracking-widest">
+                        <p className="text-[8px] text-black font-black mt-1 uppercase tracking-widest">
                           {log.performedRole === 'Admin' ? 'Quản trị viên' : log.performedRole === 'Staff' ? 'Nhân viên' : log.performedRole}
                         </p>
                       </td>
                       <td className="px-8 py-6">
                         <p className="text-sm font-black text-slate-700">{ENTITY_LABELS[log.entityType] || log.entityType}</p>
-                        <p className="text-[10px] text-slate-400 font-bold truncate max-w-[150px]" title={log.entityId}>
+                        <p className="text-[10px] text-black font-bold truncate max-w-[150px]" title={log.entityId}>
                           {resolvedNames[log.entityId] && resolvedNames[log.entityId] !== 'N/A' ? resolvedNames[log.entityId] : log.entityId}
                         </p>
                       </td>
                       <td className="px-8 py-6">
                         <p className="text-sm font-bold text-slate-900">{log.performedByName || 'Hệ thống'}</p>
-                        <p className="text-[10px] text-slate-400 font-black truncate max-w-[150px]" title={log.performedBy}>
+                        <p className="text-[10px] text-black font-black truncate max-w-[150px]" title={log.performedBy}>
                           {resolvedNames[log.performedBy] && resolvedNames[log.performedBy] !== 'N/A' ? resolvedNames[log.performedBy] : log.performedBy}
                         </p>
                       </td>
                       <td className="px-8 py-6">
-                        <p className="text-xs text-slate-600 line-clamp-1 max-w-[200px]" title={log.description}>{translateDescription(log.description)}</p>
+                        <p className="text-xs text-black line-clamp-1 max-w-[200px]" title={log.description}>{translateDescription(log.description)}</p>
                       </td>
                       <td className="px-8 py-6 text-right">
                         <button
@@ -410,7 +410,7 @@ const AuditLogPage: React.FC<AuditLogPageProps> = ({ onNavigate, userRole }) => 
           {/* Pagination Controls */}
           {!loading && logs.length > 0 && (
             <div className="bg-white px-8 py-4 flex items-center justify-between border-t border-slate-100">
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+              <p className="text-[10px] font-bold text-black uppercase tracking-widest">
                 Hiển thị <span className="text-slate-900">{Math.min(logs.length, (currentPage - 1) * ITEMS_PER_PAGE + 1)}</span>
                 - <span className="text-slate-900">{Math.min(logs.length, currentPage * ITEMS_PER_PAGE)}</span>
                 trên <span className="text-slate-900">{logs.length}</span> kết quả
@@ -419,7 +419,7 @@ const AuditLogPage: React.FC<AuditLogPageProps> = ({ onNavigate, userRole }) => 
                 <button
                   onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                   disabled={currentPage === 1}
-                  className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-slate-500 hover:bg-black hover:text-white transition-all shadow-sm disabled:opacity-30 disabled:hover:bg-white disabled:hover:text-slate-500"
+                  className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-black hover:bg-black hover:text-white transition-all shadow-sm disabled:opacity-30 disabled:hover:bg-white disabled:hover:text-black"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -433,7 +433,7 @@ const AuditLogPage: React.FC<AuditLogPageProps> = ({ onNavigate, userRole }) => 
                       <button
                         key={pageNum}
                         onClick={() => setCurrentPage(pageNum)}
-                        className={`w-10 h-10 rounded-xl font-bold text-[10px] transition-all ${currentPage === pageNum ? 'bg-black text-white' : 'bg-white text-slate-500 hover:bg-slate-50'}`}
+                        className={`w-10 h-10 rounded-xl font-bold text-[10px] transition-all ${currentPage === pageNum ? 'bg-black text-white' : 'bg-white text-black hover:bg-slate-50'}`}
                       >
                         {pageNum}
                       </button>
@@ -443,7 +443,7 @@ const AuditLogPage: React.FC<AuditLogPageProps> = ({ onNavigate, userRole }) => 
                 <button
                   onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                   disabled={currentPage === totalPages}
-                  className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-slate-500 hover:bg-black hover:text-white transition-all shadow-sm disabled:opacity-30 disabled:hover:bg-white disabled:hover:text-slate-500"
+                  className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-black hover:bg-black hover:text-white transition-all shadow-sm disabled:opacity-30 disabled:hover:bg-white disabled:hover:text-black"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -481,34 +481,34 @@ const AuditLogPage: React.FC<AuditLogPageProps> = ({ onNavigate, userRole }) => 
                 <div className="space-y-8 max-h-[85vh] overflow-y-auto pr-4 custom-scrollbar">
                   <div className="grid grid-cols-2 lg:grid-cols-3 gap-8">
                     <div>
-                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Thời gian</p>
+                      <p className="text-[10px] font-black text-black uppercase tracking-widest mb-1">Thời gian</p>
                       <p className="font-bold text-slate-900">{new Date(selectedLog.timestamp).toLocaleString('vi-VN')}</p>
                     </div>
                     <div>
-                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Hành động</p>
+                      <p className="text-[10px] font-black text-black uppercase tracking-widest mb-1">Hành động</p>
                       <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${getActionStyle(selectedLog.action)}`}>
                         {ACTION_LABELS[selectedLog.action] || selectedLog.action}
                       </span>
                     </div>
                     {/* <div>
-                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">IP Address</p>
+                      <p className="text-[10px] font-black text-black uppercase tracking-widest mb-1">IP Address</p>
                       <p className="font-bold text-slate-900">{selectedLog.ipAddress || 'N/A'}</p>
                     </div> */}
                     <div>
-                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Đối tượng</p>
+                      <p className="text-[10px] font-black text-black uppercase tracking-widest mb-1">Đối tượng</p>
                       <p className="font-bold text-slate-900">{selectedEntityName || ENTITY_LABELS[selectedLog.entityType] || selectedLog.entityType}</p>
                     </div>
                     <div className="col-span-2">
-                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Người thực hiện</p>
+                      <p className="text-[10px] font-black text-black uppercase tracking-widest mb-1">Người thực hiện</p>
                       <p className="font-bold text-slate-900">{selectedLog.performedByName || 'Hệ thống'}</p>
                     </div>
                   </div>
 
                   <div className="bg-white rounded-[2rem] p-8 border border-slate-100">
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Nội dung thay đổi</p>
+                    <p className="text-[10px] font-black text-black uppercase tracking-widest mb-4">Nội dung thay đổi</p>
                     <div className="space-y-6">
                       <div>
-                        <p className="text-[10px] font-black text-slate-400 uppercase mb-2 tracking-widest">Mô tả</p>
+                        <p className="text-[10px] font-black text-black uppercase mb-2 tracking-widest">Mô tả</p>
                         <p className="text-lg font-black text-slate-800 leading-relaxed">{translateDescription(selectedLog.description)}</p>
                       </div>
 

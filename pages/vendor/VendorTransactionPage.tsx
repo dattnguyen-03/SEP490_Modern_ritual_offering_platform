@@ -328,7 +328,7 @@ const VendorTransactionPage: React.FC<VendorTransactionPageProps> = ({ onNavigat
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
           <div>
             <h1 className="text-2xl font-black text-slate-900">Giao dịch gian hàng</h1>
-            <p className="text-sm text-slate-500 mt-1">
+            <p className="text-sm text-black mt-1">
               Quản lý doanh thu, phí vận chuyển và lịch sử rút tiền của bạn.
             </p>
           </div>
@@ -482,7 +482,7 @@ const VendorTransactionPage: React.FC<VendorTransactionPageProps> = ({ onNavigat
                       <p className="text-base font-black text-slate-900 leading-snug">
                         {tx.description || 'Không có mô tả'}
                       </p>
-                      <p className="text-xs text-slate-500 mt-1 flex items-center gap-2">
+                      <p className="text-xs text-black mt-1 flex items-center gap-2">
                         <span>{formatDateTimeVi(tx.createdAt)}</span>
                         {tx.id && <span className="opacity-40">• Mã GD: {tx.id}</span>}
                       </p>
@@ -493,7 +493,7 @@ const VendorTransactionPage: React.FC<VendorTransactionPageProps> = ({ onNavigat
                         {incoming ? '+' : '-'}{formatCurrency(Math.abs(tx.amount))}
                       </p>
                       {/* {tx.balanceAfter !== null && (
-                        <p className="mt-1 text-xs text-slate-500 font-bold">
+                        <p className="mt-1 text-xs text-black font-bold">
                           Số dư sau giao dịch: {formatCurrency(Math.abs(tx.balanceAfter as number))}
                         </p>
                       )} */}

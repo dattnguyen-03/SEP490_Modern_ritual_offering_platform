@@ -243,13 +243,13 @@ const CustomerManagement: React.FC<CustomerManagementProps> = ({ onNavigate, onL
             <table className="w-full">
               <thead>
                 <tr className="border-b border-slate-200">
-                  <th className="text-left py-3 px-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Khách hàng</th>
-                  <th className="text-left py-3 px-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Liên hệ</th>
-                  <th className="text-left py-3 px-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Hạng</th>
-                  <th className="text-left py-3 px-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Đơn hàng</th>
-                  <th className="text-left py-3 px-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Tổng chi</th>
-                  <th className="text-left py-3 px-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Trạng thái</th>
-                  <th className="text-left py-3 px-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Thao tác</th>
+                  <th className="text-left py-3 px-4 text-xs font-bold text-black uppercase tracking-widest">Khách hàng</th>
+                  <th className="text-left py-3 px-4 text-xs font-bold text-black uppercase tracking-widest">Liên hệ</th>
+                  <th className="text-left py-3 px-4 text-xs font-bold text-black uppercase tracking-widest">Hạng</th>
+                  <th className="text-left py-3 px-4 text-xs font-bold text-black uppercase tracking-widest">Đơn hàng</th>
+                  <th className="text-left py-3 px-4 text-xs font-bold text-black uppercase tracking-widest">Tổng chi</th>
+                  <th className="text-left py-3 px-4 text-xs font-bold text-black uppercase tracking-widest">Trạng thái</th>
+                  <th className="text-left py-3 px-4 text-xs font-bold text-black uppercase tracking-widest">Thao tác</th>
                 </tr>
               </thead>
               <tbody>
@@ -326,7 +326,7 @@ const CustomerManagement: React.FC<CustomerManagementProps> = ({ onNavigate, onL
           {/* Pagination Controls */}
           {totalPages > 1 && (
             <div className="flex flex-col md:flex-row items-center justify-between gap-3 px-6 py-4 border-t border-slate-100 bg-slate-50/30">
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+              <p className="text-[10px] font-bold text-black uppercase tracking-widest">
                 Hiển thị <span className="text-slate-900">{Math.min(filteredCustomers.length, (currentPage - 1) * ITEMS_PER_PAGE + 1)}</span>
                 - <span className="text-slate-900">{Math.min(filteredCustomers.length, currentPage * ITEMS_PER_PAGE)}</span>
                 trên <span className="text-slate-900">{filteredCustomers.length}</span> kết quả
@@ -335,7 +335,7 @@ const CustomerManagement: React.FC<CustomerManagementProps> = ({ onNavigate, onL
                 <button
                   onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                   disabled={currentPage === 1}
-                  className="px-4 py-2 bg-white border border-slate-200 rounded-xl flex items-center justify-center text-slate-500 hover:bg-black hover:text-white transition-all shadow-sm disabled:opacity-50 text-[10px] font-bold uppercase tracking-widest"
+                  className="px-4 py-2 bg-white border border-slate-200 rounded-xl flex items-center justify-center text-black hover:bg-black hover:text-white transition-all shadow-sm disabled:opacity-50 text-[10px] font-bold uppercase tracking-widest"
                 >
                   Trước
                 </button>
@@ -344,7 +344,7 @@ const CustomerManagement: React.FC<CustomerManagementProps> = ({ onNavigate, onL
                     <button
                       key={pageNum}
                       onClick={() => setCurrentPage(pageNum)}
-                      className={`w-10 h-10 rounded-xl font-bold text-[10px] transition-all ${currentPage === pageNum ? 'bg-black text-white shadow-lg' : 'bg-white text-slate-500 hover:bg-slate-50 border border-slate-200'}`}
+                      className={`w-10 h-10 rounded-xl font-bold text-[10px] transition-all ${currentPage === pageNum ? 'bg-black text-white shadow-lg' : 'bg-white text-black hover:bg-slate-50 border border-slate-200'}`}
                     >
                       {pageNum}
                     </button>
@@ -353,7 +353,7 @@ const CustomerManagement: React.FC<CustomerManagementProps> = ({ onNavigate, onL
                 <button
                   onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                   disabled={currentPage === totalPages}
-                  className="px-4 py-2 bg-white border border-slate-200 rounded-xl flex items-center justify-center text-slate-500 hover:bg-black hover:text-white transition-all shadow-sm disabled:opacity-50 text-[10px] font-bold uppercase tracking-widest"
+                  className="px-4 py-2 bg-white border border-slate-200 rounded-xl flex items-center justify-center text-black hover:bg-black hover:text-white transition-all shadow-sm disabled:opacity-50 text-[10px] font-bold uppercase tracking-widest"
                 >
                   Sau
                 </button>

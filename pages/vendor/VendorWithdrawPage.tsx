@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  createWithdrawal, 
-  getMyWallet, 
+import {
+  createWithdrawal,
+  getMyWallet,
   WalletInfo,
   getMyWithdrawalRequests,
   WithdrawalListItem
@@ -20,7 +20,7 @@ const VendorWithdrawPage: React.FC<VendorWithdrawPageProps> = ({ onNavigate }) =
   const [filterStatus, setFilterStatus] = useState<string>('');
   const [loadingWithdrawals, setLoadingWithdrawals] = useState(false);
   const [expandedTransactionId, setExpandedTransactionId] = useState<string | null>(null);
-  
+
   const [formData, setFormData] = useState({
     amount: '',
     bankName: '',
@@ -29,7 +29,7 @@ const VendorWithdrawPage: React.FC<VendorWithdrawPageProps> = ({ onNavigate }) =
   });
 
   // Filter withdrawals client-side based on status
-  const withdrawals = filterStatus 
+  const withdrawals = filterStatus
     ? allWithdrawals.filter(w => w.status === filterStatus)
     : allWithdrawals;
 
@@ -38,12 +38,12 @@ const VendorWithdrawPage: React.FC<VendorWithdrawPageProps> = ({ onNavigate }) =
       setLoading(true);
       const walletData = await getMyWallet('Vendor');
       setWallet(walletData);
-      
+
       // Fetch all withdrawals WITHOUT status filter
       setLoadingWithdrawals(true);
       const withdrawalData = await getMyWithdrawalRequests();
       setAllWithdrawals(withdrawalData);
-      
+
       // Pre-fill from wallet if available
       if (withdrawalData.length > 0) {
         const last = withdrawalData[0];
@@ -70,7 +70,7 @@ const VendorWithdrawPage: React.FC<VendorWithdrawPageProps> = ({ onNavigate }) =
   const handleWithdraw = async (e: React.FormEvent) => {
     e.preventDefault();
     const amount = Number(formData.amount.replace(/\./g, ''));
-    
+
     if (isNaN(amount) || amount < 50000) {
       toast.error('Số tiền rút tối thiểu là 50.000 ₫.');
       return;
@@ -117,7 +117,7 @@ const VendorWithdrawPage: React.FC<VendorWithdrawPageProps> = ({ onNavigate }) =
   };
 
   const getStatusLabel = (status: string) => {
-    switch(status) {
+    switch (status) {
       case 'Approved':
         return 'Đã duyệt';
       case 'Rejected':
@@ -130,7 +130,7 @@ const VendorWithdrawPage: React.FC<VendorWithdrawPageProps> = ({ onNavigate }) =
   };
 
   const getTransactionTypeLabel = (type: string) => {
-    switch(type) {
+    switch (type) {
       case 'Withdrawal':
         return 'Rút tiền';
       case 'Deposit':
@@ -149,7 +149,7 @@ const VendorWithdrawPage: React.FC<VendorWithdrawPageProps> = ({ onNavigate }) =
   };
 
   const getTransactionStatusLabel = (status: string) => {
-    switch(status) {
+    switch (status) {
       case 'Success':
         return '✓ Thành công';
       case 'Failed':
@@ -173,7 +173,7 @@ const VendorWithdrawPage: React.FC<VendorWithdrawPageProps> = ({ onNavigate }) =
   return (
     <div className="min-h-screen py-12 px-4 md:px-8 font-sans">
       <div className="max-w-[1650px] mx-auto">
-        
+
         {/* Header Section */}
         <div className="mb-12 flex flex-col md:flex-row md:items-center justify-between gap-8">
           <div className="flex items-start gap-5">
@@ -188,21 +188,21 @@ const VendorWithdrawPage: React.FC<VendorWithdrawPageProps> = ({ onNavigate }) =
             </button>
             <div>
               <h1 className="text-4xl font-black text-slate-900 tracking-tight mb-2">Rút tiền</h1>
-              <p className="text-slate-500 font-bold text-sm">Rút doanh thu từ ví Vendor về tài khoản ngân hàng của bạn.</p>
+              <p className="text-black font-bold text-sm">Rút doanh thu từ ví Vendor về tài khoản ngân hàng của bạn.</p>
             </div>
           </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-          
+
           {/* Form Section */}
           <div className="bg-white rounded-[3rem] p-8 md:p-12 border border-slate-200 shadow-sm">
             <div className="mb-10 p-8 bg-black rounded-[2rem] text-white relative overflow-hidden">
-               <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-bl-full -mr-10 -mt-10" />
-               <p className="text-xs font-black text-white/40 uppercase tracking-widest mb-2 relative z-10">Số dư khả dụng</p>
-               <h2 className="text-4xl font-black tabular-nums relative z-10">
-                 {wallet ? formatVnd(wallet.balance || 0) : '0 ₫'}
-               </h2>
+              <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-bl-full -mr-10 -mt-10" />
+              <p className="text-xs font-black text-white/40 uppercase tracking-widest mb-2 relative z-10">Số dư khả dụng</p>
+              <h2 className="text-4xl font-black tabular-nums relative z-10">
+                {wallet ? formatVnd(wallet.balance || 0) : '0 ₫'}
+              </h2>
             </div>
 
             <div className="mb-8 grid grid-cols-2 gap-4">
@@ -225,7 +225,7 @@ const VendorWithdrawPage: React.FC<VendorWithdrawPageProps> = ({ onNavigate }) =
                   placeholder="Vd: 1.000.000"
                   className="w-full bg-slate-50 border-none rounded-2xl px-6 py-4 font-bold text-lg text-slate-900 focus:ring-2 focus:ring-black transition-all"
                   value={formData.amount}
-                  onChange={(e) => setFormData({...formData, amount: formatNumberInput(e.target.value)})}
+                  onChange={(e) => setFormData({ ...formData, amount: formatNumberInput(e.target.value) })}
                 />
               </div>
 
@@ -238,7 +238,7 @@ const VendorWithdrawPage: React.FC<VendorWithdrawPageProps> = ({ onNavigate }) =
                     placeholder="Vd: Vietcombank"
                     className="w-full bg-slate-50 border-none rounded-2xl px-6 py-4 font-bold text-slate-900 focus:ring-2 focus:ring-black transition-all"
                     value={formData.bankName}
-                    onChange={(e) => setFormData({...formData, bankName: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, bankName: e.target.value })}
                   />
                 </div>
                 <div className="space-y-2">
@@ -249,7 +249,7 @@ const VendorWithdrawPage: React.FC<VendorWithdrawPageProps> = ({ onNavigate }) =
                     placeholder="Nhập số tài khoản"
                     className="w-full bg-slate-50 border-none rounded-2xl px-6 py-4 font-bold text-slate-900 focus:ring-2 focus:ring-black transition-all"
                     value={formData.accountNumber}
-                    onChange={(e) => setFormData({...formData, accountNumber: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, accountNumber: e.target.value })}
                   />
                 </div>
               </div>
@@ -262,7 +262,7 @@ const VendorWithdrawPage: React.FC<VendorWithdrawPageProps> = ({ onNavigate }) =
                   placeholder="VD: NGUYEN VAN A"
                   className="w-full bg-slate-50 border-none rounded-2xl px-6 py-4 font-bold text-slate-900 focus:ring-2 focus:ring-black transition-all uppercase"
                   value={formData.accountHolder}
-                  onChange={(e) => setFormData({...formData, accountHolder: e.target.value.toUpperCase()})}
+                  onChange={(e) => setFormData({ ...formData, accountHolder: e.target.value.toUpperCase() })}
                 />
               </div>
 
@@ -284,123 +284,120 @@ const VendorWithdrawPage: React.FC<VendorWithdrawPageProps> = ({ onNavigate }) =
 
           {/* Recently Withdrawal Section */}
           <div className="space-y-8">
-             <div className="flex items-center justify-between gap-4">
-               <h3 className="text-xl font-black text-slate-900 flex items-center gap-3">
-                 <span className="w-1.5 h-6 bg-black rounded-full" />
-                 Lịch sử rút tiền
-               </h3>
-               <div className="flex flex-wrap items-center gap-2">
-                 {['', 'Pending', 'Approved', 'Rejected'].map((status) => (
-                   <button
-                     key={status}
-                     onClick={() => setFilterStatus(status)}
-                     className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all ${
-                       filterStatus === status
-                         ? 'bg-black text-white'
-                         : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-                     }`}
-                   >
-                     {status ? (status === 'Pending' ? 'Chờ duyệt' : status === 'Approved' ? 'Đã duyệt' : 'Bị từ chối') : 'Tất cả'}
-                   </button>
-                 ))}
-               </div>
-             </div>
+            <div className="flex items-center justify-between gap-4">
+              <h3 className="text-xl font-black text-slate-900 flex items-center gap-3">
+                <span className="w-1.5 h-6 bg-black rounded-full" />
+                Lịch sử rút tiền
+              </h3>
+              <div className="flex flex-wrap items-center gap-2">
+                {['', 'Pending', 'Approved', 'Rejected'].map((status) => (
+                  <button
+                    key={status}
+                    onClick={() => setFilterStatus(status)}
+                    className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all ${filterStatus === status
+                        ? 'bg-black text-white'
+                        : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                      }`}
+                  >
+                    {status ? (status === 'Pending' ? 'Chờ duyệt' : status === 'Approved' ? 'Đã duyệt' : 'Bị từ chối') : 'Tất cả'}
+                  </button>
+                ))}
+              </div>
+            </div>
 
-             <div className="space-y-4">
-               {loadingWithdrawals ? (
-                 Array(3).fill(0).map((_, i) => (
-                   <div key={i} className="bg-white rounded-[2rem] p-6 border border-slate-100 animate-pulse h-24" />
-                 ))
-               ) : withdrawals.length === 0 ? (
-                 <div className="bg-white rounded-[2rem] p-12 border border-slate-100 text-center">
-                   <p className="text-slate-400 font-bold">Chưa có yêu cầu rút tiền {filterStatus ? `trong trạng thái này` : ''}.</p>
-                 </div>
-               ) : (
-                 withdrawals.map((wd) => (
-                   <div key={wd.withdrawalId} className="bg-white rounded-[2rem] border border-slate-200 shadow-sm overflow-hidden">
-                      {/* Header Row */}
-                      <div className="p-6 flex items-center justify-between group hover:border-black transition-all">
-                        <div className="flex items-center gap-5">
-                          <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-black text-xs flex-shrink-0 ${
-                            wd.status === 'Approved' ? 'bg-emerald-100 text-emerald-600' :
+            <div className="space-y-4">
+              {loadingWithdrawals ? (
+                Array(3).fill(0).map((_, i) => (
+                  <div key={i} className="bg-white rounded-[2rem] p-6 border border-slate-100 animate-pulse h-24" />
+                ))
+              ) : withdrawals.length === 0 ? (
+                <div className="bg-white rounded-[2rem] p-12 border border-slate-100 text-center">
+                  <p className="text-slate-400 font-bold">Chưa có yêu cầu rút tiền {filterStatus ? `trong trạng thái này` : ''}.</p>
+                </div>
+              ) : (
+                withdrawals.map((wd) => (
+                  <div key={wd.withdrawalId} className="bg-white rounded-[2rem] border border-slate-200 shadow-sm overflow-hidden">
+                    {/* Header Row */}
+                    <div className="p-6 flex items-center justify-between group hover:border-black transition-all">
+                      <div className="flex items-center gap-5">
+                        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-black text-xs flex-shrink-0 ${wd.status === 'Approved' ? 'bg-emerald-100 text-emerald-600' :
                             wd.status === 'Rejected' ? 'bg-rose-100 text-rose-600' :
-                            'bg-amber-100 text-amber-600'
+                              'bg-amber-100 text-amber-600'
                           }`}>
-                            {wd.status === 'Approved' ? '✓' : wd.status === 'Rejected' ? '✕' : '...'}
-                          </div>
-                          <div>
-                            <p className="text-sm font-black text-slate-900">{formatVnd(wd.amount)}</p>
-                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{wd.bank}</p>
-                          </div>
+                          {wd.status === 'Approved' ? '✓' : wd.status === 'Rejected' ? '✕' : '...'}
                         </div>
-                        <div className="flex items-center gap-4">
-                          <div className="text-right">
-                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">
-                              {formatDate(wd.processedDate || wd.requestedAt || '')}
-                            </p>
-                            <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded-md inline-block ${
-                              wd.status === 'Approved' ? 'bg-emerald-50 text-emerald-600' :
-                              wd.status === 'Rejected' ? 'bg-rose-50 text-rose-600' :
-                              'bg-amber-50 text-amber-600'
-                            }`}>
-                              {getStatusLabel(wd.status)}
-                            </span>
-                          </div>
-                          {wd.rejectionReason || wd.transaction ? (
-                            <button
-                              onClick={() => setExpandedTransactionId(
-                                expandedTransactionId === wd.withdrawalId ? null : wd.withdrawalId
-                              )}
-                              className="ml-4 px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition-all"
-                            >
-                              {expandedTransactionId === wd.withdrawalId ? '▼ Ẩn' : '▶ Xem'}
-                            </button>
-                          ) : null}
+                        <div>
+                          <p className="text-sm font-black text-slate-900">{formatVnd(wd.amount)}</p>
+                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{wd.bank}</p>
                         </div>
                       </div>
-
-                      {/* Details Section - Show rejection reason and transaction info when expanded */}
-                      {expandedTransactionId === wd.withdrawalId && (wd.rejectionReason || wd.transaction) && (
-                        <div className="px-6 pb-6 border-t border-slate-100 space-y-3">
-                          {wd.rejectionReason && (
-                            <div className="bg-rose-50 rounded-xl p-3 border border-rose-100">
-                              <p className="text-[9px] font-black text-rose-600 uppercase tracking-widest mb-1">Lý do từ chối</p>
-                              <p className="text-sm text-rose-700">{wd.rejectionReason}</p>
-                            </div>
-                          )}
-                          {wd.transaction && (
-                            <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
-                              <p className="text-[11px] font-black text-slate-500 uppercase tracking-widest mb-3">Giao dịch liên quan</p>
-                              <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
-                                <div>
-                                  <span className="text-slate-400 font-bold">ID:</span>
-                                  <p className="font-mono text-slate-700 truncate mt-0.5">{wd.transaction.transactionId}</p>
-                                </div>
-                                <div>
-                                  <span className="text-slate-400 font-bold">Loại:</span>
-                                  <p className="text-slate-700 font-bold mt-0.5">{getTransactionTypeLabel(wd.transaction.type)}</p>
-                                </div>
-                                <div>
-                                  <span className="text-slate-400 font-bold">Trạng thái:</span>
-                                  <p className={`font-bold mt-0.5 ${wd.transaction.status === 'Success' ? 'text-emerald-600' : 'text-rose-600'}`}>
-                                    {getTransactionStatusLabel(wd.transaction.status)}
-                                  </p>
-                                </div>
-                              </div>
-                              {wd.transaction.description && (
-                                <div className="mt-3">
-                                  <span className="text-slate-400 font-bold text-xs">Mô tả:</span>
-                                  <p className="text-slate-600 text-sm leading-relaxed mt-1">{wd.transaction.description}</p>
-                                </div>
-                              )}
-                            </div>
-                          )}
+                      <div className="flex items-center gap-4">
+                        <div className="text-right">
+                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">
+                            {formatDate(wd.processedDate || wd.requestedAt || '')}
+                          </p>
+                          <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded-md inline-block ${wd.status === 'Approved' ? 'bg-emerald-50 text-emerald-600' :
+                              wd.status === 'Rejected' ? 'bg-rose-50 text-rose-600' :
+                                'bg-amber-50 text-amber-600'
+                            }`}>
+                            {getStatusLabel(wd.status)}
+                          </span>
                         </div>
-                      )}
-                   </div>
-                 ))
-               )}
-             </div>
+                        {wd.rejectionReason || wd.transaction ? (
+                          <button
+                            onClick={() => setExpandedTransactionId(
+                              expandedTransactionId === wd.withdrawalId ? null : wd.withdrawalId
+                            )}
+                            className="ml-4 px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition-all"
+                          >
+                            {expandedTransactionId === wd.withdrawalId ? '▼ Ẩn' : '▶ Xem'}
+                          </button>
+                        ) : null}
+                      </div>
+                    </div>
+
+                    {/* Details Section - Show rejection reason and transaction info when expanded */}
+                    {expandedTransactionId === wd.withdrawalId && (wd.rejectionReason || wd.transaction) && (
+                      <div className="px-6 pb-6 border-t border-slate-100 space-y-3">
+                        {wd.rejectionReason && (
+                          <div className="bg-rose-50 rounded-xl p-3 border border-rose-100">
+                            <p className="text-[9px] font-black text-rose-600 uppercase tracking-widest mb-1">Lý do từ chối</p>
+                            <p className="text-sm text-rose-700">{wd.rejectionReason}</p>
+                          </div>
+                        )}
+                        {wd.transaction && (
+                          <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
+                            <p className="text-[11px] font-black text-black uppercase tracking-widest mb-3">Giao dịch liên quan</p>
+                            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
+                              <div>
+                                <span className="text-slate-400 font-bold">ID:</span>
+                                <p className="font-mono text-slate-700 truncate mt-0.5">{wd.transaction.transactionId}</p>
+                              </div>
+                              <div>
+                                <span className="text-slate-400 font-bold">Loại:</span>
+                                <p className="text-slate-700 font-bold mt-0.5">{getTransactionTypeLabel(wd.transaction.type)}</p>
+                              </div>
+                              <div>
+                                <span className="text-slate-400 font-bold">Trạng thái:</span>
+                                <p className={`font-bold mt-0.5 ${wd.transaction.status === 'Success' ? 'text-emerald-600' : 'text-rose-600'}`}>
+                                  {getTransactionStatusLabel(wd.transaction.status)}
+                                </p>
+                              </div>
+                            </div>
+                            {wd.transaction.description && (
+                              <div className="mt-3">
+                                <span className="text-slate-400 font-bold text-xs">Mô tả:</span>
+                                <p className="text-slate-600 text-sm leading-relaxed mt-1">{wd.transaction.description}</p>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                ))
+              )}
+            </div>
           </div>
         </div>
       </div>

@@ -35,17 +35,17 @@ const getRemainingAutoAccept = (createdAt: string | unknown) => {
 
 
 const STATUS_CFG: Record<string, { badge: string; label: string; icon: string }> = {
-  Pending:  { badge: 'bg-yellow-100 text-yellow-700 border-yellow-200', label: 'Chờ xử lý', icon: '' },
-  Approved: { badge: 'bg-green-100  text-green-700  border-green-200',  label: 'Đã duyệt',  icon: '' },
-  Rejected: { badge: 'bg-red-100    text-red-700    border-red-200',    label: 'Từ chối',   icon: '' },
+  Pending: { badge: 'bg-yellow-100 text-yellow-700 border-yellow-200', label: 'Chờ xử lý', icon: '' },
+  Approved: { badge: 'bg-green-100  text-green-700  border-green-200', label: 'Đã duyệt', icon: '' },
+  Rejected: { badge: 'bg-red-100    text-red-700    border-red-200', label: 'Từ chối', icon: '' },
 };
 
 const getStatusCfg = (s: string) =>
   STATUS_CFG[s] ?? { badge: 'bg-gray-100 text-gray-600 border-gray-200', label: s, icon: '' };
 
 const SUB_TABS = [
-  { id: 'all',      label: 'Tất cả' },
-  { id: 'Pending',  label: 'Chờ xử lý' },
+  { id: 'all', label: 'Tất cả' },
+  { id: 'Pending', label: 'Chờ xử lý' },
   { id: 'Approved', label: 'Đã duyệt' },
   { id: 'Rejected', label: 'Từ chối' },
 ];
@@ -57,28 +57,28 @@ interface Props {
 
 
 const VendorRefundTab: React.FC<Props> = ({ onPendingCount }) => {
-  const [refunds, setRefunds]             = useState<RefundRecord[]>([]);
-  const [loading, setLoading]             = useState(true);
-  const [filterTab, setFilterTab]         = useState('all');
-  const [currentPage, setCurrentPage]     = useState(1);
+  const [refunds, setRefunds] = useState<RefundRecord[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [filterTab, setFilterTab] = useState('all');
+  const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 5;
-  
+
   // Detail modal + action
-  const [selected, setSelected]           = useState<RefundRecord | null>(null);
-  const [orderTotal, setOrderTotal]       = useState<number | null>(null);
-  const [action, setAction]               = useState<'approve' | 'reject' | null>(null);
-  const [note, setNote]                   = useState('');
-  const [processing, setProcessing]       = useState(false);
-  const [actionError, setActionError]     = useState<string | null>(null);
-  const [successMsg, setSuccessMsg]       = useState<string | null>(null);
-  const [imageModal, setImageModal]       = useState<string | null>(null);
-  
+  const [selected, setSelected] = useState<RefundRecord | null>(null);
+  const [orderTotal, setOrderTotal] = useState<number | null>(null);
+  const [action, setAction] = useState<'approve' | 'reject' | null>(null);
+  const [note, setNote] = useState('');
+  const [processing, setProcessing] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const [imageModal, setImageModal] = useState<string | null>(null);
+
   // Quick action confirm modal (từ list card)
   const [confirmRefund, setConfirmRefund] = useState<RefundRecord | null>(null);
   const [confirmAction, setConfirmAction] = useState<'approve' | 'reject' | null>(null);
-  const [confirmNote, setConfirmNote]     = useState('');
+  const [confirmNote, setConfirmNote] = useState('');
   const [confirmProcessing, setConfirmProcessing] = useState(false);
-  const [confirmError, setConfirmError]   = useState<string | null>(null);
+  const [confirmError, setConfirmError] = useState<string | null>(null);
 
 
   const fetch = useCallback(async () => {
@@ -105,7 +105,7 @@ const VendorRefundTab: React.FC<Props> = ({ onPendingCount }) => {
     setSuccessMsg(null);
     // Fetch order details to get total amount
     try {
-      const order = await orderService.getOrderDetails(r.orderId);
+      const order = await orderService.getVendorOrderDetails(r.orderId);
       if (order) {
         setOrderTotal(order.pricing?.subTotal || null);
       }
@@ -192,7 +192,7 @@ const VendorRefundTab: React.FC<Props> = ({ onPendingCount }) => {
   const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
   const currentRefunds = filtered.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
 
- 
+
 
   return (
     <>
@@ -204,11 +204,10 @@ const VendorRefundTab: React.FC<Props> = ({ onPendingCount }) => {
               setFilterTab(tab.id);
               setCurrentPage(1);
             }}
-            className={`whitespace-nowrap px-5 py-3 rounded-t-xl font-bold text-sm transition-all border-b-2 ${
-              filterTab === tab.id
+            className={`whitespace-nowrap px-5 py-3 rounded-t-xl font-bold text-sm transition-all border-b-2 ${filterTab === tab.id
                 ? 'border-primary text-primary bg-primary/5'
-                : 'border-transparent text-slate-500 hover:text-slate-800 hover:bg-gray-100'
-            }`}
+                : 'border-transparent text-black hover:text-slate-800 hover:bg-gray-100'
+              }`}
           >
             {tab.label}
             {tab.id !== 'all' && (
@@ -277,7 +276,7 @@ const VendorRefundTab: React.FC<Props> = ({ onPendingCount }) => {
                 {/* Card body */}
                 <div className="p-5 md:p-6 space-y-4">
                   {/* Reason row */}
-                  
+
                   {/* Products + Amount row */}
                   <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
                     {/* Products column (left) - names only */}
@@ -383,7 +382,7 @@ const VendorRefundTab: React.FC<Props> = ({ onPendingCount }) => {
             <button
               onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
               disabled={currentPage === 1}
-              className="px-4 py-2 bg-white rounded-xl flex items-center justify-center text-slate-500 hover:bg-black hover:text-white transition-all shadow-sm disabled:opacity-30 disabled:hover:bg-white disabled:hover:text-slate-500 border border-slate-200 text-[10px] font-bold uppercase tracking-widest"
+              className="px-4 py-2 bg-white rounded-xl flex items-center justify-center text-black hover:bg-black hover:text-white transition-all shadow-sm disabled:opacity-30 disabled:hover:bg-white disabled:hover:text-black border border-slate-200 text-[10px] font-bold uppercase tracking-widest"
             >
               Trước
             </button>
@@ -392,7 +391,7 @@ const VendorRefundTab: React.FC<Props> = ({ onPendingCount }) => {
                 <button
                   key={pageNum}
                   onClick={() => setCurrentPage(pageNum)}
-                  className={`w-10 h-10 rounded-xl font-bold text-[10px] transition-all ${currentPage === pageNum ? 'bg-black text-white shadow-lg' : 'bg-white text-slate-500 hover:bg-slate-50 border border-slate-200'}`}
+                  className={`w-10 h-10 rounded-xl font-bold text-[10px] transition-all ${currentPage === pageNum ? 'bg-black text-white shadow-lg' : 'bg-white text-black hover:bg-slate-50 border border-slate-200'}`}
                 >
                   {pageNum}
                 </button>
@@ -401,7 +400,7 @@ const VendorRefundTab: React.FC<Props> = ({ onPendingCount }) => {
             <button
               onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
               disabled={currentPage === totalPages}
-              className="px-4 py-2 bg-white rounded-xl flex items-center justify-center text-slate-500 hover:bg-black hover:text-white transition-all shadow-sm disabled:opacity-30 disabled:hover:bg-white disabled:hover:text-slate-500 border border-slate-200 text-[10px] font-bold uppercase tracking-widest"
+              className="px-4 py-2 bg-white rounded-xl flex items-center justify-center text-black hover:bg-black hover:text-white transition-all shadow-sm disabled:opacity-30 disabled:hover:bg-white disabled:hover:text-black border border-slate-200 text-[10px] font-bold uppercase tracking-widest"
             >
               Sau
             </button>
@@ -419,13 +418,12 @@ const VendorRefundTab: React.FC<Props> = ({ onPendingCount }) => {
             onClick={e => e.stopPropagation()}
           >
             {/* Modal title */}
-            <div className={`mb-4 p-4 rounded-xl text-center font-bold ${
-              confirmAction === 'approve' 
-                ? 'bg-green-50 text-green-700' 
+            <div className={`mb-4 p-4 rounded-xl text-center font-bold ${confirmAction === 'approve'
+                ? 'bg-green-50 text-green-700'
                 : 'bg-red-50 text-red-600'
-            }`}>
-              {confirmAction === 'approve' 
-                ? ' Xác nhận duyệt hoàn tiền' 
+              }`}>
+              {confirmAction === 'approve'
+                ? ' Xác nhận duyệt hoàn tiền'
                 : ' Xác nhận từ chối yêu cầu'}
             </div>
 
@@ -477,11 +475,10 @@ const VendorRefundTab: React.FC<Props> = ({ onPendingCount }) => {
               <button
                 onClick={handleQuickAction}
                 disabled={confirmProcessing}
-                className={`flex-1 py-2.5 text-white rounded-xl text-sm font-bold transition disabled:opacity-50 ${
-                  confirmAction === 'approve' 
-                    ? 'bg-green-600 hover:bg-green-700' 
+                className={`flex-1 py-2.5 text-white rounded-xl text-sm font-bold transition disabled:opacity-50 ${confirmAction === 'approve'
+                    ? 'bg-green-600 hover:bg-green-700'
                     : 'bg-red-500 hover:bg-red-600'
-                }`}
+                  }`}
               >
                 {confirmProcessing ? 'Đang xử lý...' : 'Xác nhận'}
               </button>
@@ -490,7 +487,7 @@ const VendorRefundTab: React.FC<Props> = ({ onPendingCount }) => {
         </div>
       )}
 
-    
+
       {selected && (
         <div
           className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-start justify-center z-50 p-4 overflow-y-auto"
@@ -621,12 +618,10 @@ const VendorRefundTab: React.FC<Props> = ({ onPendingCount }) => {
 
               {/* Admin note (after processed) */}
               {selected.adminNote && (
-                <div className={`p-4 rounded-[1.5rem] border ${
-                  selected.status === 'Approved' ? 'bg-green-50 border-green-100' : 'bg-red-50 border-red-100'
-                }`}>
-                  <h4 className={`text-xs font-bold uppercase tracking-widest mb-2 ${
-                    selected.status === 'Approved' ? 'text-green-500' : 'text-red-400'
-                  }`}>Ghi chú xử lý</h4>
+                <div className={`p-4 rounded-[1.5rem] border ${selected.status === 'Approved' ? 'bg-green-50 border-green-100' : 'bg-red-50 border-red-100'
+                  }`}>
+                  <h4 className={`text-xs font-bold uppercase tracking-widest mb-2 ${selected.status === 'Approved' ? 'text-green-500' : 'text-red-400'
+                    }`}>Ghi chú xử lý</h4>
                   <p className="text-sm text-gray-700">{selected.adminNote}</p>
                   {selected.processedAt && (
                     <p className="text-xs text-gray-400 mt-2">
@@ -639,7 +634,7 @@ const VendorRefundTab: React.FC<Props> = ({ onPendingCount }) => {
               {/* Success message */}
               {successMsg && (
                 <div className="p-4 bg-green-50 border border-green-200 rounded-[1.5rem] text-sm text-green-700 font-medium">
-                   {successMsg}
+                  {successMsg}
                 </div>
               )}
 
@@ -665,9 +660,8 @@ const VendorRefundTab: React.FC<Props> = ({ onPendingCount }) => {
                   {/* Step 2 – confirm */}
                   {action && (
                     <div className="space-y-3">
-                      <div className={`p-3 rounded-xl text-sm font-bold ${
-                        action === 'approve' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-600'
-                      }`}>
+                      <div className={`p-3 rounded-xl text-sm font-bold ${action === 'approve' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-600'
+                        }`}>
                         {action === 'approve' ? ' Xác nhận duyệt hoàn tiền' : ' Xác nhận từ chối yêu cầu'}
                       </div>
                       <textarea
@@ -688,9 +682,8 @@ const VendorRefundTab: React.FC<Props> = ({ onPendingCount }) => {
                         <button
                           onClick={handleProcess}
                           disabled={processing}
-                          className={`flex-1 py-2.5 text-white rounded-xl text-sm font-bold transition disabled:opacity-50 ${
-                            action === 'approve' ? 'bg-green-600 hover:bg-green-700' : 'bg-red-500 hover:bg-red-600'
-                          }`}
+                          className={`flex-1 py-2.5 text-white rounded-xl text-sm font-bold transition disabled:opacity-50 ${action === 'approve' ? 'bg-green-600 hover:bg-green-700' : 'bg-red-500 hover:bg-red-600'
+                            }`}
                         >
                           {processing ? 'Đang xử lý...' : 'Xác nhận'}
                         </button>

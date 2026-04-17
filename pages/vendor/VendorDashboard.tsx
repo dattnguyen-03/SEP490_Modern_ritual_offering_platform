@@ -251,7 +251,7 @@ const VendorDashboard: React.FC<VendorDashboardProps> = ({ onNavigate }) => {
                 </span>
               )}
             </div>
-            <p className="text-sm text-slate-500 mb-1 uppercase font-bold tracking-widest">{stat.label}</p>
+            <p className="text-sm text-black mb-1 uppercase font-bold tracking-widest">{stat.label}</p>
             <p className="text-2xl font-black text-primary">{stat.value}</p>
           </div>
         ))}
@@ -320,7 +320,7 @@ const VendorDashboard: React.FC<VendorDashboardProps> = ({ onNavigate }) => {
                     <span className="text-[10px] font-bold text-slate-400">{product.orderCount} đơn</span>
                   </div>
                   <p className="font-bold text-slate-800 mb-1 line-clamp-2">{product.productName}</p>
-                  <div className="flex items-center justify-between text-xs font-bold text-slate-500">
+                  <div className="flex items-center justify-between text-xs font-bold text-black">
                     <span>{product.quantitySold} sản phẩm</span>
                     <span className="text-primary">{formatRevenue(product.revenue)}</span>
                   </div>
@@ -348,7 +348,7 @@ const VendorDashboard: React.FC<VendorDashboardProps> = ({ onNavigate }) => {
           </div>
           <div className="space-y-4">
             {isLoadingPaidPendingOrders && (
-              <div className="p-8 text-center text-slate-500">Đang tải đơn hàng...</div>
+              <div className="p-8 text-center text-black">Đang tải đơn hàng...</div>
             )}
 
             {!isLoadingPaidPendingOrders && paidPendingOrdersError && (
@@ -364,7 +364,7 @@ const VendorDashboard: React.FC<VendorDashboardProps> = ({ onNavigate }) => {
             )}
 
             {!isLoadingPaidPendingOrders && !paidPendingOrdersError && paidPendingOrders.length === 0 && (
-              <div className="p-8 text-center text-slate-500 bg-white rounded-2xl border-2 border-dashed border-gray-100">
+              <div className="p-8 text-center text-black bg-white rounded-2xl border-2 border-dashed border-gray-100">
                 Chưa có đơn hàng đã thanh toán đang chờ xử lý.
               </div>
             )}
@@ -378,7 +378,7 @@ const VendorDashboard: React.FC<VendorDashboardProps> = ({ onNavigate }) => {
                 <div>
                   <p className="text-[10px] font-bold uppercase text-gold tracking-[0.2em] mb-1">#{order.orderId}</p>
                   <p className="font-bold text-primary group-hover:text-gold transition-colors">{getOrderTitle(order)}</p>
-                  <p className="text-xs text-slate-500 mt-1">Khách: {getDisplayCustomerName(order)}</p>
+                  <p className="text-xs text-black mt-1">Khách: {getDisplayCustomerName(order)}</p>
                 </div>
                 <div className="text-right">
                   <p className="font-black text-primary tracking-tight mb-1">{Number(order.totalAmount || 0).toLocaleString('vi-VN')}₫</p>

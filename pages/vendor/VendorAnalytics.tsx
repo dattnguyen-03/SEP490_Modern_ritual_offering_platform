@@ -38,11 +38,11 @@ const VendorAnalytics: React.FC<VendorAnalyticsProps> = ({ onNavigate }) => {
       <div className="max-w-7xl mx-auto">
         <div className="mb-10">
           <h1 className="text-4xl font-black text-primary uppercase tracking-tight mb-2">Thống Kê Cửa Hàng</h1>
-          <p className="text-slate-500 font-bold uppercase tracking-widest text-[10px]">Hiệu suất kinh doanh của {profile?.shopName || 'cửa hàng'}</p>
+          <p className="text-black font-bold uppercase tracking-widest text-[10px]">Hiệu suất kinh doanh của {profile?.shopName || 'cửa hàng'}</p>
         </div>
 
-        <StatisticsView 
-          isStaff={false} 
+        <StatisticsView
+          isStaff={false}
           vendorId={undefined} // Backend associates stats with the user's token when calling /api/statistics/...
           hideHeader={false}
           title="Tổng quan kinh doanh"
