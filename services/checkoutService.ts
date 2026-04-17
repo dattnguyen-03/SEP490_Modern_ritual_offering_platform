@@ -12,11 +12,12 @@ export interface CheckoutItemAddOn {
 }
 
 export interface CheckoutItemSwap {
-  lineTotal: number;
   swapId: number;
-  itemName: string;
-  retailPrice: number;
-  quantity: number;
+  itemName?: string;
+  originalItemName?: string;
+  replacementItemName?: string;
+  replacementDescription?: string;
+  surcharge: number;
 }
 
 export interface CheckoutItem {

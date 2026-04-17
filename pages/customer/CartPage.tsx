@@ -220,7 +220,11 @@ const CartPage: React.FC<{ onNavigate: (path: string) => void }> = ({ onNavigate
       const targetItem = cart?.cartItems.find(i => Number(i.cartItemId) === Number(cartItemId));
       if (!targetItem) throw new Error("Item not found");
 
-      let apiAddOns = targetItem.addOns.map(a => ({ addOnId: a.addOnId, quantity: a.quantity }));
+      let apiAddOns: { cartItemAddOnId?: number; addOnId: number; quantity: number }[] = targetItem.addOns.map(a => ({ 
+        cartItemAddOnId: a.cartItemAddOnId,
+        addOnId: a.addOnId, 
+        quantity: a.quantity 
+      }));
       if (isRemoving) {
         apiAddOns = apiAddOns.filter(a => Number(a.addOnId) !== Number(addOnId));
       } else {
@@ -387,8 +391,21 @@ const CartPage: React.FC<{ onNavigate: (path: string) => void }> = ({ onNavigate
       const success = await cartService.updateCartItem({
         cartItemId: editingItem.cartItemId,
         quantity: editingItem.quantity,
-        swaps: selectedSwapIds.map(id => ({ swapId: id })),
-        addOns: selectedAddOns
+        swaps: selectedSwapIds.map(id => {
+          const existing = editingItem.swaps.find(s => s.swapId === id);
+          return { 
+            cartItemSwapId: existing?.cartItemSwapId,
+            swapId: id 
+          };
+        }),
+        addOns: selectedAddOns.map(a => {
+          const existing = editingItem.addOns.find(ea => ea.addOnId === a.addOnId);
+          return {
+            cartItemAddOnId: existing?.cartItemAddOnId,
+            addOnId: a.addOnId,
+            quantity: a.quantity
+          };
+        })
       });
 
       if (success) {
@@ -458,12 +475,23 @@ const CartPage: React.FC<{ onNavigate: (path: string) => void }> = ({ onNavigate
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
         {/* Cart Items */}
         <div className="lg:col-span-2 space-y-8">
-          {(!cart?.vendors || cart.vendors.length === 0) ? (
+          {(() => {
+            if (!loading && cart) {
+              console.log('🛒 Rendering Cart Content:', {
+                vendorsCount: cart.vendors?.length,
+                itemsCount: cartItems.length,
+                totalItems: cart.totalItems
+              });
+            }
+            return null;
+          })()}
+
+          {(cartItems.length === 0) ? (
             <div className="bg-white p-12 rounded-2xl border border-slate-100 text-center">
-              <p className="text-slate-500 mb-6">Giỏ hàng của bạn trống</p>
-              <button
+              <p className="text-slate-500 mb-6 font-medium">Giỏ hàng của bạn hiện đang trống</p>
+              <button 
                 onClick={() => onNavigate('/shop')}
-                className="border border-primary text-primary px-6 py-2 rounded-lg font-bold hover:bg-slate-50 transition-all"
+                className="bg-primary text-white px-8 py-3 rounded-xl font-bold hover:shadow-lg transition-all hover:-translate-y-1"
               >
                 Tiếp tục mua sắm
               </button>
@@ -524,13 +552,15 @@ const CartPage: React.FC<{ onNavigate: (path: string) => void }> = ({ onNavigate
                             {/* Nested Details */}
                             {(item.swaps.length > 0 || item.addOns.length > 0) && (
                               <div className="mt-2 space-y-1 px-2 border-l-2 border-slate-100 ml-1">
-                                {item.swaps.map(swap => (
-                                  <div key={swap.cartItemSwapId} className="flex items-center gap-2 text-[10px]">
-                                    <span className="material-symbols-outlined text-[12px] text-primary">check_circle</span>
-                                    <span className="text-slate-600 font-medium">{swap.replacementItemName}</span>
-                                    <span className="ml-auto font-bold text-slate-400">+{swap.surcharge > 0 ? (swap.surcharge * item.quantity).toLocaleString() : '0'}đ</span>
-                                  </div>
-                                ))}
+                                  {item.swaps.map(swap => (
+                                    <div key={swap.cartItemSwapId} className="flex items-center gap-2 text-[10px]">
+                                      <span className="material-symbols-outlined text-[12px] text-primary">check_circle</span>
+                                      <span className="text-slate-600 font-medium">
+                                        {swap.replacementDescription || swap.replacementItemName || 'Thay thế'}
+                                      </span>
+                                      <span className="ml-auto font-bold text-slate-400">+{swap.surcharge > 0 ? (swap.surcharge * item.quantity).toLocaleString() : '0'}đ</span>
+                                    </div>
+                                  ))}
                                 {item.addOns.map(addOn => (
                                   <div key={addOn.cartItemAddOnId} className="flex items-center gap-2 text-[10px]">
                                     <span className="material-symbols-outlined text-[12px] text-primary">check_circle</span>

@@ -312,9 +312,9 @@ const ProductDetailPage: React.FC<{ onNavigate: (path: string) => void }> = ({ o
       const success = await cartService.addToCart({
         variantId: selectedVariant.variantId,
         quantity,
-        swapIds: Object.entries(selectedSwaps)
+        swaps: Object.entries(selectedSwaps)
           .filter(([_, selected]) => selected)
-          .map(([id]) => Number(id)),
+          .map(([id]) => ({ swapId: Number(id) })),
         addOns: Object.entries(selectedAddOns)
           .filter(([_, qty]) => qty > 0)
           .map(([id, qty]) => ({ addOnId: Number(id), quantity: qty }))
@@ -352,9 +352,9 @@ const ProductDetailPage: React.FC<{ onNavigate: (path: string) => void }> = ({ o
       const success = await cartService.addToCart({
         variantId: selectedVariant.variantId,
         quantity,
-        swapIds: Object.entries(selectedSwaps)
+        swaps: Object.entries(selectedSwaps)
           .filter(([_, selected]) => selected)
-          .map(([id]) => Number(id)),
+          .map(([id]) => ({ swapId: Number(id) })),
         addOns: Object.entries(selectedAddOns)
           .filter(([_, qty]) => qty > 0)
           .map(([id, qty]) => ({ addOnId: Number(id), quantity: qty }))
@@ -528,7 +528,16 @@ const ProductDetailPage: React.FC<{ onNavigate: (path: string) => void }> = ({ o
                   <button
                     key={variant.variantId}
                     onClick={() => {
-                      setSelectedVariantIndex(selectedVariantIndex === index ? null : index);
+                      if (selectedVariantIndex !== index) {
+                        setSelectedVariantIndex(index);
+                        // Reset selections when changing variants to avoid sending invalid IDs
+                        setSelectedSwaps({});
+                        setSelectedAddOns({});
+                      } else {
+                        setSelectedVariantIndex(null);
+                        setSelectedSwaps({});
+                        setSelectedAddOns({});
+                      }
                       setCurrentMainImage(0);
                     }}
                     onMouseEnter={() => {

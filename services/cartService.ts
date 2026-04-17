@@ -18,6 +18,7 @@ export interface CartItemSwapApi {
   swapId: number;
   originalItemName: string;
   replacementItemName: string;
+  replacementDescription?: string;
   surcharge: number;
 }
 
@@ -65,15 +66,22 @@ export interface CartApi {
 export interface AddToCartRequest {
   variantId: number;
   quantity: number;
-  swapIds?: number[];
+  swaps?: { swapId: number }[];
   addOns?: { addOnId: number; quantity: number }[];
 }
 
 export interface UpdateCartItemRequest {
   cartItemId: number;
   quantity: number;
-  swaps?: { swapId: number }[];
-  addOns?: { addOnId: number; quantity: number }[];
+  swaps?: { 
+    cartItemSwapId?: number;
+    swapId: number; 
+  }[];
+  addOns?: { 
+    cartItemAddOnId?: number;
+    addOnId: number; 
+    quantity: number; 
+  }[];
 }
 
 class CartService {
@@ -113,38 +121,91 @@ class CartService {
       payload = data.result || data;
     }
 
-    // If the payload is an array, it's a list of items
+    const flattenedItems: CartItemApi[] = [];
+    const vendorsList: CartVendorApi[] = [];
+
+    // Case 1: Payload is a flat array of items
     if (Array.isArray(payload)) {
       const cartItems = payload.map(item => this.mapCartItem(item));
-      const subtotal = payload.reduce((sum, item) => sum + ((item.price || 0) * (item.quantity || 1)), 0);
+      flattenedItems.push(...cartItems);
+      
+      const subtotal = cartItems.reduce((sum, item) => sum + item.lineTotal, 0);
+      
+      // Group items by vendor if vendor info exists, otherwise use a default
+      const vendorGroups = new Map<string, CartItemApi[]>();
+      cartItems.forEach(item => {
+        const vendorId = (item as any).vendorId || (item as any).vendorProfileId || 'default';
+        const group = vendorGroups.get(vendorId) || [];
+        group.push(item);
+        vendorGroups.set(vendorId, group);
+      });
+
+      vendorGroups.forEach((items, vendorId) => {
+        vendorsList.push({
+          vendorId,
+          vendorName: (items[0] as any).vendorName || 'Sản phẩm khác',
+          totalItems: items.length,
+          subTotal: items.reduce((sum, i) => sum + i.lineTotal, 0),
+          items
+        });
+      });
+
       return {
         cartId: 0,
         userId: '',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
-        vendors: [],       // required by CartApi
+        vendors: vendorsList,
         cartTotal: subtotal,
         cartItems,
-        totalItems: payload.reduce((sum, item) => sum + (item.quantity || 1), 0),
+        totalItems: cartItems.reduce((sum, item) => sum + item.quantity, 0),
         subtotal,
       };
     }
 
-    // Handle the new structure with 'vendors'
-    const vendors = Array.isArray(payload.vendors) ? payload.vendors : [];
-    const flattenedItems: CartItemApi[] = [];
+    // Case 2: Structured object (with vendors or root-level items)
+    const rawVendors = Array.isArray(payload.vendors) ? payload.vendors : [];
+    const rawItems = Array.isArray(payload.cartItems || payload.items) ? (payload.cartItems || payload.items) : [];
 
-    const mappedVendors: CartVendorApi[] = vendors.map((v: any) => {
+    // Map vendors and their items
+    rawVendors.forEach((v: any) => {
       const vendorItems = Array.isArray(v.items) ? v.items.map((item: any) => this.mapCartItem(item)) : [];
       flattenedItems.push(...vendorItems);
-      return {
-        vendorId: v.vendorId || '',
-        vendorName: v.vendorName || 'Vendor',
-        totalItems: v.totalItems || 0,
-        subTotal: v.subTotal || 0,
+      vendorsList.push({
+        vendorId: v.vendorId || v.vendorProfileId || '',
+        vendorName: v.vendorName || v.shopName || 'Nhà cung cấp',
+        totalItems: v.totalItems || vendorItems.length,
+        subTotal: v.subTotal || v.subtotal || vendorItems.reduce((sum, i) => sum + i.lineTotal, 0),
         items: vendorItems
-      };
+      });
     });
+
+    // If we have top-level items but no vendors, or items that aren't in any vendor
+    if (rawItems.length > 0 && vendorsList.length === 0) {
+      const mappedItems = rawItems.map((item: any) => this.mapCartItem(item));
+      flattenedItems.push(...mappedItems);
+      
+      // Auto-group items by vendor if info is available in items
+      const vendorGroups = new Map<string, CartItemApi[]>();
+      mappedItems.forEach(item => {
+        const vId = (item as any).vendorId || (item as any).vendorProfileId || 'default';
+        const group = vendorGroups.get(vId) || [];
+        group.push(item);
+        vendorGroups.set(vId, group);
+      });
+
+      vendorGroups.forEach((items, vendorId) => {
+        vendorsList.push({
+          vendorId,
+          vendorName: (items[0] as any).vendorName || 'Sản phẩm khác',
+          totalItems: items.length,
+          subTotal: items.reduce((sum, i) => sum + i.lineTotal, 0),
+          items
+        });
+      });
+    }
+
+    const finalSubtotal = payload.cartTotal || payload.subtotal || payload.subTotal || flattenedItems.reduce((sum, i) => sum + i.lineTotal, 0);
 
     return {
       cartId: payload.cartId || payload.id || 0,
@@ -152,11 +213,11 @@ class CartService {
       customerId: payload.customerId,
       createdAt: payload.createdAt || new Date().toISOString(),
       updatedAt: payload.updatedAt || null,
-      vendors: mappedVendors,
+      vendors: vendorsList,
       cartItems: flattenedItems,
-      totalItems: payload.totalItems || flattenedItems.length,
-      cartTotal: payload.cartTotal || payload.subtotal || payload.subTotal || 0,
-      subtotal: payload.cartTotal || payload.subtotal || payload.subTotal || 0
+      totalItems: payload.totalItems || flattenedItems.reduce((sum, i) => sum + i.quantity, 0),
+      cartTotal: finalSubtotal,
+      subtotal: finalSubtotal
     };
   }
 
@@ -249,13 +310,15 @@ class CartService {
    */
   async addToCart(request: AddToCartRequest): Promise<boolean> {
     try {
-      console.log('➕ Adding to cart:', request);
+      console.log('➕ Adding to cart (Service Layer):', request);
+      const jsonBody = JSON.stringify(request);
+      console.log('📤 JSON Payload to be sent:', jsonBody);
 
       // Backend OpenAPI: only POST /api/cart/add (GET is /api/cart; /api/cart/items is PUT/DELETE only).
       let response = await fetch(`${API_BASE_URL}/cart/add`, {
         method: 'POST',
         headers: this.getHeaders('POST'),
-        body: JSON.stringify(request),
+        body: jsonBody,
       });
 
       if (response.status === 405 || response.status === 404) {
@@ -305,8 +368,16 @@ class CartService {
         ? {
           cartItemId: request.cartItemId,
           quantity: request.quantity,
-          swaps: request.swaps ?? [],     // empty array when no swaps
-          addOns: request.addOns ?? [],   // empty array when no add-ons
+          swaps: request.swaps?.map(s => {
+            const swapObj: any = { swapId: s.swapId };
+            if (s.cartItemSwapId) swapObj.cartItemSwapId = s.cartItemSwapId;
+            return swapObj;
+          }) ?? [],
+          addOns: request.addOns?.map(a => {
+            const addOnObj: any = { addOnId: a.addOnId, quantity: a.quantity };
+            if (a.cartItemAddOnId) addOnObj.cartItemAddOnId = a.cartItemAddOnId;
+            return addOnObj;
+          }) ?? [],
         }
         : { cartItemId: request.cartItemId, quantity: request.quantity };
 

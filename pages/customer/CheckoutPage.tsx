@@ -116,9 +116,9 @@ const CheckoutPage: React.FC<{ onNavigate: (path: string) => void }> = ({ onNavi
             ...vendorOrder,
             items: Array.isArray(vendorOrder.items)
               ? vendorOrder.items.map((item: any) => ({
-                  ...item,
-                  imageUrl: item.imageUrl || cartImageMap.get(Number(item.cartItemId)) || item.packageAvatarUrl || item.packageImageUrl || item.productImageUrl || null,
-                }))
+                ...item,
+                imageUrl: item.imageUrl || cartImageMap.get(Number(item.cartItemId)) || item.packageAvatarUrl || item.packageImageUrl || item.productImageUrl || null,
+              }))
               : vendorOrder.items,
           }));
 
@@ -160,7 +160,7 @@ const CheckoutPage: React.FC<{ onNavigate: (path: string) => void }> = ({ onNavi
         console.error('❌ Failed to fetch checkout summary:', error);
         const originalMsg = error.message || '';
         const lowerMsg = originalMsg.toLowerCase();
-        
+
         if (lowerMsg.includes('vượt quá') || lowerMsg.includes('phạm vi') || lowerMsg.includes('giao hàng') || lowerMsg.includes('distance')) {
           toast.message({
             title: 'Không thể giao hàng',
@@ -171,7 +171,7 @@ const CheckoutPage: React.FC<{ onNavigate: (path: string) => void }> = ({ onNavi
         } else {
           toast.error(originalMsg || 'Đã xảy ra lỗi');
         }
-        
+
         // Delay navigation slightly more to allow the user to read/see the modal
         setTimeout(() => navigate('/cart'), 1500);
       } finally {
@@ -209,7 +209,7 @@ const CheckoutPage: React.FC<{ onNavigate: (path: string) => void }> = ({ onNavi
       console.error('❌ Failed to select address:', error);
       const originalMsg = error.message || '';
       const lowerMsg = originalMsg.toLowerCase();
-      
+
       if (lowerMsg.includes('phạm vi') || lowerMsg.includes('giao hàng') || lowerMsg.includes('vượt quá') || lowerMsg.includes('distance')) {
         toast.error('Không thể giao hàng');
       } else {
@@ -281,10 +281,10 @@ const CheckoutPage: React.FC<{ onNavigate: (path: string) => void }> = ({ onNavi
         try {
           const wallet = await walletService.getMyWallet('Customer');
           const balance = wallet.balance || 0;
-          
+
           if (balance < summary.totalAmount) {
             const needed = summary.totalAmount - balance;
-            
+
             const result = await toast.confirm({
               title: 'Số dư không đủ',
               text: `Số dư ví của bạn ( ${balance.toLocaleString()}đ ) không đủ để thanh toán đơn hàng này. Bạn cần nạp thêm ít nhất ${needed.toLocaleString()}đ. Bạn có muốn nạp tiền ngay không?`,
@@ -305,17 +305,17 @@ const CheckoutPage: React.FC<{ onNavigate: (path: string) => void }> = ({ onNavi
                   createdAt: Date.now(),
                   returnPath: `${window.location.pathname}${window.location.search}`
                 }));
-                
+
                 // Set a flag to show success toast after returning from top-up
                 sessionStorage.setItem(TOPUP_SUCCESS_TOAST_KEY, '1');
-                
+
                 window.location.href = redirectUrl;
                 return;
               } else {
                 toast.error('Không thể tạo liên kết nạp tiền. Vui lòng thử lại sau.');
               }
             }
-            
+
             setProcessing(false);
             return;
           }
@@ -402,7 +402,7 @@ const CheckoutPage: React.FC<{ onNavigate: (path: string) => void }> = ({ onNavi
 
       const originalMsg = error.message || '';
       const lowerMsg = originalMsg.toLowerCase();
-      
+
       if (lowerMsg.includes('phạm vi') || lowerMsg.includes('giao hàng') || lowerMsg.includes('vượt quá') || lowerMsg.includes('distance')) {
         toast.error('Không thể giao hàng');
       } else if (error.message?.includes('500')) {
@@ -450,7 +450,7 @@ const CheckoutPage: React.FC<{ onNavigate: (path: string) => void }> = ({ onNavi
               <div className="flex justify-between items-center">
                 <label className="text-xs font-bold uppercase text-slate-400">Địa chỉ nhận hàng</label>
                 {addresses.length > 0 && (
-                  <button 
+                  <button
                     type="button"
                     onClick={() => setShowAddressSelector(!showAddressSelector)}
                     className="text-xs font-bold text-primary hover:underline flex items-center gap-1"
@@ -460,20 +460,19 @@ const CheckoutPage: React.FC<{ onNavigate: (path: string) => void }> = ({ onNavi
                   </button>
                 )}
               </div>
-              
+
               {showAddressSelector ? (
                 <div className="space-y-3 mt-4 animate-in fade-in slide-in-from-top-2 duration-300">
                   <p className="text-xs text-slate-500 italic pb-2">Chọn một địa chỉ từ danh sách của bạn:</p>
                   <div className="grid grid-cols-1 gap-3 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
                     {addresses.map((addr) => (
-                      <div 
+                      <div
                         key={addr.addressId}
                         onClick={() => !selectingAddress && handleSelectAddress(addr.addressId)}
-                        className={`p-4 rounded-2xl border-2 transition-all cursor-pointer flex justify-between items-start group ${
-                          summary.deliveryAddress?.includes(addr.addressText) 
-                            ? 'border-primary bg-primary/5' 
+                        className={`p-4 rounded-2xl border-2 transition-all cursor-pointer flex justify-between items-start group ${summary.deliveryAddress?.includes(addr.addressText)
+                            ? 'border-primary bg-primary/5'
                             : 'border-gray-100 hover:border-primary/30 hover:bg-ritual-bg'
-                        } ${selectingAddress ? 'opacity-50 cursor-not-allowed' : ''}`}
+                          } ${selectingAddress ? 'opacity-50 cursor-not-allowed' : ''}`}
                       >
                         <div className="flex-1">
                           <p className="text-sm font-bold text-gray-800 group-hover:text-primary transition-colors">
@@ -489,7 +488,7 @@ const CheckoutPage: React.FC<{ onNavigate: (path: string) => void }> = ({ onNavi
                       </div>
                     ))}
                   </div>
-                  <button 
+                  <button
                     type="button"
                     onClick={() => navigate('/profile?tab=address')}
                     className="w-full py-3 px-4 rounded-xl border border-dashed border-gray-300 text-slate-500 text-sm hover:text-primary hover:border-primary transition-all flex items-center justify-center gap-2"
@@ -589,7 +588,7 @@ const CheckoutPage: React.FC<{ onNavigate: (path: string) => void }> = ({ onNavi
           <div className="space-y-4">
             {[
               { id: 'PayOS', label: 'Ví của bạn', desc: 'Nếu số dư không đủ thì sẽ nạp tiền bằng cách chuyển khoản, QR - An toàn & Nhanh chóng' },
-              
+
             ].map((m, i) => (
               <label key={m.id} className={`flex items-center p-4 md:p-6 border-2 rounded-2xl md:rounded-3xl cursor-pointer transition-all ${paymentMethod === m.id ? 'border-primary bg-gray-50' : 'border-gray-200 hover:border-primary'}`}>
                 <input
@@ -612,7 +611,7 @@ const CheckoutPage: React.FC<{ onNavigate: (path: string) => void }> = ({ onNavi
       <aside className="w-full lg:w-[420px] shrink-0">
         <div className="sticky top-24 bg-white p-6 md:p-8 rounded-[2rem] border border-slate-100 shadow-2xl shadow-slate-200/40">
           <h3 className="text-xl font-bold text-slate-900 mb-6 border-b border-slate-50 pb-4">Tóm tắt đơn hàng</h3>
-          
+
           {/* Items List */}
           <div className="space-y-6 mb-8 max-h-[40vh] overflow-y-auto pr-2 custom-scrollbar">
             {summary.items.map((item) => (
@@ -630,33 +629,50 @@ const CheckoutPage: React.FC<{ onNavigate: (path: string) => void }> = ({ onNavi
                 </div>
                 <div className="flex-1 min-w-0">
                   <h4 className="text-sm font-bold text-slate-800 leading-snug line-clamp-2">{item.packageName}</h4>
-                  <div className="flex items-center gap-2 mt-1">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{item.variantName}</span>
-                    <span className="w-1 h-1 rounded-full bg-slate-200"></span>
-                    <span className="text-[10px] font-bold text-slate-500">SL: {item.quantity}</span>
+                  <div className="flex items-center justify-between mt-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{item.variantName}</span>
+                      <span className="w-1 h-1 rounded-full bg-slate-200"></span>
+                      <span className="text-[10px] font-bold text-slate-500">SL: {item.quantity}</span>
+                    </div>
+                    <span className="text-[10px] font-bold text-slate-800">{(item.unitPrice || 0).toLocaleString()}đ</span>
                   </div>
-                  
+
                   {/* Swaps & Add-ons */}
                   {(item.swaps?.length > 0 || item.addOns?.length > 0) && (
-                    <div className="mt-2 space-y-1">
+                    <div className="mt-2 space-y-1.5 py-1.5 border-y border-dashed border-slate-100">
                       {item.swaps?.map((swap, idx) => (
-                        <div key={idx} className="flex items-center gap-1.5 text-[9px] text-amber-600 font-bold">
-                          <span className="material-symbols-outlined text-[12px]">swap_horiz</span>
-                          <span>{swap.itemName}</span>
+                        <div key={idx} className="flex items-center justify-between text-[9px] text-amber-600 font-bold">
+                          <div className="flex items-center gap-1.5 flex-1 min-w-0">
+                            <span className="material-symbols-outlined text-[12px]">swap_horiz</span>
+                            <span className="truncate">
+                              {swap.replacementDescription || (swap.originalItemName ? `${swap.originalItemName} → ${swap.replacementItemName}` : swap.itemName || 'Thay thế')}
+                            </span>
+                          </div>
+                          <span className="ml-2 whitespace-nowrap">
+                            +{((swap.surcharge || 0) * item.quantity).toLocaleString()}đ
+                          </span>
                         </div>
                       ))}
                       {item.addOns?.map((addOn, idx) => (
-                        <div key={idx} className="flex items-center gap-1.5 text-[9px] text-emerald-600 font-bold">
-                          <span className="material-symbols-outlined text-[12px]">check_circle</span>
-                          <span>{addOn.itemName} <span className="text-slate-400">x{addOn.quantity}</span></span>
+                        <div key={idx} className="flex items-center justify-between text-[9px] text-emerald-600 font-bold">
+                          <div className="flex items-center gap-1.5 flex-1 min-w-0">
+                            <span className="material-symbols-outlined text-[12px]">check_circle</span>
+                            <span className="truncate">{addOn.itemName} <span className="text-slate-400">x{addOn.quantity}</span></span>
+                          </div>
+                          <span className="ml-2 whitespace-nowrap">
+                            +{(addOn.lineTotal || (addOn.retailPrice * addOn.quantity)).toLocaleString()}đ
+                          </span>
                         </div>
                       ))}
                     </div>
                   )}
 
-                  <div className="flex items-center justify-between mt-2">
-                    <span className="text-[9px] font-medium text-slate-400 italic">{item.vendorName}</span>
-                    <span className="text-sm font-bold text-slate-900">{(item.lineTotal || 0).toLocaleString()}đ</span>
+                  <div className="flex items-end justify-between mt-3">
+                    <div className="flex flex-col">
+                      <span className="text-[9px] font-black text-slate-900 uppercase mt-1 tracking-tighter">Tổng mục này:</span>
+                    </div>
+                    <span className="text-base font-black text-slate-900 leading-none">{(item.lineTotal || 0).toLocaleString()}đ</span>
                   </div>
                 </div>
               </div>
@@ -669,7 +685,7 @@ const CheckoutPage: React.FC<{ onNavigate: (path: string) => void }> = ({ onNavi
               <span className="text-slate-500 font-medium">Tạm tính ({summary.totalItems} món)</span>
               <span className="text-slate-900 font-bold">{(summary.subTotal || 0).toLocaleString()}đ</span>
             </div>
-            
+
             <div className="flex justify-between items-center text-sm">
               <span className="text-slate-500 font-medium">Phí giao hàng</span>
               <span className={`font-bold ${summary.shippingFee === 0 ? 'text-emerald-500' : 'text-slate-900'}`}>
@@ -717,13 +733,13 @@ const CheckoutPage: React.FC<{ onNavigate: (path: string) => void }> = ({ onNavi
 
             {(summary.totalHoldFee || 0) > 0 && !hasExceededDistance && (
               <div className="p-3 bg-amber-50/50 border border-amber-100 rounded-xl">
-                 <div className="flex items-center justify-between mb-1">
-                   <span className="text-[10px] font-bold text-amber-700 uppercase tracking-wider">Phí giữ chỗ (Dự kiến)</span>
-                   <span className="text-xs font-bold text-amber-700">{(summary.totalHoldFee || 0).toLocaleString()}đ</span>
-                 </div>
-                 <p className="text-[9px] text-amber-600/70 leading-relaxed">
-                   Khoản phí này dùng để giữ lịch và chỉ bị trừ nếu bạn chủ động hủy đơn.
-                 </p>
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-[10px] font-bold text-amber-700 uppercase tracking-wider">Phí giữ chỗ (Dự kiến)</span>
+                  <span className="text-xs font-bold text-amber-700">{(summary.totalHoldFee || 0).toLocaleString()}đ</span>
+                </div>
+                <p className="text-[9px] text-amber-600/70 leading-relaxed">
+                  Khoản phí này dùng để giữ lịch và chỉ bị trừ nếu bạn chủ động hủy đơn.
+                </p>
               </div>
             )}
 
@@ -731,13 +747,12 @@ const CheckoutPage: React.FC<{ onNavigate: (path: string) => void }> = ({ onNavi
               <button
                 onClick={handleCheckout}
                 disabled={processing || !deliveryDate || hasExceededDistance}
-                className={`w-full py-4 rounded-xl font-bold uppercase tracking-widest text-sm transition-all shadow-lg active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed ${
-                  hasExceededDistance 
-                  ? 'bg-slate-300 text-slate-500 shadow-none' 
-                  : (processing || !deliveryDate 
-                      ? 'bg-slate-500 text-white cursor-not-allowed shadow-none' 
+                className={`w-full py-4 rounded-xl font-bold uppercase tracking-widest text-sm transition-all shadow-lg active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed ${hasExceededDistance
+                    ? 'bg-slate-300 text-slate-500 shadow-none'
+                    : (processing || !deliveryDate
+                      ? 'bg-slate-500 text-white cursor-not-allowed shadow-none'
                       : 'bg-primary text-white shadow-primary/20 hover:shadow-primary/30 hover:-translate-y-0.5')
-                }`}
+                  }`}
               >
                 {processing ? (
                   <span className="flex items-center justify-center gap-2">
