@@ -695,7 +695,7 @@ const ProductDetailPage: React.FC<{ onNavigate: (path: string) => void }> = ({ o
                 if (swap && swap.surcharge > 0) {
                   return (
                     <div key={swapId} className="flex justify-between items-center mb-1">
-                      <span className="text-[10px] font-bold text-amber-600 uppercase tracking-tighter">Phụ phí đổi món : ({swap.replacementItemName}):</span>
+                      <span className="text-[10px] font-bold text-amber-600 uppercase tracking-tighter">Phụ phí đổi món: ({swap.replacementItemName}):</span>
                       <span className="text-[10px] font-bold text-amber-600">+{(swap.surcharge * quantity).toLocaleString()}đ</span>
                     </div>
                   );
