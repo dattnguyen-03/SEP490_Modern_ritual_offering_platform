@@ -155,7 +155,7 @@ const VendorTransactionPage: React.FC<VendorTransactionPageProps> = ({ onNavigat
         type: typeFilter || undefined,
         status: statusFilter || undefined,
         from: fromDate || undefined,
-        to: toDate || undefined,
+        to: toDate ? `${toDate}T23:59:59` : undefined,
         walletType: 'Vendor'
       };
 

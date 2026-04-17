@@ -1,4 +1,4 @@
-import { getAuthToken } from './auth';
+import { getAuthToken, getCurrentUser } from './auth';
 import { packageService } from './packageService';
 const API_BASE_URL = '/api';
 
@@ -1005,8 +1005,14 @@ class OrderService {
             }
 
             const token = getAuthToken();
+            const user = getCurrentUser();
+            const isVendor = user?.role === 'vendor' || user?.roles?.includes('vendor');
+            const url = isVendor 
+                ? `${API_BASE_URL}/orders/vendor/${orderId}/status`
+                : `${API_BASE_URL}/orders/${orderId}/status`;
+            
             const xhr = new XMLHttpRequest();
-            xhr.open('PUT', `${API_BASE_URL}/orders/${orderId}/status`, true);
+            xhr.open('PUT', url, true);
             xhr.setRequestHeader('Accept', '*/*');
             if (token) {
                 xhr.setRequestHeader('Authorization', `Bearer ${token}`);
@@ -1038,7 +1044,13 @@ class OrderService {
     async cancelOrder(orderId: string, reason?: string): Promise<boolean> {
         try {
             const normalizedReason = typeof reason === 'string' ? reason.trim() : '';
-            const response = await fetch(`${API_BASE_URL}/orders/${orderId}/cancel`, {
+            const user = getCurrentUser();
+            const isVendor = user?.role === 'vendor' || user?.roles?.includes('vendor');
+            const url = isVendor
+                ? `${API_BASE_URL}/orders/vendor/${orderId}/cancel`
+                : `${API_BASE_URL}/orders/${orderId}/cancel`;
+
+            const response = await fetch(url, {
                 method: 'PUT',
                 headers: this.getHeaders('PUT'),
                 body: JSON.stringify({ cancelReason: normalizedReason || 'Không có lý do' }),

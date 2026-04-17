@@ -487,9 +487,6 @@ const OrderDetailsPage: React.FC = () => {
                             <div className="pb-6">
                                 <p className="text-[10px] font-black uppercase text-black tracking-widest mb-4 italic">Thời gian phục vụ</p>
                                 <div className="flex items-center gap-4">
-                                    <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-500 flex items-center justify-center">
-                                        <span className="material-symbols-outlined">event</span>
-                                    </div>
                                     <div>
                                         <p className="font-black text-slate-900 tracking-tight">{new Date(order.delivery?.deliveryDate).toLocaleDateString('vi-VN')}</p>
                                         <p className="text-xs font-bold text-black uppercase tracking-widest mt-0.5">{order.delivery?.deliveryTime?.slice(0, 5)}</p>

@@ -114,8 +114,8 @@ const isIncomingTransaction = (tx: WalletTransaction): boolean => {
 
 const toDateParam = (value: string | null): string | undefined => {
   if (!value) return undefined;
-  // Use standard ISO-like format YYYY-MM-DD which is common for our APIs
-  return value;
+  // Append T23:59:59 to include the entire day for the 'To' date
+  return `${value}T23:59:59`;
 };
 
 const buildInitialDateRange = () => {
@@ -140,11 +140,10 @@ const TransactionHistoryPage: React.FC<TransactionHistoryPageProps> = () => {
 
   const [relatedChain, setRelatedChain] = useState<WalletTransaction[]>([]);
 
-  const initialDates = buildInitialDateRange();
   const [typeFilter, setTypeFilter] = useState<string>('');
   const [statusFilter, setStatusFilter] = useState<string>('');
-  const [fromDate, setFromDate] = useState<string>(initialDates.from);
-  const [toDate, setToDate] = useState<string>(initialDates.to);
+  const [fromDate, setFromDate] = useState<string>('');
+  const [toDate, setToDate] = useState<string>('');
 
   const fetchData = async (options?: { showToastOnError?: boolean }) => {
     try {
@@ -188,11 +187,10 @@ const TransactionHistoryPage: React.FC<TransactionHistoryPageProps> = () => {
   };
 
   const handleClearFilters = () => {
-    const range = buildInitialDateRange();
     setTypeFilter('');
     setStatusFilter('');
-    setFromDate(range.from);
-    setToDate(range.to);
+    setFromDate('');
+    setToDate('');
     void fetchData();
   };
 
@@ -361,8 +359,8 @@ const TransactionHistoryPage: React.FC<TransactionHistoryPageProps> = () => {
               <span className="opacity-70">Tổng tiền ra:</span>
               <span className="tabular-nums">{formatCurrency(totalOut)}</span>
             </div> */}
-            <div className="px-3 py-1.5 rounded-xl bg-primary/10 text-primary font-black border border-primary/20 flex items-center gap-2 shadow-sm shadow-primary/10">
-              <span className="opacity-70 uppercase tracking-tight">Chi tiêu thực tế:</span>
+            <div className="px-3 py-1.5 rounded-xl bg-primary/10 text-black font-black border border-primary/20 flex items-center gap-2 shadow-sm shadow-primary/10">
+              <span className="tracking-tight">Chi tiêu thực tế:</span>
               <span className="tabular-nums">{formatCurrency(netSpending)}</span>
             </div>
           </div>
