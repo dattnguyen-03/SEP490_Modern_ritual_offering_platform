@@ -26,7 +26,7 @@ interface StaffProduct {
   vendorName?: string;
 }
 
-type PackageStatusFilter = '' | 'Draft' | 'Pending' | 'Approved' | 'Rejected' | 'StaffActionRequired' | 'VendorActionRequired' | 'AdminActionRequired';
+type PackageStatusFilter = '' | 'Draft' | 'Pending' | 'Approved' | 'Rejected' | 'StaffActionRequired' | 'VendorActionRequired' | 'AdminActionRequired' | 'WaitingStaffApproval';
 
 const StaffProductManagement: React.FC<StaffProductManagementProps> = ({ onNavigate }) => {
   const location = useLocation();
@@ -426,7 +426,7 @@ const StaffProductManagement: React.FC<StaffProductManagementProps> = ({ onNavig
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const statusFromQuery = String(params.get('status') || '').trim();
-    const allowedStatuses: PackageStatusFilter[] = ['', 'Draft', 'Pending', 'Approved', 'Rejected', 'StaffActionRequired', 'VendorActionRequired', 'AdminActionRequired'];
+    const allowedStatuses: PackageStatusFilter[] = ['', 'Draft', 'Pending', 'Approved', 'Rejected', 'StaffActionRequired', 'VendorActionRequired', 'AdminActionRequired', 'WaitingStaffApproval'];
 
     if (!statusFromQuery) return;
 
