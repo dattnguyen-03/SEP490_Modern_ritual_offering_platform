@@ -7,24 +7,59 @@ export interface RevenueByTime {
   category: string | null;
 }
 
+export interface RevenueByCategory {
+  categoryId: number;
+  categoryName: string;
+  revenue: number;
+  percentage: number;
+  orderCount: number;
+}
+
+export interface RevenueByVendor {
+  vendorId: string;
+  shopName: string;
+  revenue: number;
+  percentage: number;
+  orderCount: number;
+}
+
 export interface RevenueResult {
   totalRevenue: number;
-  previousPeriodRevenue: number;
-  growthRate: number;
+  previousPeriodRevenue?: number;
+  growthRate?: number;
   revenueByTime: RevenueByTime[];
+  revenueByCategory?: RevenueByCategory[];
+  revenueByVendor?: RevenueByVendor[];
+  startDate?: string;
+  endDate?: string;
+  groupBy?: string;
 }
 
 export interface ProductStat {
-  packageId: string;
-  packageName: string;
-  vendorName: string;
-  totalQuantity: number;
-  totalRevenue: number;
+  productId: string | number;
+  productName: string;
+  imageUrl?: string | null;
+  quantitySold: number;
+  revenue: number;
+  orderCount: number;
+}
+
+export interface CategoryStat {
+  categoryId: number;
+  categoryName: string;
+  productCount: number;
+  percentage: number;
 }
 
 export interface ProductStatResult {
   totalProducts: number;
-  products: ProductStat[];
+  soldProducts: number;
+  topSellingProducts: ProductStat[];
+  topRevenueProducts: ProductStat[];
+  productsByCategory: CategoryStat[];
+  startDate: string;
+  endDate: string;
+  sortBy: string;
 }
 
 export interface StatItem {
@@ -136,12 +171,14 @@ export interface StatisticsOverviewResult {
 
 export interface StatisticsParams {
   period?: 'day' | 'week' | 'month' | 'year';
+  groupBy?: 'day' | 'month' | 'year';
   startDate?: string;
   endDate?: string;
   vendorId?: string;
   categoryId?: number;
   status?: string;
   limit?: number;
+  sortBy?: string;
 }
 
 const fetchWithAuth = async <T>(url: string): Promise<T> => {
@@ -168,6 +205,13 @@ export const statisticsService = {
   getRevenue: async (params: StatisticsParams = {}): Promise<RevenueResult> => {
     const searchParams = new URLSearchParams();
     if (params.period) searchParams.append('Period', params.period);
+    if (params.groupBy) {
+      // Mapping to plural if backend needs it (based on user JSON showing "days")
+      const mappedGroupBy = params.groupBy === 'day' ? 'days' : 
+                          params.groupBy === 'month' ? 'months' : 
+                          params.groupBy === 'year' ? 'years' : params.groupBy;
+      searchParams.append('GroupBy', mappedGroupBy);
+    }
     if (params.startDate) searchParams.append('StartDate', params.startDate);
     if (params.endDate) searchParams.append('EndDate', params.endDate);
     if (params.vendorId) searchParams.append('VendorId', params.vendorId);
@@ -183,6 +227,8 @@ export const statisticsService = {
     if (params.categoryId) searchParams.append('CategoryId', params.categoryId.toString());
     if (params.startDate) searchParams.append('StartDate', params.startDate);
     if (params.endDate) searchParams.append('EndDate', params.endDate);
+    if (params.sortBy) searchParams.append('SortBy', params.sortBy);
+    if (params.period) searchParams.append('Period', params.period);
 
     return fetchWithAuth<ProductStatResult>(`/api/statistics/products?${searchParams.toString()}`);
   },

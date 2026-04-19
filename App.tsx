@@ -170,11 +170,11 @@ const AppContent: React.FC<{
     const navItems = [
       { label: 'Tổng quan', icon: 'dashboard', path: '/staff/dashboard' },
       { label: 'Xác minh vendor', icon: 'verified_user', path: '/staff-vendors' },
-      
+
       { label: 'Sản phẩm', icon: 'inventory_2', path: '/staff-product' },
       { label: 'Khiếu nại', icon: 'warning', path: '/staff-refunds' },
       // { label: 'Giao dịch', icon: 'payments', path: '/staff-transactions' },
-      { label: 'Thống kê', icon: 'analytics', path: '/staff-statistics' },
+      // { label: 'Thống kê', icon: 'analytics', path: '/staff-statistics' },
       { label: 'Banner', icon: 'ad', path: '/staff-banners' },
       { label: 'Cẩm nang', icon: 'book_4', path: '/staff-guidelines' },
       { label: 'Cấu hình hệ thống', icon: 'settings', path: '/staff-settings' },
@@ -195,8 +195,8 @@ const AppContent: React.FC<{
                     key={item.path}
                     onClick={() => handleNavigate(item.path)}
                     className={`flex items-center w-full px-6 py-4 rounded-3xl font-bold text-sm uppercase transition-all tracking-wider ${activeRoute === item.path
-                        ? 'bg-primary text-white shadow-lg shadow-primary/20 scale-[1.02]'
-                        : 'text-slate-500 hover:bg-ritual-bg hover:text-primary'
+                      ? 'bg-primary text-white shadow-lg shadow-primary/20 scale-[1.02]'
+                      : 'text-slate-500 hover:bg-ritual-bg hover:text-primary'
                       }`}
                   >
                     <span className="material-symbols-outlined mr-4 text-xl">{item.icon}</span>
@@ -249,8 +249,8 @@ const AppContent: React.FC<{
                     key={item.path}
                     onClick={() => handleNavigate(item.path)}
                     className={`flex items-center w-full px-6 py-4 rounded-3xl font-bold text-sm uppercase transition-all tracking-wider ${activeRoute === item.path
-                        ? 'bg-primary text-white shadow-lg shadow-primary/20 scale-[1.02]'
-                        : 'text-slate-500 hover:bg-ritual-bg hover:text-primary'
+                      ? 'bg-primary text-white shadow-lg shadow-primary/20 scale-[1.02]'
+                      : 'text-slate-500 hover:bg-ritual-bg hover:text-primary'
                       }`}
                   >
                     <span className="material-symbols-outlined mr-4 text-xl">{item.icon}</span>

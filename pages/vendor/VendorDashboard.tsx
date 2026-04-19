@@ -13,6 +13,7 @@ import {
 import { Line, Doughnut } from 'react-chartjs-2';
 import { orderService, VendorOrder } from '../../services/orderService';
 import { statisticsService, VendorDashboardResult } from '../../services/statisticsService';
+import StatisticsView from '../../components/StatisticsView';
 
 ChartJS.register(
   CategoryScale,
@@ -257,83 +258,13 @@ const VendorDashboard: React.FC<VendorDashboardProps> = ({ onNavigate }) => {
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2 bg-white rounded-[2rem] border border-gold/10 shadow-sm p-8">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-xl font-black text-primary flex items-center gap-2">
-              <span className="material-symbols-outlined text-gold">show_chart</span>
-              Biểu đồ doanh thu
-            </h3>
-          </div>
-          <div className="h-[320px]">
-            {revenueChartData.labels.length > 0 ? (
-              <Line data={revenueChartData} options={chartOptions} />
-            ) : (
-              <div className="h-full flex items-center justify-center text-slate-400 text-sm font-semibold">Chưa có dữ liệu doanh thu</div>
-            )}
-          </div>
-        </div>
-
-        <div className="bg-white rounded-[2rem] border border-gold/10 shadow-sm p-8">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-xl font-black text-primary flex items-center gap-2">
-              <span className="material-symbols-outlined text-gold">donut_small</span>
-              Trạng thái đơn hàng
-            </h3>
-          </div>
-          <div className="h-[320px]">
-            {orderStatusChartData.labels.length > 0 ? (
-              <Doughnut data={orderStatusChartData} options={{ ...chartOptions, cutout: '68%' }} />
-            ) : (
-              <div className="h-full flex items-center justify-center text-slate-400 text-sm font-semibold">Chưa có dữ liệu trạng thái</div>
-            )}
-          </div>
-        </div>
-      </div>
-
-      <div className="bg-white rounded-[2rem] border border-gold/10 shadow-sm p-8">
-        <div className="flex items-center justify-between mb-6">
-          <h3 className="text-xl font-black text-primary flex items-center gap-2">
-            <span className="material-symbols-outlined text-gold">stars</span>
-            Top sản phẩm bán chạy
-          </h3>
-          <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
-            {dashboardStats?.topProducts?.length || 0} mục
-          </span>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
-          {(dashboardStats?.topProducts || []).length > 0 ? (
-            dashboardStats!.topProducts!.map((product, index) => (
-              <div key={String(product.productId)} onClick={() => onNavigate('/vendor/products')} className="rounded-2xl border border-slate-100 shadow-sm overflow-hidden bg-white hover:shadow-md hover:border-gold/30 transition-all cursor-pointer">
-                <div className="h-44 bg-slate-50 overflow-hidden">
-                  {product.imageUrl ? (
-                    <img src={product.imageUrl} alt={product.productName} className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-slate-300">
-                      <span className="material-symbols-outlined text-5xl">image</span>
-                    </div>
-                  )}
-                </div>
-                <div className="p-5">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-[10px] font-black uppercase tracking-widest text-gold">#{index + 1}</span>
-                    <span className="text-[10px] font-bold text-slate-400">{product.orderCount} đơn</span>
-                  </div>
-                  <p className="font-bold text-slate-800 mb-1 line-clamp-2">{product.productName}</p>
-                  <div className="flex items-center justify-between text-xs font-bold text-black">
-                    <span>{product.quantitySold} sản phẩm</span>
-                    <span className="text-primary">{formatRevenue(product.revenue)}</span>
-                  </div>
-                </div>
-              </div>
-            ))
-          ) : (
-            <div className="md:col-span-2 xl:col-span-3 text-center py-10 text-slate-400 font-semibold border-2 border-dashed border-slate-100 rounded-2xl">
-              Chưa có dữ liệu top sản phẩm
-            </div>
-          )}
-        </div>
-      </div>
+      {/* Integrated Statistics View */}
+      <StatisticsView 
+        isStaff={false} 
+        hideHeader={false} 
+        title="Phân tích kinh doanh" 
+        subtitle="Theo dõi doanh thu và hiệu suất sản phẩm" 
+      />
 
       {/* Tab Content */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
