@@ -57,9 +57,60 @@ export interface ProductStatResult {
   topSellingProducts: ProductStat[];
   topRevenueProducts: ProductStat[];
   productsByCategory: CategoryStat[];
-  startDate: string;
-  endDate: string;
-  sortBy: string;
+  startDate?: string;
+  endDate?: string;
+  sortBy?: string;
+}
+
+export interface UserRoleDist {
+  role: string;
+  count: number;
+  percentage: number;
+}
+
+export interface UserByTime {
+  label: string;
+  value: number;
+  date: string;
+}
+
+export interface UserStatusDist {
+  status: string;
+  count: number;
+  percentage: number;
+}
+
+export interface UserResult {
+  totalUsers: number;
+  usersByRole: UserRoleDist[];
+  usersByStatus: UserStatusDist[];
+  userRegistrationsByTime: UserByTime[];
+  startDate?: string;
+  endDate?: string;
+  groupBy?: string;
+}
+
+export interface DeliveryByTime {
+  label: string;
+  value: number;
+  date: string;
+}
+
+export interface DeliveryStatusDist {
+  status: string;
+  count: number;
+  percentage: number;
+}
+
+export interface DeliveryResult {
+  totalDeliveries: number;
+  successfulDeliveries: number;
+  failedDeliveries: number;
+  pendingDeliveries: number;
+  deliveriesByStatus: DeliveryStatusDist[];
+  deliveriesByTime: DeliveryByTime[];
+  startDate?: string;
+  endDate?: string;
 }
 
 export interface StatItem {
@@ -135,6 +186,7 @@ export interface StatisticsOverviewResult {
   totalRevenue: number;
   totalOrders: number;
   totalCustomers?: number;
+  totalUsers?: number;
   totalVendors?: number;
   averageOrderValue: number;
   totalProducts: number;
@@ -228,9 +280,43 @@ export const statisticsService = {
     if (params.startDate) searchParams.append('StartDate', params.startDate);
     if (params.endDate) searchParams.append('EndDate', params.endDate);
     if (params.sortBy) searchParams.append('SortBy', params.sortBy);
-    if (params.period) searchParams.append('Period', params.period);
+    if (params.vendorId) searchParams.append('VendorId', params.vendorId);
 
     return fetchWithAuth<ProductStatResult>(`/api/statistics/products?${searchParams.toString()}`);
+  },
+
+  getUsers: async (params: StatisticsParams & { role?: string; status?: string } = {}): Promise<UserResult> => {
+    const searchParams = new URLSearchParams();
+    if (params.role) searchParams.append('Role', params.role);
+    if (params.status) searchParams.append('Status', params.status);
+    if (params.groupBy) {
+      const mappedGroupBy = params.groupBy === 'day' ? 'days' : 
+                          params.groupBy === 'month' ? 'months' : 
+                          params.groupBy === 'year' ? 'years' : params.groupBy;
+      searchParams.append('GroupBy', mappedGroupBy);
+    }
+    if (params.startDate) searchParams.append('StartDate', params.startDate);
+    if (params.endDate) searchParams.append('EndDate', params.endDate);
+    if (params.period) searchParams.append('Period', params.period);
+
+    return fetchWithAuth<UserResult>(`/api/statistics/users?${searchParams.toString()}`);
+  },
+
+  getDelivery: async (params: StatisticsParams & { deliveryStatus?: string } = {}): Promise<DeliveryResult> => {
+    const searchParams = new URLSearchParams();
+    if (params.deliveryStatus) searchParams.append('DeliveryStatus', params.deliveryStatus);
+    if (params.vendorId) searchParams.append('VendorId', params.vendorId);
+    if (params.groupBy) {
+      const mappedGroupBy = params.groupBy === 'day' ? 'days' : 
+                          params.groupBy === 'month' ? 'months' : 
+                          params.groupBy === 'year' ? 'years' : params.groupBy;
+      searchParams.append('GroupBy', mappedGroupBy);
+    }
+    if (params.startDate) searchParams.append('StartDate', params.startDate);
+    if (params.endDate) searchParams.append('EndDate', params.endDate);
+    if (params.period) searchParams.append('Period', params.period);
+
+    return fetchWithAuth<DeliveryResult>(`/api/statistics/delivery?${searchParams.toString()}`);
   },
 
   getOrders: async (params: StatisticsParams = {}): Promise<OrderStatResult> => {

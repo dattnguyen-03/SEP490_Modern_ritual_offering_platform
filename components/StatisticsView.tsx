@@ -11,14 +11,17 @@ import {
   Tooltip,
   Legend,
   Filler,
+  RadialLinearScale,
 } from 'chart.js';
-import { Line, Bar, Doughnut } from 'react-chartjs-2';
+import { Line, Bar, Doughnut, PolarArea } from 'react-chartjs-2';
 import {
   statisticsService,
   RevenueResult,
   OrderStatResult,
   ProductStatResult,
   VendorStatResult,
+  UserResult,
+  DeliveryResult,
   StatisticsOverviewResult,
 } from '../services/statisticsService';
 import toast from '../services/toast';
@@ -31,6 +34,7 @@ ChartJS.register(
   LineElement,
   BarElement,
   ArcElement,
+  RadialLinearScale,
   Title,
   Tooltip,
   Legend,
@@ -69,6 +73,8 @@ const StatisticsView: React.FC<StatisticsViewProps> = ({
   const [orderData, setOrderData] = useState<OrderStatResult | null>(null);
   const [productData, setProductData] = useState<ProductStatResult | null>(null);
   const [vendorStatData, setVendorStatData] = useState<VendorStatResult | null>(null);
+  const [userData, setUserData] = useState<UserResult | null>(null);
+  const [deliveryData, setDeliveryData] = useState<DeliveryResult | null>(null);
   const [overviewData, setOverviewData] = useState<StatisticsOverviewResult | null>(null);
 
   // Filters for revenue specifically
@@ -119,70 +125,45 @@ const StatisticsView: React.FC<StatisticsViewProps> = ({
       const params = { vendorId, groupBy, startDate, endDate };
 
       if (isStaff && !vendorId) {
-        // For Admin Dashboard overview
-        const overview = await statisticsService.getOverview({ vendorId, startDate, endDate });
-        setOverviewData(overview);
-
-        // Specifically fetch products and revenue to allow flexible filtering
-        const [rev, prod] = await Promise.all([
+        const [rev, ord, prod, vend, users, delivery, overview] = await Promise.all([
           statisticsService.getRevenue(params).catch(() => null),
-          statisticsService.getProducts({
-            vendorId,
-            startDate,
-            endDate,
-            limit: productLimit,
-            sortBy: productSortBy
-          }).catch(() => null)
+          statisticsService.getOrders(params).catch(() => null),
+          statisticsService.getProducts({ ...params, limit: productLimit, sortBy: productSortBy }).catch(() => null),
+          statisticsService.getVendors(params).catch(() => null),
+          statisticsService.getUsers(params).catch(() => null),
+          statisticsService.getDelivery(params).catch(() => null),
+          statisticsService.getOverview({ vendorId, startDate, endDate }).catch(() => null),
         ]);
+        const resRev = rev || mapOverviewRevenue(overview?.revenueChart || []);
+        const resOrd = (ord && ord.ordersByStatus && ord.ordersByStatus.length > 0)
+          ? ord
+          : mapOverviewOrders(overview?.orderStatusChart || [], overview!);
+        const resProd = (prod && ((prod.topSellingProducts?.length || 0) > 0 || (prod.topRevenueProducts?.length || 0) > 0))
+          ? prod
+          : mapOverviewProducts(overview?.topProducts || []);
 
-        const overviewOrders = overview.orderStatusChart || [];
-        const overviewProducts = overview.topProducts || [];
-
-        setRevenueData(rev || mapOverviewRevenue(overview.revenueChart || []));
-        const resProd = prod || mapOverviewProducts(overviewProducts);
-        setProductData((resProd && (resProd.topSellingProducts?.length > 0 || resProd.topRevenueProducts?.length > 0)) ? resProd : null);
-        setOrderData(mapOverviewOrders(overviewOrders, overview));
-
-        // Build vendorStatData from overview fields (API trả topVendors + totalVendors)
-        const topVendors = overview.topVendors || overview.topPerformingVendors || [];
-        setVendorStatData(
-          overview.vendorStats || (
-            (overview.totalVendors !== undefined || topVendors.length > 0)
-              ? {
-                totalVendors: overview.totalVendors ?? topVendors.length,
-                activeVendors: 0,
-                inactiveVendors: 0,
-                suspendedVendors: 0,
-                bannedVendors: 0,
-                vendorsByTier: [],
-                vendorsByStatus: [],
-                vendorRegistrationsByTime: [],
-                topPerformingVendors: topVendors,
-              }
-              : null
-          )
-        );
+        setRevenueData(resRev);
+        setOrderData(resOrd);
+        setProductData(resProd);
+        setVendorStatData(vend);
+        setUserData(users);
+        setDeliveryData(delivery);
+        setOverviewData(overview);
         return;
       }
 
-      const [rev, ord, prod, vend] = await Promise.all([
+      const [rev, ord, prod, delivery] = await Promise.all([
         statisticsService.getRevenue(params).catch(() => null),
-        statisticsService.getOrders({ vendorId, startDate, endDate }).catch(() => null),
-        statisticsService.getProducts({
-          vendorId,
-          startDate,
-          endDate,
-          limit: productLimit,
-          sortBy: productSortBy
-        }).catch(() => null),
-        (isStaff && !vendorId) ? statisticsService.getVendors({ vendorId, startDate, endDate }).catch(() => null) : Promise.resolve(null)
+        statisticsService.getOrders(params).catch(() => null),
+        statisticsService.getProducts({ ...params, limit: productLimit }).catch(() => null),
+        statisticsService.getDelivery(params).catch(() => null),
       ]);
 
       setOverviewData(null);
       setRevenueData(rev);
       setOrderData(ord);
       setProductData(prod);
-      if (vend) setVendorStatData(vend);
+      setDeliveryData(delivery);
     } catch (error) {
       console.error('Error fetching statistics:', error);
       toast.error('Không thể tải dữ liệu thống kê');
@@ -239,7 +220,6 @@ const StatisticsView: React.FC<StatisticsViewProps> = ({
   ];
 
   const categoryChartData = useMemo(() => {
-    // Priority 1: Data from revenue API (new structure)
     if (revenueData?.revenueByCategory && revenueData.revenueByCategory.length > 0) {
       return {
         labels: revenueData.revenueByCategory.map(item => item.categoryName),
@@ -253,7 +233,6 @@ const StatisticsView: React.FC<StatisticsViewProps> = ({
       };
     }
 
-    // Fallback: Data from product categories
     const items = productData?.productsByCategory || [];
     return {
       labels: items.map(item => item.categoryName),
@@ -282,52 +261,56 @@ const StatisticsView: React.FC<StatisticsViewProps> = ({
     };
   }, [productData, productSortBy, chartPalettes]);
 
-  const orderStatusChartData = useMemo(() => {
-    const items = orderData?.ordersByStatus || [];
+  const userChartData = useMemo(() => {
+    const items = userData?.userRegistrationsByTime || [];
     return {
       labels: items.map(item => item.label),
       datasets: [
         {
-          label: 'Số lượng đơn hàng',
+          label: 'Người dùng mới',
           data: items.map(item => item.value),
-          backgroundColor: [
-            'rgba(34, 197, 94, 0.8)',
-            'rgba(59, 130, 246, 0.8)',
-            'rgba(245, 158, 11, 0.8)',
-            'rgba(107, 114, 128, 0.8)',
-            'rgba(239, 68, 68, 0.8)',
-          ],
-          borderRadius: 8,
+          backgroundColor: 'rgba(59, 130, 246, 0.5)',
+          borderColor: '#3b82f6',
+          borderWidth: 2,
+          fill: true,
+          tension: 0.4,
+        },
+      ],
+    };
+  }, [userData]);
+
+  const translateStatus = (status: string) => {
+    const statusMap: Record<string, string> = {
+      'Completed': 'Hoàn thành',
+      'Pending': 'Đang chờ',
+      'Processing': 'Đang xử lý',
+      'Confirmed': 'Đã xác nhận',
+      'Shipping': 'Đang giao hàng',
+      'Delivering': 'Đang giao hàng',
+      'Delivered': 'Đã giao hàng',
+      'Cancelled': 'Đã hủy',
+      'Refunded': 'Đã hoàn tiền',
+      'Paid': 'Đã thanh toán',
+      'Unpaid': 'Chưa thanh toán'
+    };
+    return statusMap[status] || status;
+  };
+
+  const orderStatusChartData = useMemo(() => {
+    const items = orderData?.ordersByStatus || [];
+    return {
+      labels: items.map((item: any) => translateStatus(item.label || item.status || 'Không xác định')),
+      datasets: [
+        {
+          label: 'Số lượng đơn hàng',
+          data: items.map((item: any) => item.value ?? item.count ?? 0),
+          backgroundColor: chartPalettes.map(c => c.replace('0.8', '0.6')),
+          borderWidth: 2,
+          borderColor: '#ffffff',
         },
       ],
     };
   }, [orderData]);
-
-  const vendorStatusChartData = useMemo(() => {
-    if (!vendorStatData) return { labels: [], datasets: [] };
-    const labels = ['Hoạt động', 'Ngoại tuyến', 'Tạm ngưng', 'Bị khóa'];
-    const data = [
-      vendorStatData.activeVendors || 0,
-      vendorStatData.inactiveVendors || 0,
-      vendorStatData.suspendedVendors || 0,
-      vendorStatData.bannedVendors || 0
-    ];
-
-    // Filter out zeros to keep chart clean
-    const filteredLabels = labels.filter((_, i) => data[i] > 0);
-    const filteredData = data.filter(v => v > 0);
-
-    return {
-      labels: filteredLabels,
-      datasets: [
-        {
-          data: filteredData,
-          backgroundColor: ['#22c55e', '#64748b', '#f59e0b', '#ef4444'],
-          borderWidth: 0,
-        },
-      ],
-    };
-  }, [vendorStatData]);
 
   const chartOptions = {
     responsive: true,
@@ -362,7 +345,6 @@ const StatisticsView: React.FC<StatisticsViewProps> = ({
 
   return (
     <div className="space-y-10">
-      {/* Header with filters */}
       {!hideHeader && (
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-white p-6 rounded-[2rem] border border-gold/10 shadow-sm gap-4">
           <div>
@@ -459,7 +441,6 @@ const StatisticsView: React.FC<StatisticsViewProps> = ({
         </div>
       )}
 
-      {/* Top Highlight Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {[
           {
@@ -477,18 +458,20 @@ const StatisticsView: React.FC<StatisticsViewProps> = ({
             growth: orderData?.growthRate ?? overviewData?.orderGrowthRate
           },
           {
-            label: (isStaff && !vendorId) ? 'Nhà cung cấp' : 'Sản phẩm kinh doanh',
+            label: (isStaff && !vendorId) ? 'Người dùng' : 'Sản phẩm kinh doanh',
             value: (isStaff && !vendorId)
-              ? (vendorStatData?.totalVendors?.toString() || overviewData?.totalVendors?.toString() || '0')
+              ? (userData?.totalUsers?.toString() || overviewData?.totalUsers?.toString() || '0')
               : (productData?.totalProducts?.toString() || overviewData?.totalProducts?.toString() || '0'),
-            icon: (isStaff && !vendorId) ? 'store' : 'inventory_2',
+            icon: (isStaff && !vendorId) ? 'group' : 'inventory_2',
             color: 'text-blue-600'
           },
           {
-            label: 'Giá trị trung bình',
-            value: formatCurrency(orderData?.averageOrderValue || overviewData?.averageOrderValue || 0),
-            icon: 'trending_up',
-            color: 'text-purple-600'
+            label: (isStaff && !vendorId) ? 'Nhà cung cấp' : 'Giá trị trung bình',
+            value: (isStaff && !vendorId)
+              ? (vendorStatData?.totalVendors?.toString() || overviewData?.totalVendors?.toString() || '0')
+              : formatCurrency(orderData?.averageOrderValue || overviewData?.averageOrderValue || 0),
+            icon: (isStaff && !vendorId) ? 'store' : 'trending_up',
+            color: (isStaff && !vendorId) ? 'text-orange-600' : 'text-purple-600'
           },
         ].map((stat, i) => (
           <div key={i} className="bg-white rounded-[2rem] p-6 border border-gold/10 shadow-sm hover:shadow-lg transition-all">
@@ -528,14 +511,6 @@ const StatisticsView: React.FC<StatisticsViewProps> = ({
               <span className="material-symbols-outlined text-gold">donut_small</span>
               {isStaff && !vendorId ? 'Top sản phẩm' : 'Danh mục bán chạy'}
             </h3>
-
-            {/* <select
-              value={productSortBy}
-              onChange={(e) => setProductSortBy(e.target.value)}
-              className="text-[10px] font-black uppercase tracking-widest bg-ritual-bg/50 border-none rounded-xl px-3 py-1.5 focus:ring-1 focus:ring-gold/20 outline-none cursor-pointer"
-            >
-              <option value="QuantitySold">Số lượng</option>
-            </select> */}
           </div>
           <div className="h-[320px] w-full">
             {categoryChartData.labels.length > 0 ? (
@@ -627,8 +602,17 @@ const StatisticsView: React.FC<StatisticsViewProps> = ({
           </h3>
           <div className="h-[300px] w-full">
             {orderStatusChartData.labels.length > 0 ? (
-              <Bar data={orderStatusChartData} options={chartOptions} />
-            ) : <EmptyState message="Chưa có dữ liệu trạng thái" icon="bar_chart" />}
+              <Bar 
+                data={orderStatusChartData} 
+                options={{ 
+                  ...chartOptions,
+                  plugins: {
+                    ...chartOptions.plugins,
+                    legend: { display: false }
+                  }
+                }} 
+              />
+            ) : <EmptyState message="Chưa có dữ liệu đơn hàng" icon="analytics" />}
           </div>
         </div>
         <div className="bg-white rounded-[2.5rem] p-8 border border-gold/10 shadow-sm">
@@ -698,6 +682,137 @@ const StatisticsView: React.FC<StatisticsViewProps> = ({
           )}
         </div>
       </div>
+
+      {/* <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-8">
+        <div className="lg:col-span-2 bg-white rounded-[2.5rem] p-8 border border-gold/10 shadow-sm">
+          <h3 className="text-lg font-black text-primary mb-6 flex items-center gap-2">
+            <span className="material-symbols-outlined text-gold">local_shipping</span>
+            Hiệu suất giao hàng
+          </h3>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+            <div className="p-6 bg-green-50 rounded-[2rem] border border-green-100">
+              <p className="text-[10px] font-black text-green-600 uppercase tracking-widest mb-1">Thành công</p>
+              <p className="text-2xl font-black text-green-700">{deliveryData?.successfulDeliveries || 0}</p>
+            </div>
+            <div className="p-6 bg-red-50 rounded-[2rem] border border-red-100">
+              <p className="text-[10px] font-black text-red-600 uppercase tracking-widest mb-1">Thất bại</p>
+              <p className="text-2xl font-black text-red-700">{deliveryData?.failedDeliveries || 0}</p>
+            </div>
+            <div className="p-6 bg-ritual-bg/50 rounded-[2rem] border border-gold/5">
+              <p className="text-[10px] font-black text-primary uppercase tracking-widest mb-1">Đang chờ</p>
+              <p className="text-2xl font-black text-primary">{deliveryData?.pendingDeliveries || 0}</p>
+            </div>
+          </div>
+          <div className="mt-8 p-6 bg-white rounded-[2rem] border border-gold/10 shadow-inner">
+            <div className="flex justify-between items-center mb-4">
+              <span className="text-xs font-bold text-slate-500 uppercase">Tỷ lệ thành công</span>
+              <span className="text-lg font-black text-primary">
+                {deliveryData?.totalDeliveries ? Math.round((deliveryData.successfulDeliveries / deliveryData.totalDeliveries) * 100) : 0}%
+              </span>
+            </div>
+            <div className="h-4 w-full bg-ritual-bg rounded-full overflow-hidden">
+              <div
+                className="h-full bg-green-500 rounded-full transition-all duration-1000 shadow-[0_0_12px_rgba(34,197,94,0.4)]"
+                style={{ width: `${deliveryData?.totalDeliveries ? (deliveryData.successfulDeliveries / deliveryData.totalDeliveries) * 100 : 0}%` }}
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-[2.5rem] p-8 border border-gold/10 shadow-sm">
+          <h3 className="text-lg font-black text-primary mb-6 flex items-center gap-2">
+            <span className="material-symbols-outlined text-gold">pending_actions</span>
+            Trạng thái giao hàng
+          </h3>
+          <div className="h-[280px] w-full">
+            {deliveryData?.deliveriesByStatus && deliveryData.deliveriesByStatus.length > 0 ? (
+              <Doughnut
+                data={{
+                  labels: deliveryData.deliveriesByStatus.map(d => d.status),
+                  datasets: [{
+                    data: deliveryData.deliveriesByStatus.map(d => d.count),
+                    backgroundColor: chartPalettes,
+                    borderWidth: 0,
+                  }]
+                }}
+                options={{ ...chartOptions, cutout: '70%' }}
+              />
+            ) : <EmptyState message="Chưa có dữ liệu giao hàng" icon="local_shipping" />}
+          </div>
+        </div>
+      </div> */}
+
+      {/* User Statistics Row (Admin Only) */}
+      {isStaff && !vendorId && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
+          <div className="bg-white rounded-[2.5rem] p-8 border border-gold/10 shadow-sm">
+            <h3 className="text-lg font-black text-primary mb-6 flex items-center gap-2">
+              <span className="material-symbols-outlined text-gold">person_add</span>
+              Tăng trưởng người dùng
+            </h3>
+            <div className="h-[300px] w-full">
+              {userChartData.labels.length > 0 ? (
+                <Line data={userChartData} options={chartOptions} />
+              ) : <EmptyState message="Chưa có dữ liệu người dùng" icon="group" />}
+            </div>
+          </div>
+          <div className="bg-white rounded-[2.5rem] p-8 border border-gold/10 shadow-sm">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-lg font-black text-primary flex items-center gap-2">
+                <span className="material-symbols-outlined text-gold">group_work</span>
+                Phân bổ vai trò
+              </h3>
+            </div>
+            <div className="space-y-6 mt-4">
+              {userData?.usersByRole && userData.usersByRole.length > 0 ? (
+                userData.usersByRole.map((role, i) => (
+                  <div key={role.role} className="mb-6 last:mb-0">
+                    <div className="flex justify-between items-end mb-2">
+                      <div className="flex flex-col">
+                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">{role.role}</span>
+                        <span className="text-sm font-black text-primary leading-none">{role.count} <span className="text-[10px] font-bold text-slate-400">người</span></span>
+                      </div>
+                      <span className="text-xs font-black text-gold bg-gold/10 px-2 py-1 rounded-lg">
+                        {Math.round(role.percentage)}%
+                      </span>
+                    </div>
+                    <div className="h-2 w-full bg-ritual-bg rounded-full overflow-hidden">
+                      <div
+                        className="h-full rounded-full transition-all duration-1000"
+                        style={{
+                          width: `${role.percentage}%`,
+                          backgroundColor: chartPalettes[i % chartPalettes.length]
+                        }}
+                      />
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <EmptyState message="Chưa có dữ liệu vai trò" icon="badge" />
+              )}
+
+              <div className="pt-8 border-t border-gold/10">
+                <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Trạng thái tài khoản</h4>
+                <div className="grid grid-cols-2 gap-4">
+                  {userData?.usersByStatus && userData.usersByStatus.length > 0 ? (
+                    userData.usersByStatus.map((status, i) => (
+                      <div key={status.status} className="p-3 bg-ritual-bg/30 rounded-2xl border border-gold/5">
+                        <div className="flex justify-between items-center mb-1">
+                          <span className="text-[10px] font-black text-primary uppercase">{status.status}</span>
+                          <span className="text-[10px] font-black text-gold">{Math.round(status.percentage)}%</span>
+                        </div>
+                        <p className="text-lg font-black text-primary">{status.count}</p>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-xs text-slate-400 italic">Chưa có dữ liệu trạng thái</p>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );
