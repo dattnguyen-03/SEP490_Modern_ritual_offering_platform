@@ -34,11 +34,12 @@ export interface Product {
 
 export interface PackageAddOn {
   addOnId: number;
-  itemName: string;
+  addOnName: string;
+  description?: string;
   retailPrice: number;
   itemType: string;
-  maxQuantity: number;
-  displayOrder: number;
+  maxQuantity?: number;
+  displayOrder?: number;
   isActive: boolean;
 }
 
@@ -147,6 +148,7 @@ export enum AppRoute {
   VendorOrders = 'vendor-orders',
   VendorAnalytics = 'vendor-analytics',
   VendorSettings = 'vendor-settings',
+  VendorAddOns = 'vendor-add-ons',
   
   // Admin Routes
   AdminDashboard = 'admin-dashboard',
@@ -175,6 +177,7 @@ export const getPath = (route: AppRoute | string): string => {
     [AppRoute.VendorOrders]: '/vendor/orders',
     [AppRoute.VendorAnalytics]: '/vendor/analytics',
     [AppRoute.VendorSettings]: '/vendor/settings',
+    [AppRoute.VendorAddOns]: '/vendor/add-ons',
     [AppRoute.AdminDashboard]: '/admin/dashboard',
     [AppRoute.AdminVendors]: '/admin/dashboard',
     [AppRoute.AdminUsers]: '/admin/dashboard',

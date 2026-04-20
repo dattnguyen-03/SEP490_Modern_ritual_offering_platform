@@ -16,4 +16,5 @@ export { default as ProductManagement } from './ProductManagement';
 export { default as OrderManagement } from './OrderManagement';
 export { default as VendorAnalytics } from './VendorAnalytics';
 export { default as VendorSettings } from './VendorSettings';
+export { default as AddOnManagement } from './AddOnManagement';
 

@@ -653,7 +653,7 @@ const ProductDetailPage: React.FC<{ onNavigate: (path: string) => void }> = ({ o
                     >
                       <div className="flex items-center justify-between gap-3">
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-black text-slate-800 truncate">{addOn.itemName}</p>
+                          <p className="text-sm font-black text-slate-800 truncate">{addOn.addOnName}</p>
                           <p className="text-xs font-bold text-primary">{addOn.retailPrice.toLocaleString()}đ</p>
                         </div>
                         <div className="flex items-center bg-gray-100 rounded-xl p-0.5">
@@ -709,7 +709,7 @@ const ProductDetailPage: React.FC<{ onNavigate: (path: string) => void }> = ({ o
                 if (addOn) {
                   return (
                     <div key={addOnId} className="flex justify-between items-center mb-1">
-                      <span className="text-[10px] font-bold text-primary uppercase tracking-tighter">Thêm ({addOn.itemName} x{qty}):</span>
+                      <span className="text-[10px] font-bold text-primary uppercase tracking-tighter">Thêm ({addOn.addOnName} x{qty}):</span>
                       <span className="text-[10px] font-bold text-primary">+{(addOn.retailPrice * qty).toLocaleString()}đ</span>
                     </div>
                   );

@@ -7,7 +7,8 @@ const API_BASE_URL = '/api';
 export interface CartItemAddOnApi {
   cartItemAddOnId: number;
   addOnId: number;
-  itemName: string;
+  addOnName: string;
+  itemName?: string;
   retailPrice: number;
   quantity: number;
   lineTotal: number;
@@ -261,7 +262,7 @@ class CartService {
       addOns: Array.isArray(item.addOns) ? item.addOns.map((a: any) => ({
         cartItemAddOnId: a.cartItemAddOnId,
         addOnId: a.addOnId,
-        itemName: a.itemName,
+        addOnName: a.addOnName || a.itemName || '',
         retailPrice: a.retailPrice,
         quantity: a.quantity,
         lineTotal: a.lineTotal

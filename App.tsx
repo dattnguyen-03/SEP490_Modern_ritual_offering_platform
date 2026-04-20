@@ -35,6 +35,7 @@ import VendorTransactionPage from './pages/vendor/VendorTransactionPage';
 import VendorWithdrawPage from './pages/vendor/VendorWithdrawPage';
 import DiscountPolicyManagement from './pages/vendor/DiscountPolicyManagement';
 import VendorBannerManagement from './pages/vendor/VendorBannerManagement';
+import AddOnManagement from './pages/vendor/AddOnManagement';
 
 // Admin Pages
 import AdminDashboard from './pages/admin/AdminDashboard';
@@ -231,6 +232,7 @@ const AppContent: React.FC<{
       { label: 'Biểu ngữ', icon: 'ad', path: '/vendor/banners' },
       { label: 'Tin nhắn', icon: 'chat', path: '/vendor/messages' },
       { label: 'Rút tiền', icon: 'account_balance_wallet', path: '/vendor/withdraw' },
+      { label: 'Món Thêm', icon: 'extension', path: '/vendor/add-ons' },
       { label: 'Cài đặt', icon: 'settings', path: '/vendor/settings' },
     ];
 
@@ -309,6 +311,7 @@ const AppContent: React.FC<{
       <Route path="/vendor/banners" element={isAuthenticated && hasVendorRole ? <Layout activeRoute="/vendor/banners" onNavigate={handleNavigate} userRole={'vendor'} onLogout={onLogout}><VendorPageFrame activeRoute="/vendor/banners"><VendorBannerManagement /></VendorPageFrame></Layout> : <Navigate to="/auth" />} />
       <Route path="/vendor/messages" element={isAuthenticated && hasVendorRole ? <Layout activeRoute="/vendor/messages" onNavigate={handleNavigate} userRole={'vendor'} onLogout={onLogout}><VendorPageFrame activeRoute="/vendor/messages"><ChatPage /></VendorPageFrame></Layout> : <Navigate to="/auth" />} />
       <Route path="/vendor/withdraw" element={isAuthenticated && hasVendorRole ? <Layout activeRoute="/vendor/withdraw" onNavigate={handleNavigate} userRole={'vendor'} onLogout={onLogout}><VendorPageFrame activeRoute="/vendor/withdraw"><VendorWithdrawPage onNavigate={handleNavigate} /></VendorPageFrame></Layout> : <Navigate to="/auth" />} />
+      <Route path="/vendor/add-ons" element={isAuthenticated && hasVendorRole ? <Layout activeRoute="/vendor/add-ons" onNavigate={handleNavigate} userRole={'vendor'} onLogout={onLogout}><VendorPageFrame activeRoute="/vendor/add-ons"><AddOnManagement onNavigate={handleNavigate} /></VendorPageFrame></Layout> : <Navigate to="/auth" />} />
 
       {/* Staff Routes */}
       <Route path="/staff/dashboard" element={isAuthenticated && userRole === 'staff' ? <Layout activeRoute="/staff/dashboard" onNavigate={handleNavigate} userRole={userRole} onLogout={onLogout}><StaffDashboard onNavigate={handleNavigate} onLogout={onLogout} /></Layout> : <Navigate to="/auth" />} />
