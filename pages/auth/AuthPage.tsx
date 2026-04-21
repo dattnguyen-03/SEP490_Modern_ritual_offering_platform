@@ -164,9 +164,9 @@ const AuthPage: React.FC<AuthPageProps> = ({ onNavigate, onLogin }) => {
           password: formData.password,
         };
 
-        console.log('🔐 Logging in with:', credentials);
+        console.log(' Logging in with:', credentials);
         const response = await login(credentials);
-        console.log('✅ Login successful:', response);
+        console.log(' Login successful:', response);
 
         // Prepare user data to save
         const userData = {
@@ -182,7 +182,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ onNavigate, onLogin }) => {
         localStorage.setItem('smart-child-refresh-token', response.refreshToken);
         localStorage.setItem('smart-child-user', JSON.stringify(userData));
 
-        console.log('💾 Saved to localStorage:', {
+        console.log(' Saved to localStorage:', {
           token: response.token.substring(0, 20) + '...',
           refreshToken: response.refreshToken.substring(0, 20) + '...',
           user: userData
@@ -201,7 +201,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ onNavigate, onLogin }) => {
         // First-time profile setup only applies to customers.
         if (normalizedRole === 'customer') {
           try {
-            console.log('🔍 Checking if customer profile is complete...');
+            console.log(' Checking if customer profile is complete...');
             const { getProfile } = await import('../../services/auth');
             const profile = await getProfile();
 
@@ -237,13 +237,13 @@ const AuthPage: React.FC<AuthPageProps> = ({ onNavigate, onLogin }) => {
                   }
                 }
               } catch (addressError) {
-                console.warn('⚠️ Could not check address list:', addressError);
+                console.warn(' Could not check address list:', addressError);
               }
             }
 
             const isProfileIncomplete = !(hasFullName && hasPhoneNumber && hasDateOfBirth && hasAddress);
 
-            console.log('📋 Profile status:', {
+            console.log(' Profile status:', {
               fullName: profile.fullName,
               phoneNumber: profile.phoneNumber,
               dateOfBirth: profile.dateOfBirth,
@@ -254,7 +254,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ onNavigate, onLogin }) => {
 
             if (isProfileIncomplete) {
               // First-time login - redirect to profile page
-              console.log('⚠️ Customer profile incomplete - redirecting to profile setup');
+              console.log(' Customer profile incomplete - redirecting to profile setup');
               localStorage.setItem(PROFILE_SETUP_REQUIRED_KEY, 'true');
               toast.message({
                 title: 'Chào mừng bạn đến với Modern Ritual Offering !',
@@ -271,7 +271,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ onNavigate, onLogin }) => {
 
             localStorage.setItem(PROFILE_SETUP_REQUIRED_KEY, 'false');
           } catch (profileError) {
-            console.error('⚠️ Could not check profile completeness:', profileError);
+            console.error(' Could not check profile completeness:', profileError);
             // Continue with normal login flow if profile check fails
           }
         } else {
@@ -285,7 +285,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ onNavigate, onLogin }) => {
           onLogin(response.role as UserRole);
         }
       } catch (error) {
-        console.error('❌ Login failed:', error);
+        console.error(' Login failed:', error);
         const errorMessage = error instanceof Error ? error.message : 'Lỗi không xác định';
         setError(errorMessage);
       }
@@ -309,9 +309,9 @@ const AuthPage: React.FC<AuthPageProps> = ({ onNavigate, onLogin }) => {
           password: formData.password,
         };
 
-        console.log('📝 Registering:', registerData);
+        console.log(' Registering:', registerData);
         const response = await register(registerData);
-        console.log('✅ Registration successful:', response);
+        console.log(' Registration successful:', response);
 
         // Show success message with better instructions
         toast.message({

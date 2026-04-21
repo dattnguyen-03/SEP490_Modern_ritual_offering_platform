@@ -178,7 +178,6 @@ const AddOnManagement: React.FC<AddOnManagementProps> = ({ onNavigate }) => {
             </div>
           ) : addOns.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 text-center px-6">
-              <div className="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center text-4xl mb-6">🏜️</div>
               <h3 className="text-xl font-black text-slate-900">Chưa có add-on nào</h3>
               <p className="text-slate-500 mt-2 max-w-sm">Hãy bắt đầu bằng cách thêm các vật phẩm như hoa, quả, hoặc dịch vụ đi kèm.</p>
               <button
