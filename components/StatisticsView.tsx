@@ -793,19 +793,64 @@ const StatisticsView: React.FC<StatisticsViewProps> = ({
 
               <div className="pt-8 border-t border-gold/10">
                 <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Trạng thái tài khoản</h4>
-                <div className="grid grid-cols-2 gap-4">
+                
+                {/* Unified Percentage Distribution Bar */}
+                <div className="h-3.5 w-full bg-ritual-bg/50 rounded-full overflow-hidden flex mb-6 shadow-inner border border-gold/5 p-0.5">
                   {userData?.usersByStatus && userData.usersByStatus.length > 0 ? (
                     userData.usersByStatus.map((status, i) => (
-                      <div key={status.status} className="p-3 bg-ritual-bg/30 rounded-2xl border border-gold/5">
-                        <div className="flex justify-between items-center mb-1">
-                          <span className="text-[10px] font-black text-primary uppercase">{status.status}</span>
-                          <span className="text-[10px] font-black text-gold">{Math.round(status.percentage)}%</span>
-                        </div>
-                        <p className="text-lg font-black text-primary">{status.count}</p>
+                      <div 
+                        key={status.status}
+                        className="h-full first:rounded-l-full last:rounded-r-full transition-all duration-1000 group relative cursor-help"
+                        style={{ 
+                          width: `${status.percentage}%`,
+                          backgroundColor: status.status.toUpperCase() === 'ACTIVE' ? '#22C55E' : 
+                                           status.status.toUpperCase() === 'BANNED' ? '#EF4444' : 
+                                           chartPalettes[(i + 4) % chartPalettes.length]
+                        }}
+                      >
+                         <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[9px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10 font-bold">
+                           {status.status}: {Math.round(status.percentage)}%
+                         </div>
                       </div>
                     ))
                   ) : (
-                    <p className="text-xs text-slate-400 italic">Chưa có dữ liệu trạng thái</p>
+                    <div className="w-full h-full bg-slate-100 rounded-full animate-pulse"></div>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  {userData?.usersByStatus && userData.usersByStatus.length > 0 ? (
+                    userData.usersByStatus.map((status, i) => (
+                      <div 
+                        key={status.status} 
+                        className="p-5 bg-white rounded-3xl border border-gold/10 hover:border-gold/30 hover:shadow-lg hover:shadow-gold/5 transition-all group relative overflow-hidden"
+                      >
+                        {/* Status specific background accent */}
+                        <div 
+                          className="absolute top-0 right-0 w-24 h-24 -mr-8 -mt-8 rounded-full opacity-[0.03] group-hover:opacity-[0.06] transition-opacity"
+                          style={{ 
+                            backgroundColor: status.status.toUpperCase() === 'ACTIVE' ? '#22C55E' : 
+                                             status.status.toUpperCase() === 'BANNED' ? '#EF4444' : 
+                                             chartPalettes[(i + 4) % chartPalettes.length]
+                          }}
+                        />
+                        
+                        <div className="flex justify-between items-start relative z-10">
+                          <span className="text-[10px] font-black text-slate-800 uppercase tracking-widest">{status.status}</span>
+                          <span className="text-[10px] font-black text-slate-400 group-hover:text-primary transition-colors">
+                            {Math.round(status.percentage)}%
+                          </span>
+                        </div>
+                        <div className="mt-3 flex items-baseline gap-1 relative z-10">
+                          <p className="text-2xl font-black text-primary">{status.count}</p>
+                          <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">tài khoản</span>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="col-span-2 py-4">
+                      <p className="text-xs text-slate-400 italic font-bold uppercase tracking-widest text-center opacity-50">Chưa có dữ liệu trạng thái</p>
+                    </div>
                   )}
                 </div>
               </div>
