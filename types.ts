@@ -34,7 +34,8 @@ export interface Product {
 
 export interface PackageAddOn {
   addOnId: number;
-  addOnName: string;
+  addOnName?: string;
+  itemName?: string;
   description?: string;
   retailPrice: number;
   itemType: string;

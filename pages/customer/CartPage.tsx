@@ -565,7 +565,7 @@ const CartPage: React.FC<{ onNavigate: (path: string) => void }> = ({ onNavigate
                                   <div key={addOn.cartItemAddOnId} className="flex items-center gap-2 text-[10px]">
                                     <span className="material-symbols-outlined text-[12px] text-primary">check_circle</span>
                                     <div className="flex-1 min-w-0 flex items-center gap-2">
-                                      <span className="text-black font-medium truncate">{addOn.itemName}</span>
+                                      <span className="text-black font-medium truncate">{addOn.addOnName || addOn.itemName}</span>
                                       <div className="flex items-center gap-1.5 px-1 bg-slate-50/80 rounded border border-slate-100 flex-shrink-0">
                                         <button
                                           onClick={() => updateAddOnQuantity(item.cartItemId, addOn.addOnId, addOn.quantity - 1)}
@@ -813,7 +813,7 @@ const CartPage: React.FC<{ onNavigate: (path: string) => void }> = ({ onNavigate
                         return (
                           <div key={addon.addOnId} className={`p-4 rounded-xl border-2 transition-all flex justify-between items-center ${quantity > 0 ? 'border-emerald-500 bg-emerald-50/20' : 'border-slate-50 bg-slate-50/50'}`}>
                             <div className="flex-1">
-                              <p className="text-xs font-bold text-slate-700">{addon.itemName}</p>
+                              <p className="text-xs font-bold text-slate-700">{addon.addOnName || addon.itemName}</p>
                               <p className="text-xs font-bold text-emerald-600 mt-1">{addon.retailPrice.toLocaleString()}đ</p>
                             </div>
                             <div className="flex items-center gap-3 bg-white p-1 rounded-lg border border-slate-100 shadow-sm">

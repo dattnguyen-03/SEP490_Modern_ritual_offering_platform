@@ -658,7 +658,7 @@ const CheckoutPage: React.FC<{ onNavigate: (path: string) => void }> = ({ onNavi
                         <div key={idx} className="flex items-center justify-between text-[9px] text-emerald-600 font-bold">
                           <div className="flex items-center gap-1.5 flex-1 min-w-0">
                             <span className="material-symbols-outlined text-[12px]">check_circle</span>
-                            <span className="truncate">{addOn.itemName} <span className="text-black">x{addOn.quantity}</span></span>
+                            <span className="truncate">{addOn.addOnName || addOn.itemName} <span className="text-black">x{addOn.quantity}</span></span>
                           </div>
                           <span className="ml-2 whitespace-nowrap">
                             +{(addOn.lineTotal || (addOn.retailPrice * addOn.quantity)).toLocaleString()}đ

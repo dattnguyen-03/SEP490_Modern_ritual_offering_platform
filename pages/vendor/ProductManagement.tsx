@@ -848,7 +848,7 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onNavigate }) => 
                               className="mt-1 h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
                             />
                             <div className="min-w-0 flex-1">
-                              <p className="text-sm font-bold text-gray-800 truncate">{addOn.addOnName}</p>
+                              <p className="text-sm font-bold text-gray-800 truncate">{addOn.addOnName || addOn.itemName}</p>
                               <p className="text-[11px] text-gray-500 mt-0.5">{mapItemTypeLabel(addOn.itemType)} • {Number(addOn.retailPrice || 0).toLocaleString('vi-VN')}đ</p>
                             </div>
                           </label>
@@ -1405,7 +1405,7 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onNavigate }) => 
                                       className="mt-1 h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
                                     />
                                     <div className="min-w-0 flex-1">
-                                      <p className="text-sm font-bold text-gray-800 truncate">{addOn.addOnName}</p>
+                                      <p className="text-sm font-bold text-gray-800 truncate">{addOn.addOnName || addOn.itemName}</p>
                                       <p className="text-[11px] text-gray-500 mt-0.5">{mapItemTypeLabel(addOn.itemType)} • {Number(addOn.retailPrice || 0).toLocaleString('vi-VN')}đ</p>
                                     </div>
                                   </label>
@@ -1437,7 +1437,7 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onNavigate }) => 
                                   key={String(addOn?.addOnId ?? addOn?.id)}
                                   className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100 text-xs font-bold"
                                 >
-                                  {String(addOn?.addOnName || 'Món thêm')}
+                                  {String(addOn?.addOnName || addOn?.itemName || 'Món thêm')}
                                   <span className="text-emerald-600/80">{Number(addOn?.retailPrice || 0).toLocaleString('vi-VN')}đ</span>
                                 </span>
                               ))}
