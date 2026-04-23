@@ -182,6 +182,18 @@ const VendorProfilePage: React.FC<VendorProfilePageProps> = ({ onNavigate }) => 
         <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/5 rounded-full translate-y-1/2 -translate-x-1/2 blur-2xl"></div>
 
         <div className="container mx-auto px-6 relative z-10">
+          <button
+            onClick={() => onNavigate('/shop')}
+            className="mb-8 flex items-center gap-2 text-white/40 hover:text-white transition-all group/back w-fit"
+          >
+            <div className="w-8 h-8 rounded-full border border-white/20 flex items-center justify-center group-hover/back:bg-white group-hover/back:text-slate-900 transition-all">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+              </svg>
+            </div>
+            <span className="text-[10px] font-black uppercase tracking-[0.2em]">Quay lại</span>
+          </button>
+
           <div className="flex flex-col lg:flex-row gap-16 items-center lg:items-start text-center lg:text-left">
             {/* Identity */}
             <div className="flex flex-col lg:flex-row items-center gap-8 w-full lg:w-1/2">
