@@ -1009,7 +1009,7 @@ class OrderService {
             const isVendor = user?.role === 'vendor' || user?.roles?.includes('vendor');
             const url = isVendor 
                 ? `${API_BASE_URL}/orders/vendor/${orderId}/status`
-                : `${API_BASE_URL}/orders/${orderId}/status`;
+                : `${API_BASE_URL}/orders/customer/${orderId}/status`;
             
             const xhr = new XMLHttpRequest();
             xhr.open('PUT', url, true);
@@ -1048,7 +1048,7 @@ class OrderService {
             const isVendor = user?.role === 'vendor' || user?.roles?.includes('vendor');
             const url = isVendor
                 ? `${API_BASE_URL}/orders/vendor/${orderId}/cancel`
-                : `${API_BASE_URL}/orders/${orderId}/cancel`;
+                : `${API_BASE_URL}/orders/customer/${orderId}/cancel`;
 
             const response = await fetch(url, {
                 method: 'PUT',

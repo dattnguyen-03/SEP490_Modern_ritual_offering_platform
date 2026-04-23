@@ -265,8 +265,9 @@ const OrderDetailsPage: React.FC = () => {
         if (['PENDING', 'CONFIRMED', 'PAID'].includes(normalized)) return 0;
         if (['PREPARING', 'PROCESSING'].includes(normalized)) return 1;
         if (['SHIPPING', 'DELIVERING'].includes(normalized)) return 2;
-        if (['DELIVERED', 'COMPLETED'].includes(normalized)) return 3;
-        if (normalized === 'REFUNDED') return hasRefund ? 4 : 3;
+        if (['DELIVERED', 'COMPLETED', 'REFUNDED'].includes(normalized)) {
+            return hasRefund ? 4 : 3;
+        }
         return 0;
     };
 
