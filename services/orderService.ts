@@ -1000,6 +1000,29 @@ class OrderService {
             const token = getAuthToken();
             const user = getCurrentUser();
             const isVendor = user?.role === 'vendor' || user?.roles?.includes('vendor');
+
+            // Special case for customer completing order
+            if (!isVendor && newStatus === 'Completed') {
+                const url = `${API_BASE_URL}/orders/customer/${orderId}/completed`;
+                fetchWithAuth(url, {
+                    method: 'PUT',
+                    headers: { 'Accept': '*/*' }
+                }).then(async (response) => {
+                    if (response.ok) {
+                        resolve(true);
+                    } else {
+                        const errorText = await response.text().catch(() => '');
+                        try {
+                            const errorData = JSON.parse(errorText);
+                            reject(new Error(errorData.errorMessages?.[0] || errorData.message || `HTTP error! status: ${response.status}`));
+                        } catch {
+                            reject(new Error(`HTTP error! status: ${response.status}`));
+                        }
+                    }
+                }).catch(err => reject(err));
+                return;
+            }
+
             const url = isVendor 
                 ? `${API_BASE_URL}/orders/vendor/${orderId}/status`
                 : `${API_BASE_URL}/orders/customer/${orderId}/status`;
