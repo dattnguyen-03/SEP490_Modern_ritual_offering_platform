@@ -665,8 +665,12 @@ const ProductDetailPage: React.FC<{ onNavigate: (path: string) => void }> = ({ o
                           </button>
                           <span className="w-8 text-center text-xs font-black text-slate-800">{selectedAddOns[addOn.addOnId] || 0}</span>
                           <button
-                            onClick={() => setSelectedAddOns(prev => ({ ...prev, [addOn.addOnId]: Math.min(addOn.maxQuantity, (prev[addOn.addOnId] || 0) + 1) }))}
-                            className={`w-7 h-7 rounded-lg flex items-center justify-center font-bold transition-all ${(selectedAddOns[addOn.addOnId] || 0) < addOn.maxQuantity ? 'bg-white text-primary shadow-sm active:scale-90' : 'text-slate-300 pointer-events-none'}`}
+                            onClick={() => setSelectedAddOns(prev => {
+                              const currentQty = prev[addOn.addOnId] || 0;
+                              const maxAllowed = addOn.maxQuantity || (addOn as any).maxQtyPerOrder || 99;
+                              return { ...prev, [addOn.addOnId]: Math.min(maxAllowed, currentQty + 1) };
+                            })}
+                            className={`w-7 h-7 rounded-lg flex items-center justify-center font-bold transition-all ${(selectedAddOns[addOn.addOnId] || 0) < (addOn.maxQuantity || (addOn as any).maxQtyPerOrder || 99) ? 'bg-white text-primary shadow-sm active:scale-90' : 'text-slate-300 pointer-events-none'}`}
                           >
                             +
                           </button>
