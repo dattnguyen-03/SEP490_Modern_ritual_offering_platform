@@ -1,6 +1,6 @@
 import { ApiPackage, ApiResponse, Product, PackageVariant, CeremonyCategory, PaginatedResult } from '../types';
 import { vendorService, VendorProfile } from './vendorService';
-import { getAuthToken } from './auth';
+import { getAuthToken, fetchWithAuth } from './auth';
 
 
 const API_BASE_URL = '/api'; // Use proxy instead of direct URL
@@ -221,12 +221,11 @@ class PackageService {
   ): Promise<any> {
     const token = getAuthToken();
     const send = async (body: any) => {
-      const response = await fetch(endpoint, {
+      const response = await fetchWithAuth(endpoint, {
         method,
         headers: {
           'Content-Type': 'application/json',
           Accept: 'application/json, text/plain, */*',
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
         body: JSON.stringify(body),
       });
@@ -284,7 +283,7 @@ class PackageService {
         const endpoint = `${API_BASE_URL}/packages/management/by-status?${query.toString()}`;
         console.log(`📡 Fetching by-status: ${endpoint}`);
 
-        const response = await fetch(endpoint, {
+        const response = await fetchWithAuth(endpoint, {
           method: 'GET',
           headers: {
             Accept: 'application/json, text/plain, */*',
@@ -400,7 +399,7 @@ class PackageService {
       if (this.managementCollectionEndpointUnavailable) return this.getAllPackages(pageNumber, pageSize);
 
       console.log(`📦 Fetching management packages (page ${pageNumber}, size ${pageSize})...`);
-      const response = await fetch(`${API_BASE_URL}/packages/management?PageNumber=${pageNumber}&PageSize=${pageSize}`, {
+      const response = await fetchWithAuth(`${API_BASE_URL}/packages/management?PageNumber=${pageNumber}&PageSize=${pageSize}`, {
         method: 'GET',
         headers: {
           'Accept': 'application/json, text/plain, */*',
@@ -447,7 +446,7 @@ class PackageService {
   async getAllPackages(pageNumber: number = 1, pageSize: number = 50): Promise<ApiPackage[]> {
     try {
       console.log(` Fetching packages from API (page ${pageNumber}, size ${pageSize})...`);
-      const response = await fetch(`${API_BASE_URL}/packages?PageNumber=${pageNumber}&PageSize=${pageSize}`, {
+      const response = await fetchWithAuth(`${API_BASE_URL}/packages?PageNumber=${pageNumber}&PageSize=${pageSize}`, {
         method: 'GET',
         headers: {
           'Accept': 'text/plain',
@@ -511,7 +510,7 @@ class PackageService {
     if (!token) return null;
 
     try {
-      const response = await fetch(`${API_BASE_URL}/packages/nearby?PageNumber=${pageNumber}&PageSize=${pageSize}`, {
+      const response = await fetchWithAuth(`${API_BASE_URL}/packages/nearby?PageNumber=${pageNumber}&PageSize=${pageSize}`, {
         method: 'GET',
         headers: {
           Accept: 'application/json, text/plain, */*',
@@ -560,7 +559,7 @@ class PackageService {
    */
   async getPackages(pageNumber: number = 1, pageSize: number = 12): Promise<PaginatedResult<ApiPackage> | null> {
     try {
-      const response = await fetch(`${API_BASE_URL}/packages?pageNumber=${pageNumber}&pageSize=${pageSize}`, {
+      const response = await fetchWithAuth(`${API_BASE_URL}/packages?pageNumber=${pageNumber}&pageSize=${pageSize}`, {
         method: 'GET',
         headers: {
           'Accept': 'text/plain',
@@ -613,11 +612,10 @@ class PackageService {
         ? `${API_BASE_URL}/packages/management/${normalizedId}`
         : `${API_BASE_URL}/packages/${normalizedId}`;
 
-      let response = await fetch(primaryEndpoint, {
+      let response = await fetchWithAuth(primaryEndpoint, {
         method: 'GET',
         headers: {
           Accept: 'application/json, text/plain, */*',
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
       });
 
@@ -626,7 +624,7 @@ class PackageService {
       // Fallback to public endpoint if management fails (e.g. 403 or 404)
       if (!response.ok && useManagement) {
         console.warn(`⚠️ Management endpoint failed (${response.status}). Falling back to public endpoint...`);
-        response = await fetch(`${API_BASE_URL}/packages/${normalizedId}`, {
+        response = await fetchWithAuth(`${API_BASE_URL}/packages/${normalizedId}`, {
           method: 'GET',
           headers: {
             Accept: 'application/json, text/plain, */*',
@@ -695,11 +693,10 @@ class PackageService {
         throw new Error(`Invalid package id: ${id}`);
       }
 
-      const response = await fetch(`${API_BASE_URL}/packages/management/${normalizedId}/ai-screening`, {
+      const response = await fetchWithAuth(`${API_BASE_URL}/packages/management/${normalizedId}/ai-screening`, {
         method: 'GET',
         headers: {
           Accept: 'application/json, text/plain, */*',
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
       });
 
@@ -727,7 +724,7 @@ class PackageService {
     try {
       const token = getAuthToken();
       const normalizedId = Number(String(id).trim());
-      const response = await fetch(`${API_BASE_URL}/packages/management/${normalizedId}/approve`, {
+      const response = await fetchWithAuth(`${API_BASE_URL}/packages/management/${normalizedId}/approve`, {
         method: 'POST',
         headers: {
           Accept: 'application/json, text/plain, */*',
@@ -752,7 +749,7 @@ class PackageService {
     try {
       const token = getAuthToken();
       const normalizedId = Number(String(id).trim());
-      const response = await fetch(`${API_BASE_URL}/packages/management/${normalizedId}/reject`, {
+      const response = await fetchWithAuth(`${API_BASE_URL}/packages/management/${normalizedId}/reject`, {
         method: 'POST',
         headers: {
           Accept: 'application/json, text/plain, */*',
@@ -1183,7 +1180,7 @@ class PackageService {
    */
   async getCeremonyCategories(): Promise<CeremonyCategory[]> {
     try {
-      const response = await fetch(`${API_BASE_URL}/ceremony-categories`, {
+      const response = await fetchWithAuth(`${API_BASE_URL}/ceremony-categories`, {
         method: 'GET',
         headers: {
           Accept: 'application/json, text/plain, */*',

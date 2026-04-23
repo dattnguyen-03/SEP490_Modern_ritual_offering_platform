@@ -1,4 +1,4 @@
-import { getAuthToken } from './auth';
+import { getAuthToken, fetchWithAuth } from './auth';
 
 export interface AuditLogFilter {
   action?: string;
@@ -90,9 +90,8 @@ export const auditService = {
       params.append('to', filter.to);
     }
 
-    const response = await fetch(`/api/audit-logs?${params.toString()}`, {
+    const response = await fetchWithAuth(`/api/audit-logs?${params.toString()}`, {
       headers: {
-        'Authorization': `Bearer ${token}`,
         'Accept': 'application/json'
       }
     });
@@ -105,9 +104,8 @@ export const auditService = {
 
   getAuditLogById: async (id: string): Promise<AuditLog> => {
     const token = getAuthToken();
-    const response = await fetch(`/api/audit-logs/${id}`, {
+    const response = await fetchWithAuth(`/api/audit-logs/${id}`, {
       headers: {
-        'Authorization': `Bearer ${token}`,
         'Accept': 'application/json'
       }
     });

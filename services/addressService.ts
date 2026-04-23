@@ -1,6 +1,5 @@
-
 import { ApiResponse } from '../types';
-import { getAuthToken } from './auth';
+import { getAuthToken, fetchWithAuth } from './auth';
 
 const API_BASE_URL = '/api';
 
@@ -15,17 +14,15 @@ export interface CustomerAddress {
 
 class AddressService {
   private getHeaders(): HeadersInit {
-    const token = getAuthToken();
     return {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
-      ...(token ? { 'Authorization': `Bearer ${token}` } : {})
     };
   }
 
   async getAddresses(): Promise<CustomerAddress[]> {
     try {
-      const response = await fetch(`${API_BASE_URL}/addresses`, {
+      const response = await fetchWithAuth(`${API_BASE_URL}/addresses`, {
         method: 'GET',
         headers: this.getHeaders(),
       });
@@ -49,7 +46,7 @@ class AddressService {
 
   async setDefaultAddress(addressId: string | number): Promise<boolean> {
     try {
-      const response = await fetch(`${API_BASE_URL}/addresses/${addressId}/set-default`, {
+      const response = await fetchWithAuth(`${API_BASE_URL}/addresses/${addressId}/set-default`, {
         method: 'PUT',
         headers: this.getHeaders(),
       });

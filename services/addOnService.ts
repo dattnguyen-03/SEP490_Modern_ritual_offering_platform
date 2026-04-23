@@ -1,5 +1,5 @@
 import { ApiResponse, PackageAddOn } from '../types';
-import { getAuthToken } from './auth';
+import { getAuthToken, fetchWithAuth } from './auth';
 import { API_BASE_URL } from './api';
 
 const isSuccessful = (data: any): boolean => {
@@ -10,11 +10,10 @@ class AddOnService {
   async getAllAddOns(): Promise<PackageAddOn[]> {
     try {
       const token = getAuthToken();
-      const response = await fetch(`${API_BASE_URL}/add-ons`, {
+      const response = await fetchWithAuth(`${API_BASE_URL}/add-ons`, {
         method: 'GET',
         headers: {
           'Accept': 'application/json',
-          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
         },
       });
 
@@ -36,11 +35,10 @@ class AddOnService {
   async getAddOnById(id: number): Promise<PackageAddOn | null> {
     try {
       const token = getAuthToken();
-      const response = await fetch(`${API_BASE_URL}/add-ons/${id}`, {
+      const response = await fetchWithAuth(`${API_BASE_URL}/add-ons/${id}`, {
         method: 'GET',
         headers: {
           'Accept': 'application/json',
-          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
         },
       });
 
@@ -62,12 +60,11 @@ class AddOnService {
   async createAddOn(addOn: Omit<PackageAddOn, 'addOnId'>): Promise<PackageAddOn | null> {
     try {
       const token = getAuthToken();
-      const response = await fetch(`${API_BASE_URL}/add-ons`, {
+      const response = await fetchWithAuth(`${API_BASE_URL}/add-ons`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
-          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
         },
         body: JSON.stringify(addOn),
       });
@@ -90,12 +87,11 @@ class AddOnService {
   async updateAddOn(id: number, addOn: Partial<PackageAddOn>): Promise<boolean> {
     try {
       const token = getAuthToken();
-      const response = await fetch(`${API_BASE_URL}/add-ons/${id}`, {
+      const response = await fetchWithAuth(`${API_BASE_URL}/add-ons/${id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
-          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
         },
         body: JSON.stringify(addOn),
       });
@@ -115,11 +111,10 @@ class AddOnService {
   async deleteAddOn(id: number): Promise<boolean> {
     try {
       const token = getAuthToken();
-      const response = await fetch(`${API_BASE_URL}/add-ons/${id}`, {
+      const response = await fetchWithAuth(`${API_BASE_URL}/add-ons/${id}`, {
         method: 'DELETE',
         headers: {
           'Accept': 'application/json',
-          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
         },
       });
 

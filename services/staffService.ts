@@ -1,4 +1,4 @@
-import { getAuthToken } from './auth';
+import { getAuthToken, fetchWithAuth } from './auth';
 
 const API_BASE_URL = '/api';
 
@@ -67,11 +67,9 @@ export interface CeremonyCategory {
 
 class StaffService {
     private getHeaders(): HeadersInit {
-        const token = getAuthToken();
         return {
             'Accept': 'application/json',
             'Content-Type': 'application/json',
-            ...(token ? { 'Authorization': `Bearer ${token}` } : {})
         };
     }
 
@@ -81,7 +79,7 @@ class StaffService {
                 ? `${API_BASE_URL}/staff/vendor-verifications?status=${status}` 
                 : `${API_BASE_URL}/staff/vendor-verifications`;
             
-            const response = await fetch(url, {
+            const response = await fetchWithAuth(url, {
                 method: 'GET',
                 headers: this.getHeaders(),
             });
@@ -100,7 +98,7 @@ class StaffService {
 
     async getVendorVerificationDetail(profileId: string): Promise<VendorVerificationDetail> {
         try {
-            const response = await fetch(`${API_BASE_URL}/staff/vendor-verifications/${profileId}`, {
+            const response = await fetchWithAuth(`${API_BASE_URL}/staff/vendor-verifications/${profileId}`, {
                 method: 'GET',
                 headers: this.getHeaders(),
             });
@@ -123,7 +121,7 @@ class StaffService {
                 ? `${API_BASE_URL}/staff/vendor-verifications/${profileId}/approve?staffNote=${encodeURIComponent(staffNote)}`
                 : `${API_BASE_URL}/staff/vendor-verifications/${profileId}/approve`;
                 
-            const response = await fetch(url, {
+            const response = await fetchWithAuth(url, {
                 method: 'PUT',
                 headers: this.getHeaders(),
             });
@@ -143,7 +141,7 @@ class StaffService {
 
     async rejectVendor(profileId: string, rejectionReason: string, staffNote?: string): Promise<boolean> {
         try {
-            const response = await fetch(`${API_BASE_URL}/staff/vendor-verifications/${profileId}/reject`, {
+            const response = await fetchWithAuth(`${API_BASE_URL}/staff/vendor-verifications/${profileId}/reject`, {
                 method: 'PUT',
                 headers: this.getHeaders(),
                 body: JSON.stringify({ 
@@ -168,7 +166,7 @@ class StaffService {
 
     // --- Ceremony Categories ---
     async getCeremonyCategories(): Promise<CeremonyCategory[]> {
-        const response = await fetch(`${API_BASE_URL}/ceremony-categories/all`, {
+        const response = await fetchWithAuth(`${API_BASE_URL}/ceremony-categories/all`, {
             method: 'GET',
             headers: this.getHeaders(),
         });
@@ -178,7 +176,7 @@ class StaffService {
     }
 
     async createCeremonyCategory(category: { name: string; description: string }): Promise<CeremonyCategory> {
-        const response = await fetch(`${API_BASE_URL}/ceremony-categories`, {
+        const response = await fetchWithAuth(`${API_BASE_URL}/ceremony-categories`, {
             method: 'POST',
             headers: this.getHeaders(),
             body: JSON.stringify(category),
@@ -189,7 +187,7 @@ class StaffService {
     }
 
     async updateCeremonyCategory(id: number, category: { name: string; description: string }): Promise<boolean> {
-        const response = await fetch(`${API_BASE_URL}/ceremony-categories/${id}`, {
+        const response = await fetchWithAuth(`${API_BASE_URL}/ceremony-categories/${id}`, {
             method: 'PUT',
             headers: this.getHeaders(),
             body: JSON.stringify(category),
@@ -200,7 +198,7 @@ class StaffService {
     }
 
     async deleteCeremonyCategory(id: number): Promise<boolean> {
-        const response = await fetch(`${API_BASE_URL}/ceremony-categories/${id}`, {
+        const response = await fetchWithAuth(`${API_BASE_URL}/ceremony-categories/${id}`, {
             method: 'DELETE',
             headers: this.getHeaders(),
         });
@@ -210,7 +208,7 @@ class StaffService {
     }
 
     async reactivateCeremonyCategory(id: number): Promise<boolean> {
-        const response = await fetch(`${API_BASE_URL}/ceremony-categories/${id}/reactivate`, {
+        const response = await fetchWithAuth(`${API_BASE_URL}/ceremony-categories/${id}/reactivate`, {
             method: 'PUT',
             headers: this.getHeaders(),
         });

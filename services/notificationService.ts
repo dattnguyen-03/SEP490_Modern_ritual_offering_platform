@@ -1,4 +1,4 @@
-import { getAuthToken } from './auth';
+import { getAuthToken, fetchWithAuth } from './auth';
 
 const API_BASE_URL = '/api';
 
@@ -79,12 +79,11 @@ export async function fetchNotifications(pageNumber = 1, pageSize = 20): Promise
 
   const url = `${API_BASE_URL}/notifications?pageNumber=${pageNumber}&pageSize=${pageSize}`;
 
-  const response = await fetch(url, {
+  const response = await fetchWithAuth(url, {
     method: 'GET',
     headers: {
       'Accept': 'application/json',
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`,
     },
   });
 
@@ -129,12 +128,11 @@ export async function fetchUnreadNotificationCount(): Promise<number> {
 
   const url = `${API_BASE_URL}/notifications/unread-count`;
 
-  const response = await fetch(url, {
+  const response = await fetchWithAuth(url, {
     method: 'GET',
     headers: {
       Accept: 'application/json',
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
     },
   });
 
@@ -188,7 +186,7 @@ export async function markNotificationAsRead(notificationId: string | number): P
   const url = `${API_BASE_URL}/notifications/${notificationId}/read`;
 
   try {
-    const response = await fetch(url, {
+    const response = await fetchWithAuth(url, {
       method: 'PATCH',
       headers: {
         Accept: 'application/json',
@@ -217,7 +215,7 @@ export async function markAllNotificationsAsReadApi(): Promise<boolean> {
   const url = `${API_BASE_URL}/notifications/read-all`;
 
   try {
-    const response = await fetch(url, {
+    const response = await fetchWithAuth(url, {
       method: 'PATCH',
       headers: {
         Accept: 'application/json',

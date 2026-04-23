@@ -1,4 +1,4 @@
-import { getAuthToken, getCurrentUser } from './auth';
+import { getAuthToken, getCurrentUser, fetchWithAuth } from './auth';
 
 /** Values accepted by GET /api/transactions/me?ActiveRole=... (Swagger). */
 type TransactionsMeActiveRole = 'Customer' | 'Vendor' | 'Admin' | 'Staff';
@@ -317,11 +317,10 @@ export async function getMyWallet(type: WalletType): Promise<WalletInfo> {
 
   // API expects actor role in ActiveRole, while wallet type can be System.
   const activeRole = resolveWalletMeActiveRole(type);
-  const response = await fetch(`/api/wallets/me?ActiveRole=${encodeURIComponent(activeRole)}`, {
+  const response = await fetchWithAuth(`/api/wallets/me?ActiveRole=${encodeURIComponent(activeRole)}`, {
     method: 'GET',
     headers: {
       Accept: 'application/json',
-      Authorization: `Bearer ${token}`,
     },
   });
 
@@ -352,12 +351,11 @@ export async function createTopupLink(amount: number, type: WalletType): Promise
     throw new Error('Bạn chưa đăng nhập.');
   }
 
-  const response = await fetch('/api/payos/create-topup-link', {
+  const response = await fetchWithAuth('/api/payos/create-topup-link', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       Accept: 'application/json',
-      Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify({
       amount,
@@ -401,12 +399,11 @@ export async function cancelPayosTopup(orderCode: number): Promise<void> {
     throw new Error('Mã giao dịch PayOS không hợp lệ.');
   }
 
-  const response = await fetch('/api/payos/cancel-topup', {
+  const response = await fetchWithAuth('/api/payos/cancel-topup', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       Accept: 'application/json',
-      Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify({ orderCode: code }),
   });
@@ -434,12 +431,11 @@ export async function createWithdrawal(request: WithdrawalRequest): Promise<With
     'System': 2
   };
 
-  const response = await fetch('/api/withdrawals', {
+  const response = await fetchWithAuth('/api/withdrawals', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       Accept: 'application/json',
-      Authorization: `Bearer ${token}`,
     },
     // PascalCase keys for strict backend and including both Integer/String values for WalletType
     body: JSON.stringify({
@@ -489,11 +485,10 @@ export async function getWithdrawalRequests(): Promise<WithdrawalListItem[]> {
     throw new Error('Bạn chưa đăng nhập.');
   }
 
-  const response = await fetch('/api/withdrawals', {
+  const response = await fetchWithAuth('/api/withdrawals', {
     method: 'GET',
     headers: {
       Accept: 'application/json',
-      Authorization: `Bearer ${token}`,
     },
   });
 
@@ -528,11 +523,10 @@ export async function getMyWithdrawalRequests(status?: string): Promise<Withdraw
     ? `?status=${encodeURIComponent(status.trim())}`
     : '';
 
-  const response = await fetch(`/api/withdrawals/me${query}`, {
+  const response = await fetchWithAuth(`/api/withdrawals/me${query}`, {
     method: 'GET',
     headers: {
       Accept: 'application/json',
-      Authorization: `Bearer ${token}`,
     },
   });
 
@@ -567,11 +561,10 @@ export async function approveWithdrawal(id: string): Promise<void> {
     throw new Error('Bạn chưa đăng nhập.');
   }
 
-  const response = await fetch(`/api/withdrawals/${encodeURIComponent(id)}/approve`, {
+  const response = await fetchWithAuth(`/api/withdrawals/${encodeURIComponent(id)}/approve`, {
     method: 'PUT',
     headers: {
       Accept: 'application/json',
-      Authorization: `Bearer ${token}`,
     },
   });
 
@@ -599,12 +592,11 @@ export async function rejectWithdrawal(id: string, reason: string): Promise<void
     throw new Error('Bạn chưa đăng nhập.');
   }
 
-  const response = await fetch(`/api/withdrawals/${encodeURIComponent(id)}/reject`, {
+  const response = await fetchWithAuth(`/api/withdrawals/${encodeURIComponent(id)}/reject`, {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
       Accept: 'application/json',
-      Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify({ reason }),
   });
@@ -659,11 +651,10 @@ export async function getMyTransactions(filter: TransactionFilter = {}): Promise
 
   const queryString = params.toString();
 
-  const response = await fetch(`/api/transactions/me${queryString ? `?${queryString}` : ''}`, {
+  const response = await fetchWithAuth(`/api/transactions/me${queryString ? `?${queryString}` : ''}`, {
     method: 'GET',
     headers: {
       Accept: 'application/json',
-      Authorization: `Bearer ${token}`,
     },
   });
 
@@ -714,11 +705,10 @@ export async function getTransactionById(id: string, role: string = 'Customer'):
     return 'Customer';
   })();
 
-  const response = await fetch(`/api/transactions/${safeId}?ActiveRole=${encodeURIComponent(resolvedRole)}`, {
+  const response = await fetchWithAuth(`/api/transactions/${safeId}?ActiveRole=${encodeURIComponent(resolvedRole)}`, {
     method: 'GET',
     headers: {
       Accept: 'application/json',
-      Authorization: `Bearer ${token}`,
     },
   });
 
@@ -769,11 +759,10 @@ export async function getRelatedTransactions(id: string): Promise<WalletTransact
   const currentRole = String(getCurrentUser()?.role || '').trim().toLowerCase();
   const activeRole = currentRole === 'admin' ? 'Admin' : currentRole === 'staff' ? 'Staff' : currentRole === 'vendor' ? 'Vendor' : 'Customer';
 
-  const response = await fetch(`/api/transactions/${safeId}/related?ActiveRole=${encodeURIComponent(activeRole)}`, {
+  const response = await fetchWithAuth(`/api/transactions/${safeId}/related?ActiveRole=${encodeURIComponent(activeRole)}`, {
     method: 'GET',
     headers: {
       Accept: 'application/json',
-      Authorization: `Bearer ${token}`,
     },
   });
 
@@ -844,11 +833,10 @@ export async function getAllTransactions(filter: AllTransactionFilter = {}): Pro
 
   const queryString = params.toString();
 
-  const response = await fetch(`/api/transactions${queryString ? `?${queryString}` : ''}`, {
+  const response = await fetchWithAuth(`/api/transactions${queryString ? `?${queryString}` : ''}`, {
     method: 'GET',
     headers: {
       Accept: 'application/json',
-      Authorization: `Bearer ${token}`,
     },
   });
 

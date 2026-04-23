@@ -1,4 +1,4 @@
-import { getAuthToken } from './auth';
+import { getAuthToken, fetchWithAuth } from './auth';
 
 const API_BASE_URL = '/api';
 
@@ -71,10 +71,8 @@ class ReviewService {
     }
 
     private getHeaders(isMultipart = false): HeadersInit {
-        const token = getAuthToken();
         const headers: HeadersInit = {
             'Accept': 'application/json',
-            ...(token ? { 'Authorization': `Bearer ${token}` } : {})
         };
         
         if (!isMultipart) {
@@ -100,7 +98,7 @@ class ReviewService {
                 });
             }
 
-            const response = await fetch(`${API_BASE_URL}/reviews`, {
+            const response = await fetchWithAuth(`${API_BASE_URL}/reviews`, {
                 method: 'POST',
                 headers: this.getHeaders(true),
                 body: formData,
@@ -127,7 +125,7 @@ class ReviewService {
         try {
             if (!Number.isFinite(packageId) || packageId <= 0) return [];
             const qs = new URLSearchParams({ PageNumber: '1', PageSize: '50' });
-            const response = await fetch(`${API_BASE_URL}/reviews/package/${packageId}?${qs.toString()}`, {
+            const response = await fetchWithAuth(`${API_BASE_URL}/reviews/package/${packageId}?${qs.toString()}`, {
                 method: 'GET',
                 headers: this.getHeaders(),
             });
@@ -149,13 +147,13 @@ class ReviewService {
     async getReviewsByVariant(variantId: number | string): Promise<Review[]> {
         try {
             console.log(`🔍 Fetching reviews (legacy variant path) for: ${variantId}`);
-            let response = await fetch(`${API_BASE_URL}/reviews/variant/${variantId}`, {
+            let response = await fetchWithAuth(`${API_BASE_URL}/reviews/variant/${variantId}`, {
                 method: 'GET',
                 headers: this.getHeaders(),
             });
 
             if (response.status === 404 || response.status === 405) {
-                response = await fetch(`${API_BASE_URL}/reviews?variantId=${variantId}`, {
+                response = await fetchWithAuth(`${API_BASE_URL}/reviews?variantId=${variantId}`, {
                     method: 'GET',
                     headers: this.getHeaders(),
                 });
@@ -176,7 +174,7 @@ class ReviewService {
 
     async getVendorReviews(): Promise<Review[]> {
         try {
-            const response = await fetch(`${API_BASE_URL}/reviews/vendor`, {
+            const response = await fetchWithAuth(`${API_BASE_URL}/reviews/vendor`, {
                 method: 'GET',
                 headers: this.getHeaders(),
             });
@@ -199,7 +197,7 @@ class ReviewService {
                 PageNumber: pageNumber.toString(), 
                 PageSize: pageSize.toString() 
             });
-            const response = await fetch(`${API_BASE_URL}/reviews/vendor/${vendorId}?${qs.toString()}`, {
+            const response = await fetchWithAuth(`${API_BASE_URL}/reviews/vendor/${vendorId}?${qs.toString()}`, {
                 method: 'GET',
                 headers: this.getHeaders(),
             });
@@ -218,7 +216,7 @@ class ReviewService {
 
     async updateVendorReply(reviewId: string | number, vendorReply: string): Promise<boolean> {
         try {
-            const response = await fetch(`${API_BASE_URL}/reviews/${reviewId}/vendor-reply`, {
+            const response = await fetchWithAuth(`${API_BASE_URL}/reviews/${reviewId}/vendor-reply`, {
                 method: 'PUT',
                 headers: this.getHeaders(),
                 body: JSON.stringify({ vendorReply }),
@@ -239,7 +237,7 @@ class ReviewService {
 
     async updateReviewVisibility(reviewId: string | number, isVisible: boolean): Promise<boolean> {
         try {
-            const response = await fetch(`${API_BASE_URL}/reviews/${reviewId}/visibility`, {
+            const response = await fetchWithAuth(`${API_BASE_URL}/reviews/${reviewId}/visibility`, {
                 method: 'PUT',
                 headers: this.getHeaders(),
                 body: JSON.stringify({ isVisible }),

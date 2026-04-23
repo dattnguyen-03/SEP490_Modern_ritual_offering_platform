@@ -1,5 +1,5 @@
 import { ApiResponse, ApiPackage, PackageVariant } from '../types';
-import { getAuthToken } from './auth';
+import { getAuthToken, fetchWithAuth } from './auth';
 import { API_BASE_URL } from './api';
 import { packageService } from './packageService';
 
@@ -96,11 +96,9 @@ export interface ProcessCheckoutResponse {
 
 class CheckoutService {
   private getHeaders(): HeadersInit {
-    const token = getAuthToken();
     return {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
-      ...(token ? { 'Authorization': `Bearer ${token}` } : {})
     };
   }
 
@@ -114,7 +112,7 @@ class CheckoutService {
       // Backend expects: Array of { cartItemId: number }
       const requestBody = cartItemIds.map(id => ({ cartItemId: id }));
       console.log(' Fetching checkout summary (body):', requestBody);
-      const response = await fetch(`${API_BASE_URL}/checkout/summary`, {
+      const response = await fetchWithAuth(`${API_BASE_URL}/checkout/summary`, {
         method: 'POST',
         headers: this.getHeaders(),
         body: JSON.stringify(requestBody),
@@ -306,7 +304,7 @@ class CheckoutService {
       console.log(' Processing checkout:', formattedRequest);
       console.log(' Request body:', JSON.stringify(formattedRequest, null, 2));
       
-      const response = await fetch(`${API_BASE_URL}/checkout/process`, {
+      const response = await fetchWithAuth(`${API_BASE_URL}/checkout/process`, {
         method: 'POST',
         headers: this.getHeaders(),
         body: JSON.stringify(formattedRequest),
@@ -352,7 +350,7 @@ class CheckoutService {
   async getPaymentReturnUrl(): Promise<string | null> {
     try {
       console.log(' Fetching payment return URL');
-      const response = await fetch(`${API_BASE_URL}/payments/payment-return`, {
+      const response = await fetchWithAuth(`${API_BASE_URL}/payments/payment-return`, {
         method: 'GET',
         headers: this.getHeaders(),
       });
@@ -388,7 +386,7 @@ class CheckoutService {
         amount: safeAmount,
         type: "customer"
       };
-      const response = await fetch(`${API_BASE_URL}/payos/create-topup-link`, {
+      const response = await fetchWithAuth(`${API_BASE_URL}/payos/create-topup-link`, {
         method: 'POST',
         headers: this.getHeaders(),
         body: JSON.stringify(requestBody)
@@ -424,7 +422,7 @@ class CheckoutService {
   async getTransaction(transactionId: string): Promise<any | null> {
     try {
       console.log(' Getting transaction:', transactionId);
-      const response = await fetch(`${API_BASE_URL}/payments/${transactionId}`, {
+      const response = await fetchWithAuth(`${API_BASE_URL}/payments/${transactionId}`, {
         method: 'GET',
         headers: this.getHeaders(),
       });
@@ -457,7 +455,7 @@ class CheckoutService {
   async processTransaction(transactionId: string): Promise<any | null> {
     try {
       console.log(' Processing transaction:', transactionId);
-      const response = await fetch(`${API_BASE_URL}/payments/${transactionId}`, {
+      const response = await fetchWithAuth(`${API_BASE_URL}/payments/${transactionId}`, {
         method: 'POST',
         headers: this.getHeaders(),
       });

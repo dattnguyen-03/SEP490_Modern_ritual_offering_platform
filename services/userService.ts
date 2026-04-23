@@ -1,4 +1,4 @@
-import { ApiResponse } from './auth';
+import { ApiResponse, fetchWithAuth } from './auth';
 
 const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
   ? '' 
@@ -34,11 +34,10 @@ export const userService = {
     const token = localStorage.getItem('smart-child-token');
     if (!token) throw new Error('No authentication token found');
 
-    const response = await fetch(`${API_BASE_URL}/api/users`, {
+    const response = await fetchWithAuth(`${API_BASE_URL}/api/users`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
         'Accept': '*/*',
       },
       body: JSON.stringify(userData),
@@ -79,11 +78,10 @@ export const userService = {
     const queryString = queryParams.toString();
     const url = `${API_BASE_URL}/api/users${queryString ? `?${queryString}` : ''}`;
 
-    const response = await fetch(url, {
+    const response = await fetchWithAuth(url, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
         'Accept': '*/*',
       },
     });
@@ -108,11 +106,10 @@ export const userService = {
     const token = localStorage.getItem('smart-child-token');
     if (!token) throw new Error('No authentication token found');
 
-    const response = await fetch(`${API_BASE_URL}/api/users/${userId}`, {
+    const response = await fetchWithAuth(`${API_BASE_URL}/api/users/${userId}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
         'Accept': '*/*',
       },
     });
@@ -137,11 +134,10 @@ export const userService = {
     const token = localStorage.getItem('smart-child-token');
     if (!token) throw new Error('No authentication token found');
 
-    const response = await fetch(`${API_BASE_URL}/api/users/${userId}/status`, {
+    const response = await fetchWithAuth(`${API_BASE_URL}/api/users/${userId}/status`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
         'Accept': '*/*',
       },
       body: JSON.stringify({ status, reason }),

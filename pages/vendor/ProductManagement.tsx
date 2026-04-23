@@ -1237,7 +1237,7 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onNavigate }) => 
         )}
 
         {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mt-8 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8 mb-8">
           <div className="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-primary">
             <p className="text-gray-600 text-sm font-semibold mb-2">Tổng Sản Phẩm</p>
             <p className="text-3xl font-black text-primary">{products.length}</p>
@@ -1252,11 +1252,6 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onNavigate }) => 
             <p className="text-gray-600 text-sm font-semibold mb-2">Đánh Giá Trung Bình</p>
             <p className="text-3xl font-black text-yellow-600">{products.length > 0 ? (products.reduce((sum, p) => sum + p.rating, 0) / products.length).toFixed(1) : '0.0'} ⭐</p>
             <p className="text-xs text-gray-500 mt-2">Dựa trên dữ liệu hiện có</p>
-          </div>
-          <div className="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-orange-500">
-            <p className="text-gray-600 text-sm font-semibold mb-2">Tồn Kho Tổng</p>
-            <p className="text-3xl font-black text-orange-600">{products.reduce((sum, p) => sum + p.stock, 0)}</p>
-            <p className="text-xs text-gray-500 mt-2">Sản phẩm có sẵn</p>
           </div>
         </div>
 

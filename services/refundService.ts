@@ -1,4 +1,4 @@
-import { getAuthToken } from './auth';
+import { getAuthToken, fetchWithAuth } from './auth';
 const API_BASE_URL = '/api';
 
 export interface CreateRefundItem {
@@ -94,20 +94,15 @@ class RefundService {
     }
 
     private getHeaders(): HeadersInit {
-        const token = getAuthToken();
-        const headers: HeadersInit = {
+        return {
             'Accept': 'application/json',
-            ...(token ? { 'Authorization': `Bearer ${token}` } : {})
         };
-        return headers;
     }
 
     private getJsonHeaders(): HeadersInit {
-        const token = getAuthToken();
         return {
             'Content-Type': 'application/json',
             'Accept': 'application/json',
-            ...(token ? { 'Authorization': `Bearer ${token}` } : {})
         };
     }
 
@@ -143,7 +138,7 @@ class RefundService {
         if (!orderId) return [];
 
         try {
-            const response = await fetch(`${API_BASE_URL}/orders/${orderId}`, {
+            const response = await fetchWithAuth(`${API_BASE_URL}/orders/${orderId}`, {
                 method: 'GET',
                 headers: this.getJsonHeaders(),
             });
@@ -182,7 +177,7 @@ class RefundService {
                 console.log(`  ${pair[0]}: ${pair[1]}`);
             }
 
-            const response = await fetch(`${API_BASE_URL}/refunds`, {
+            const response = await fetchWithAuth(`${API_BASE_URL}/refunds`, {
                 method: 'POST',
                 headers: this.getHeaders(),
                 body: formData,
@@ -216,7 +211,7 @@ class RefundService {
      */
     async escalateRefund(refundId: string, isEscalate: boolean = true): Promise<boolean> {
         try {
-            const response = await fetch(`${API_BASE_URL}/refunds/${refundId}/escalate`, {
+            const response = await fetchWithAuth(`${API_BASE_URL}/refunds/${refundId}/escalate`, {
                 method: 'PUT',
                 headers: this.getJsonHeaders(),
                 body: JSON.stringify({ isEscalate }),
@@ -241,7 +236,7 @@ class RefundService {
      */
     async getAllRefunds(): Promise<RefundRecord[]> {
         try {
-            const response = await fetch(`${API_BASE_URL}/refunds`, {
+            const response = await fetchWithAuth(`${API_BASE_URL}/refunds`, {
                 method: 'GET',
                 headers: this.getJsonHeaders(),
             });
@@ -283,7 +278,7 @@ class RefundService {
      */
     async getRefundById(refundId: string): Promise<RefundRecord | null> {
         try {
-            const response = await fetch(`${API_BASE_URL}/refunds/${refundId}`, {
+            const response = await fetchWithAuth(`${API_BASE_URL}/refunds/${refundId}`, {
                 method: 'GET',
                 headers: this.getJsonHeaders(),
             });
@@ -329,7 +324,7 @@ class RefundService {
      */
     async approveRefund(refundId: string, note?: string): Promise<boolean> {
         try {
-            const response = await fetch(`${API_BASE_URL}/refunds/${refundId}/approve`, {
+            const response = await fetchWithAuth(`${API_BASE_URL}/refunds/${refundId}/approve`, {
                 method: 'PUT',
                 headers: this.getJsonHeaders(),
                 body: JSON.stringify(note || ''),
@@ -360,7 +355,7 @@ class RefundService {
               isApprove: false, 
               adminResponse: reason || ''
             };
-            const response = await fetch(`${API_BASE_URL}/refunds/${refundId}/reject`, {
+            const response = await fetchWithAuth(`${API_BASE_URL}/refunds/${refundId}/reject`, {
                 method: 'PUT',
                 headers: this.getJsonHeaders(),
                 body: JSON.stringify(payload),
@@ -387,7 +382,7 @@ class RefundService {
      */
     async reviewRefund(refundId: string, staffNote: string): Promise<boolean> {
         try {
-            const response = await fetch(`${API_BASE_URL}/refunds/${refundId}/review`, {
+            const response = await fetchWithAuth(`${API_BASE_URL}/refunds/${refundId}/review`, {
                 method: 'PUT',
                 headers: this.getJsonHeaders(),
                 body: JSON.stringify({ staffNote: staffNote || '' }),
@@ -412,7 +407,7 @@ class RefundService {
      */
     async vendorRespondRefund(refundId: string, isAccept: boolean, vendorNote?: string): Promise<boolean> {
         try {
-            const response = await fetch(`${API_BASE_URL}/refunds/${refundId}/vendor-respond`, {
+            const response = await fetchWithAuth(`${API_BASE_URL}/refunds/${refundId}/vendor-respond`, {
                 method: 'PUT',
                 headers: this.getJsonHeaders(),
                 body: JSON.stringify({

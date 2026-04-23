@@ -1,4 +1,4 @@
-import { getAuthToken, getCurrentUser } from './auth';
+import { getAuthToken, getCurrentUser, fetchWithAuth } from './auth';
 import { packageService } from './packageService';
 const API_BASE_URL = '/api';
 
@@ -344,17 +344,10 @@ class OrderService {
     }
 
     private getHeaders(method: string = 'GET'): HeadersInit {
-        const token = getAuthToken();
         const headers: Record<string, string> = {
             'Accept': '*/*',
         };
 
-        if (token) {
-            headers['Authorization'] = `Bearer ${token}`;
-        }
-
-        // Only set Content-Type for POST/PUT/PATCH if it's NOT a multipart request (implicitly handled by FETCH/XHR with FormData)
-        // Note: For OrderService, we generally use JSON for GET/POST/PUT unless it's the status update with images.
         if (['POST', 'PUT', 'PATCH'].includes(method.toUpperCase())) {
             headers['Content-Type'] = 'application/json';
         }
@@ -365,7 +358,7 @@ class OrderService {
     // Get all orders for the current customer
     async getMyOrders(): Promise<Order[]> {
         try {
-            const response = await fetch(`${API_BASE_URL}/orders/customer`, {
+            const response = await fetchWithAuth(`${API_BASE_URL}/orders/customer`, {
                 method: 'GET',
                 headers: this.getHeaders('GET'),
             });
@@ -500,7 +493,7 @@ class OrderService {
     // Get details for a specific order
     async getOrderDetails(orderId: string): Promise<Order | null> {
         try {
-            const response = await fetch(`${API_BASE_URL}/orders/customer/${orderId}`, {
+            const response = await fetchWithAuth(`${API_BASE_URL}/orders/customer/${orderId}`, {
                 method: 'GET',
                 headers: this.getHeaders('GET'),
             });
@@ -766,7 +759,7 @@ class OrderService {
     async getVendorOrders(pageNumber: number = 1, pageSize: number = 100): Promise<VendorOrder[]> {
         try {
             const url = `${API_BASE_URL}/orders/vendor?PageNumber=${pageNumber}&PageSize=${pageSize}`;
-            const response = await fetch(url, {
+            const response = await fetchWithAuth(url, {
                 method: 'GET',
                 headers: this.getHeaders(),
             });
@@ -852,7 +845,7 @@ class OrderService {
     async getVendorOrderDetails(orderId: string): Promise<Order | null> {
         try {
             const url = `${API_BASE_URL}/orders/vendor/${orderId}`;
-            const response = await fetch(url, {
+            const response = await fetchWithAuth(url, {
                 method: 'GET',
                 headers: this.getHeaders('GET'),
             });
@@ -1050,7 +1043,7 @@ class OrderService {
                 ? `${API_BASE_URL}/orders/vendor/${orderId}/cancel`
                 : `${API_BASE_URL}/orders/customer/${orderId}/cancel`;
 
-            const response = await fetch(url, {
+            const response = await fetchWithAuth(url, {
                 method: 'PUT',
                 headers: this.getHeaders('PUT'),
                 body: JSON.stringify({ cancelReason: normalizedReason || 'Không có lý do' }),

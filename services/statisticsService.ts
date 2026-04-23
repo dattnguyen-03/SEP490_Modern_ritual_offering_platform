@@ -1,4 +1,4 @@
-import { getAuthToken } from './auth';
+import { fetchWithAuth } from './auth';
 
 export interface RevenueByTime {
   label: string;
@@ -233,13 +233,11 @@ export interface StatisticsParams {
   sortBy?: string;
 }
 
-const fetchWithAuth = async <T>(url: string): Promise<T> => {
-  const token = getAuthToken();
-  const response = await fetch(url, {
+const fetchWithAuthJson = async <T>(url: string): Promise<T> => {
+  const response = await fetchWithAuth(url, {
     method: 'GET',
     headers: {
       Accept: 'application/json',
-      Authorization: `Bearer ${token}`,
     },
   });
 
@@ -269,7 +267,7 @@ export const statisticsService = {
     if (params.vendorId) searchParams.append('VendorId', params.vendorId);
     if (params.categoryId) searchParams.append('CategoryId', params.categoryId.toString());
 
-    return fetchWithAuth<RevenueResult>(`/api/statistics/revenue?${searchParams.toString()}`);
+    return fetchWithAuthJson<RevenueResult>(`/api/statistics/revenue?${searchParams.toString()}`);
   },
 
   getProducts: async (params: StatisticsParams = {}): Promise<ProductStatResult> => {
@@ -282,7 +280,7 @@ export const statisticsService = {
     if (params.sortBy) searchParams.append('SortBy', params.sortBy);
     if (params.vendorId) searchParams.append('VendorId', params.vendorId);
 
-    return fetchWithAuth<ProductStatResult>(`/api/statistics/products?${searchParams.toString()}`);
+    return fetchWithAuthJson<ProductStatResult>(`/api/statistics/products?${searchParams.toString()}`);
   },
 
   getUsers: async (params: StatisticsParams & { role?: string; status?: string } = {}): Promise<UserResult> => {
@@ -299,7 +297,7 @@ export const statisticsService = {
     if (params.endDate) searchParams.append('EndDate', params.endDate);
     if (params.period) searchParams.append('Period', params.period);
 
-    return fetchWithAuth<UserResult>(`/api/statistics/users?${searchParams.toString()}`);
+    return fetchWithAuthJson<UserResult>(`/api/statistics/users?${searchParams.toString()}`);
   },
 
   getDelivery: async (params: StatisticsParams & { deliveryStatus?: string } = {}): Promise<DeliveryResult> => {
@@ -316,7 +314,7 @@ export const statisticsService = {
     if (params.endDate) searchParams.append('EndDate', params.endDate);
     if (params.period) searchParams.append('Period', params.period);
 
-    return fetchWithAuth<DeliveryResult>(`/api/statistics/delivery?${searchParams.toString()}`);
+    return fetchWithAuthJson<DeliveryResult>(`/api/statistics/delivery?${searchParams.toString()}`);
   },
 
   getOrders: async (params: StatisticsParams = {}): Promise<OrderStatResult> => {
@@ -327,7 +325,7 @@ export const statisticsService = {
     if (params.startDate) searchParams.append('StartDate', params.startDate);
     if (params.endDate) searchParams.append('EndDate', params.endDate);
 
-    return fetchWithAuth<OrderStatResult>(`/api/statistics/orders?${searchParams.toString()}`);
+    return fetchWithAuthJson<OrderStatResult>(`/api/statistics/orders?${searchParams.toString()}`);
   },
 
   getVendors: async (params: StatisticsParams = {}): Promise<VendorStatResult> => {
@@ -337,7 +335,7 @@ export const statisticsService = {
     if (params.startDate) searchParams.append('StartDate', params.startDate);
     if (params.endDate) searchParams.append('EndDate', params.endDate);
 
-    return fetchWithAuth<VendorStatResult>(`/api/statistics/vendors?${searchParams.toString()}`);
+    return fetchWithAuthJson<VendorStatResult>(`/api/statistics/vendors?${searchParams.toString()}`);
   },
 
   getVendorDashboard: async (params: StatisticsParams = {}): Promise<VendorDashboardResult> => {
@@ -346,7 +344,7 @@ export const statisticsService = {
     if (params.startDate) searchParams.append('StartDate', params.startDate);
     if (params.endDate) searchParams.append('EndDate', params.endDate);
 
-    return fetchWithAuth<VendorDashboardResult>(`/api/statistics/vendor/dashboard?${searchParams.toString()}`);
+    return fetchWithAuthJson<VendorDashboardResult>(`/api/statistics/vendor/dashboard?${searchParams.toString()}`);
   },
 
   getOverview: async (params: StatisticsParams = {}): Promise<StatisticsOverviewResult> => {
@@ -356,6 +354,6 @@ export const statisticsService = {
     if (params.endDate) searchParams.append('EndDate', params.endDate);
     if (params.vendorId) searchParams.append('VendorId', params.vendorId);
 
-    return fetchWithAuth<StatisticsOverviewResult>(`/api/statistics/overview?${searchParams.toString()}`);
+    return fetchWithAuthJson<StatisticsOverviewResult>(`/api/statistics/overview?${searchParams.toString()}`);
   }
 };

@@ -1,4 +1,5 @@
 import { ApiResponse } from '../types';
+import { fetchWithAuth } from './auth';
 
 const API_BASE_URL = '/api';
 
@@ -57,7 +58,7 @@ class VendorService {
     
     try {
       console.log('📦 Fetching vendor profile:', vendorProfileId);
-      const response = await fetch(`${API_BASE_URL}/vendors/${vendorProfileId}`, {
+      const response = await fetchWithAuth(`${API_BASE_URL}/vendors/${vendorProfileId}`, {
         method: 'GET',
         headers: {
           'Accept': 'application/json',
@@ -99,7 +100,7 @@ class VendorService {
   async getAllVendors(): Promise<VendorProfile[]> {
     try {
       console.log('📦 Fetching all vendors...');
-      const response = await fetch(`${API_BASE_URL}/vendors`, {
+      const response = await fetchWithAuth(`${API_BASE_URL}/vendors`, {
         method: 'GET',
         headers: {
           'Accept': 'application/json',
@@ -141,11 +142,10 @@ class VendorService {
   async getVendorTiers(): Promise<VendorTier[]> {
     try {
       const token = localStorage.getItem('smart-child-token');
-      const response = await fetch(`${API_BASE_URL}/vendor-tiers`, {
+      const response = await fetchWithAuth(`${API_BASE_URL}/vendor-tiers`, {
         method: 'GET',
         headers: {
           'Accept': 'application/json',
-          'Authorization': `Bearer ${token}`,
         },
       });
 
@@ -174,11 +174,10 @@ class VendorService {
   async getVendorTierById(id: number): Promise<VendorTier | null> {
     try {
       const token = localStorage.getItem('smart-child-token');
-      const response = await fetch(`${API_BASE_URL}/vendor-tiers/${id}`, {
+      const response = await fetchWithAuth(`${API_BASE_URL}/vendor-tiers/${id}`, {
         method: 'GET',
         headers: {
           'Accept': 'application/json',
-          'Authorization': `Bearer ${token}`,
         },
       });
 
@@ -201,12 +200,11 @@ class VendorService {
   async updateVendorTier(id: number, tierData: Partial<VendorTier>): Promise<boolean> {
     try {
       const token = localStorage.getItem('smart-child-token');
-      const response = await fetch(`${API_BASE_URL}/vendor-tiers/${id}`, {
+      const response = await fetchWithAuth(`${API_BASE_URL}/vendor-tiers/${id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
-          'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify(tierData),
       });
@@ -230,12 +228,11 @@ class VendorService {
   async createVendorTier(tierData: Partial<VendorTier>): Promise<boolean> {
     try {
       const token = localStorage.getItem('smart-child-token');
-      const response = await fetch(`${API_BASE_URL}/vendor-tiers`, {
+      const response = await fetchWithAuth(`${API_BASE_URL}/vendor-tiers`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
-          'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify(tierData),
       });
@@ -259,11 +256,10 @@ class VendorService {
   async deleteVendorTier(id: number): Promise<boolean> {
     try {
       const token = localStorage.getItem('smart-child-token');
-      const response = await fetch(`${API_BASE_URL}/vendor-tiers/${id}`, {
+      const response = await fetchWithAuth(`${API_BASE_URL}/vendor-tiers/${id}`, {
         method: 'DELETE',
         headers: {
           'Accept': 'application/json',
-          'Authorization': `Bearer ${token}`,
         },
       });
 
@@ -287,12 +283,11 @@ class VendorService {
   async requestStoreClosure(reason: string): Promise<ApiResponse<any>> {
     try {
       const token = localStorage.getItem('smart-child-token');
-      const response = await fetch(`${API_BASE_URL}/vendor/closure/request`, {
+      const response = await fetchWithAuth(`${API_BASE_URL}/vendor/closure/request`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
-          'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify({ reason }),
       });
@@ -306,11 +301,10 @@ class VendorService {
   async getStoreClosureStatus(): Promise<ApiResponse<any>> {
     try {
       const token = localStorage.getItem('smart-child-token');
-      const response = await fetch(`${API_BASE_URL}/vendor/closure/status?ActiveRole=Vendor`, {
+      const response = await fetchWithAuth(`${API_BASE_URL}/vendor/closure/status?ActiveRole=Vendor`, {
         method: 'GET',
         headers: {
           'Accept': 'application/json',
-          'Authorization': `Bearer ${token}`,
         },
       });
       // Handle non-200 responses safely
@@ -337,11 +331,10 @@ class VendorService {
   async cancelStoreClosure(): Promise<ApiResponse<any>> {
     try {
       const token = localStorage.getItem('smart-child-token');
-      const response = await fetch(`${API_BASE_URL}/vendor/closure/cancel?ActiveRole=Vendor`, {
+      const response = await fetchWithAuth(`${API_BASE_URL}/vendor/closure/cancel?ActiveRole=Vendor`, {
         method: 'POST',
         headers: {
           'Accept': 'application/json',
-          'Authorization': `Bearer ${token}`,
         },
       });
       return await response.json();
