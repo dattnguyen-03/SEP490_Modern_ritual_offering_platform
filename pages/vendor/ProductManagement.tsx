@@ -3,8 +3,9 @@ import Swal from 'sweetalert2';
 import { useLocation } from 'react-router-dom';
 import toast from '../../services/toast';
 import { packageService } from '../../services/packageService';
+import { addOnService } from '../../services/addOnService';
 import { getCurrentUser } from '../../services/auth';
-import { CeremonyCategory } from '../../types';
+import { CeremonyCategory, PackageAddOn } from '../../types';
 import ImageModal from '../../components/ImageModal';
 
 interface ProductManagementProps {
@@ -53,6 +54,7 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onNavigate }) => 
     categoryId: number;
     packageImageUrls: string[];
     primaryImageIndex: number;
+    addOnIds: number[];
     variants: { variantId?: string | number; variantName: string; description: string; price: number; imageUrls: string[]; primaryImageIndex?: number }[];
   } | null>(null);
 
@@ -66,6 +68,7 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onNavigate }) => 
     categoryId: number;
     packageImageUrls: string[];
     primaryImageIndex: number;
+    addOnIds: number[];
     variants: { variantId?: string | number; variantName: string; description: string; price: number; imageUrls: string[]; primaryImageIndex?: number }[];
   }>({
     packageName: '',
@@ -73,10 +76,12 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onNavigate }) => 
     categoryId: 1,
     packageImageUrls: [],
     primaryImageIndex: 0,
+    addOnIds: [],
     variants: [{ variantName: '', description: '', price: 0, imageUrls: [], primaryImageIndex: 0 }],
   });
 
   const [categories, setCategories] = useState<CeremonyCategory[]>([]);
+  const [availableAddOns, setAvailableAddOns] = useState<PackageAddOn[]>([]);
 
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
   const [imageModalImages, setImageModalImages] = useState<string[]>([]);
@@ -87,9 +92,13 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onNavigate }) => 
   useEffect(() => {
     const initData = async () => {
       try {
-        // Fetch categories
-        const catData = await packageService.getCeremonyCategories();
+        // Fetch categories and vendor add-ons for package form
+        const [catData, addOnData] = await Promise.all([
+          packageService.getCeremonyCategories(),
+          addOnService.getAllAddOns(),
+        ]);
         setCategories(catData.filter(c => c.isActive));
+        setAvailableAddOns((addOnData || []).filter(a => a.isActive));
 
         // Fetch vendor profile to get the correct profileId for filtering
         const { getVendorProfile } = await import('../../services/auth');
@@ -146,6 +155,35 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onNavigate }) => 
     const found = categories.find(c => c.categoryId === categoryId);
     if (found) return found.name;
     return categoryLabelMap[categoryId] || 'Khác';
+  };
+
+  const mapItemTypeLabel = (itemType?: string): string => {
+    const normalized = String(itemType || '').trim().toLowerCase();
+    if (normalized === 'food') return 'Thực phẩm';
+    if (normalized === 'object') return 'Vật phẩm';
+    if (normalized === 'service') return 'Dịch vụ';
+    return 'Khác';
+  };
+
+  const parseCurrencyInput = (value: string): number => {
+    const digits = String(value || '').replace(/\D/g, '');
+    if (!digits) return 0;
+    return Number(digits);
+  };
+
+  const formatCurrencyInput = (value: number): string => {
+    return Number(value || 0).toLocaleString('vi-VN');
+  };
+
+  const extractSelectedAddOnIds = (pkg: any): number[] => {
+    if (!pkg) return [];
+    const source = Array.isArray(pkg.availableAddOns)
+      ? pkg.availableAddOns
+      : (Array.isArray(pkg.addOns) ? pkg.addOns : []);
+
+    return source
+      .map((a: any) => Number(a?.addOnId ?? a?.id))
+      .filter((id: number) => Number.isInteger(id) && id > 0);
   };
 
   const getCategoryId = (label: string) => {
@@ -324,6 +362,7 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onNavigate }) => 
       categoryId: viewProductDetails.categoryId || 1,
       packageImageUrls: imgs.filter(url => url.trim() !== ''),
       primaryImageIndex: primaryIdx,
+      addOnIds: extractSelectedAddOnIds(viewProductDetails),
       variants: (viewProductDetails.packageVariants || []).map((v: any) => {
         const raw = (v as any).imageUrls ?? (v as any).variantImageUrls ?? (v as any).variantImages ?? (v as any).images ?? [];
         const rawUrls = Array.isArray(raw)
@@ -366,6 +405,8 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onNavigate }) => 
         packageImageUrls: editForm.packageImageUrls.filter(u => u.trim()),
         primaryImageIndex: safePrimaryIndex,
         action: normalizedAction,
+        addOnIds: editForm.addOnIds,
+        newAddOns: [],
         variants: editForm.variants.map(v => {
           const base = {
             variantId: v.variantId,
@@ -563,6 +604,8 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onNavigate }) => 
         packageImageUrls: createForm.packageImageUrls,
         primaryImageIndex: safePrimaryIndex,
         action,
+        addOnIds: createForm.addOnIds,
+        newAddOns: [],
         variants: createForm.variants.map(v => {
           const base = {
             variantName: v.variantName,
@@ -586,7 +629,7 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onNavigate }) => 
       });
       toast.success(action === 'Draft' ? 'Lưu nháp thành công!' : 'Gửi phê duyệt thành công!');
       setShowAddForm(false);
-      setCreateForm({ packageName: '', description: '', categoryId: 1, packageImageUrls: [], primaryImageIndex: 0, variants: [{ variantName: '', description: '', price: 0, imageUrls: [] }] });
+      setCreateForm({ packageName: '', description: '', categoryId: 1, packageImageUrls: [], primaryImageIndex: 0, addOnIds: [], variants: [{ variantName: '', description: '', price: 0, imageUrls: [] }] });
       loadPackages();
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Lỗi khi tạo sản phẩm';
@@ -776,6 +819,45 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onNavigate }) => 
                   )}
                 </div>
 
+                {/* Add-ons */}
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="text-xs font-black text-gray-400 uppercase tracking-widest">Món thêm đi kèm</label>
+                    <span className="text-[10px] font-bold text-gray-500">Đã chọn: {createForm.addOnIds.length}</span>
+                  </div>
+
+                  {availableAddOns.length === 0 ? (
+                    <div className="text-xs text-gray-400 italic bg-gray-50 border border-dashed border-gray-200 rounded-xl px-3 py-2">Hiện chưa có món thêm khả dụng.</div>
+                  ) : (
+                    <div className="max-h-44 overflow-y-auto rounded-2xl border border-gray-200 p-3 bg-white space-y-2">
+                      {availableAddOns.map((addOn) => {
+                        const checked = createForm.addOnIds.includes(addOn.addOnId);
+                        return (
+                          <label key={addOn.addOnId} className={`flex items-start gap-3 p-2 rounded-xl cursor-pointer border transition ${checked ? 'border-primary/40 bg-primary/5' : 'border-gray-200 hover:border-gray-300'}`}>
+                            <input
+                              type="checkbox"
+                              checked={checked}
+                              onChange={() => {
+                                setCreateForm((prev) => ({
+                                  ...prev,
+                                  addOnIds: checked
+                                    ? prev.addOnIds.filter((id) => id !== addOn.addOnId)
+                                    : [...prev.addOnIds, addOn.addOnId],
+                                }));
+                              }}
+                              className="mt-1 h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                            />
+                            <div className="min-w-0 flex-1">
+                              <p className="text-sm font-bold text-gray-800 truncate">{addOn.addOnName}</p>
+                              <p className="text-[11px] text-gray-500 mt-0.5">{mapItemTypeLabel(addOn.itemType)} • {Number(addOn.retailPrice || 0).toLocaleString('vi-VN')}đ</p>
+                            </div>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+
                 {/* Variants */}
                 <div>
                   <div className="flex items-center justify-between mb-2">
@@ -813,9 +895,10 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onNavigate }) => 
                           <div>
                             <label className="text-[10px] font-bold text-gray-400 block mb-1">Giá (VNĐ) <span className="text-red-400">*</span></label>
                             <input
-                              type="number"
-                              value={v.price || ''}
-                              onChange={e => { const vars = [...createForm.variants]; vars[idx] = { ...vars[idx], price: Number(e.target.value) }; setCreateForm({ ...createForm, variants: vars }); }}
+                              type="text"
+                              inputMode="numeric"
+                              value={formatCurrencyInput(v.price)}
+                              onChange={e => { const vars = [...createForm.variants]; vars[idx] = { ...vars[idx], price: parseCurrencyInput(e.target.value) }; setCreateForm({ ...createForm, variants: vars }); }}
                               className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:border-primary focus:outline-none"
                               placeholder="500000"
                             />
@@ -1290,6 +1373,47 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onNavigate }) => 
                             <p className="text-[9px] text-amber-600 font-bold mt-1">Đã đạt giới hạn tối đa 255 ký tự.</p>
                           )}
                         </div>
+
+                        <div>
+                          <div className="flex items-center justify-between mb-2">
+                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block">Món thêm đi kèm</label>
+                            <span className="text-[10px] font-bold text-gray-500">Đã chọn: {editForm.addOnIds.length}</span>
+                          </div>
+
+                          {availableAddOns.length === 0 ? (
+                            <div className="text-xs text-gray-400 italic bg-gray-50 border border-dashed border-gray-200 rounded-xl px-3 py-2">Hiện chưa có món thêm khả dụng.</div>
+                          ) : (
+                            <div className="max-h-40 overflow-y-auto rounded-xl border border-primary/30 p-2 bg-white/90 space-y-2">
+                              {availableAddOns.map((addOn) => {
+                                const checked = editForm.addOnIds.includes(addOn.addOnId);
+                                return (
+                                  <label key={addOn.addOnId} className={`flex items-start gap-3 p-2 rounded-lg cursor-pointer border transition ${checked ? 'border-primary/40 bg-primary/5' : 'border-gray-200 hover:border-gray-300'}`}>
+                                    <input
+                                      type="checkbox"
+                                      checked={checked}
+                                      onChange={() => {
+                                        setEditForm((prev) => {
+                                          if (!prev) return prev;
+                                          return {
+                                            ...prev,
+                                            addOnIds: checked
+                                              ? prev.addOnIds.filter((id) => id !== addOn.addOnId)
+                                              : [...prev.addOnIds, addOn.addOnId],
+                                          };
+                                        });
+                                      }}
+                                      className="mt-1 h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                                    />
+                                    <div className="min-w-0 flex-1">
+                                      <p className="text-sm font-bold text-gray-800 truncate">{addOn.addOnName}</p>
+                                      <p className="text-[11px] text-gray-500 mt-0.5">{mapItemTypeLabel(addOn.itemType)} • {Number(addOn.retailPrice || 0).toLocaleString('vi-VN')}đ</p>
+                                    </div>
+                                  </label>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
                       </div>
                     ) : (
                       <>
@@ -1302,6 +1426,25 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onNavigate }) => 
                           <p className="text-sm text-gray-700 leading-relaxed bg-gray-50/80 p-4 rounded-[1.25rem] border border-gray-100">
                             {viewProductDetails.description || 'Không có mô tả chi tiết cho sản phẩm này.'}
                           </p>
+                        </div>
+
+                        <div>
+                          <p className="text-[11px] text-gray-500 font-bold uppercase tracking-widest mb-2">Món thêm đi kèm</p>
+                          {Array.isArray(viewProductDetails.availableAddOns) && viewProductDetails.availableAddOns.length > 0 ? (
+                            <div className="flex flex-wrap gap-2">
+                              {viewProductDetails.availableAddOns.map((addOn: any) => (
+                                <span
+                                  key={String(addOn?.addOnId ?? addOn?.id)}
+                                  className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100 text-xs font-bold"
+                                >
+                                  {String(addOn?.addOnName || 'Món thêm')}
+                                  <span className="text-emerald-600/80">{Number(addOn?.retailPrice || 0).toLocaleString('vi-VN')}đ</span>
+                                </span>
+                              ))}
+                            </div>
+                          ) : (
+                            <p className="text-sm text-gray-500 italic">Chưa chọn món thêm nào cho sản phẩm này.</p>
+                          )}
                         </div>
                       </>
                     )}
@@ -1379,13 +1522,14 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onNavigate }) => 
                                   {isEditing ? (
                                     <div className="flex items-center gap-1">
                                       <input
-                                        type="number"
-                                        value={Number.isFinite(price) ? price : 0}
+                                        type="text"
+                                        inputMode="numeric"
+                                        value={formatCurrencyInput(Number.isFinite(price) ? price : 0)}
                                         onChange={e => {
                                           setEditForm(f => {
                                             if (!f) return f;
                                             const vars = [...f.variants];
-                                            vars[idx] = { ...vars[idx], price: Number(e.target.value) };
+                                            vars[idx] = { ...vars[idx], price: parseCurrencyInput(e.target.value) };
                                             return { ...f, variants: vars };
                                           });
                                         }}
