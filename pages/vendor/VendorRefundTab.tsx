@@ -121,8 +121,8 @@ const VendorRefundTab: React.FC<Props> = ({ onPendingCount }) => {
 
   const handleProcess = async () => {
     if (!selected || !action) return;
-    if (action === 'reject' && !note.trim()) {
-      setActionError('Vui lòng nhập lý do từ chối');
+    if (!note.trim()) {
+      setActionError(action === 'reject' ? 'Vui lòng nhập lý do từ chối' : 'Vui lòng nhập ghi chú duyệt hoàn tiền');
       return;
     }
     setProcessing(true);
@@ -153,8 +153,8 @@ const VendorRefundTab: React.FC<Props> = ({ onPendingCount }) => {
 
   const handleQuickAction = async () => {
     if (!confirmRefund || !confirmAction) return;
-    if (confirmAction === 'reject' && !confirmNote.trim()) {
-      setConfirmError('Vui lòng nhập lý do từ chối');
+    if (!confirmNote.trim()) {
+      setConfirmError(confirmAction === 'reject' ? 'Vui lòng nhập lý do từ chối' : 'Vui lòng nhập ghi chú duyệt hoàn tiền');
       return;
     }
     setConfirmProcessing(true);
@@ -449,17 +449,22 @@ const VendorRefundTab: React.FC<Props> = ({ onPendingCount }) => {
                 )}
               </>
             )}
-
-            {/* Note textarea for approve (optional) */}
+ 
+            {/* Note textarea for approve (mandatory) */}
             {confirmAction === 'approve' && (
               <>
                 <textarea
                   value={confirmNote}
-                  onChange={e => setConfirmNote(e.target.value)}
-                  placeholder="Ghi chú thêm (tùy chọn)..."
+                  onChange={e => { setConfirmNote(e.target.value); setConfirmError(null); }}
+                  placeholder="Ghi chú duyệt (bắt buộc)..."
                   rows={2}
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-green-300/50 focus:border-green-400 resize-none mb-4"
+                  className={`w-full px-4 py-3 rounded-xl border text-sm focus:outline-none focus:ring-2 resize-none mb-4 ${
+                    confirmError ? 'border-red-400 ring-red-300/50' : 'border-gray-200 focus:ring-green-300/50 focus:border-green-400'
+                  }`}
                 />
+                {confirmError && (
+                  <p className="text-xs text-red-500 font-medium mb-4">{confirmError}</p>
+                )}
               </>
             )}
 
@@ -667,7 +672,7 @@ const VendorRefundTab: React.FC<Props> = ({ onPendingCount }) => {
                       <textarea
                         value={note}
                         onChange={e => { setNote(e.target.value); setActionError(null); }}
-                        placeholder={action === 'reject' ? 'Lý do từ chối (bắt buộc)...' : 'Ghi chú thêm (tùy chọn)...'}
+                        placeholder={action === 'reject' ? 'Lý do từ chối (bắt buộc)...' : 'Ghi chú duyệt hoàn tiền (bắt buộc)...'}
                         rows={3}
                         className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary resize-none"
                       />
