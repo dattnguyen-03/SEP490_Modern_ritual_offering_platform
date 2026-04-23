@@ -36,6 +36,16 @@ const AddOnManagement: React.FC<AddOnManagementProps> = ({ onNavigate }) => {
     return 'Khác';
   };
 
+  const parseCurrencyInput = (value: string): number => {
+    const digits = String(value || '').replace(/\D/g, '');
+    if (!digits) return 0;
+    return Number(digits);
+  };
+
+  const formatCurrencyInput = (value: number): string => {
+    return Number(value || 0).toLocaleString('vi-VN');
+  };
+
   const loadAddOns = async () => {
     setLoading(true);
     try {
@@ -348,10 +358,10 @@ const AddOnManagement: React.FC<AddOnManagementProps> = ({ onNavigate }) => {
                 <div>
                   <label className="text-xs font-black text-gray-400 uppercase tracking-widest block mb-1.5">Giá bán (VNĐ) <span className="text-red-500">*</span></label>
                   <input
-                    type="number"
-                    min={0}
-                    value={formData.retailPrice}
-                    onChange={(e) => setFormData({ ...formData, retailPrice: Number(e.target.value) })}
+                    type="text"
+                    inputMode="numeric"
+                    value={formatCurrencyInput(formData.retailPrice)}
+                    onChange={(e) => setFormData({ ...formData, retailPrice: parseCurrencyInput(e.target.value) })}
                     className="w-full px-4 py-3 border-2 border-gray-200 rounded-2xl text-sm text-gray-900 focus:border-primary focus:outline-none transition font-semibold"
                     placeholder="0"
                   />
