@@ -534,7 +534,8 @@ const MyOrdersPage: React.FC = () => {
                                             )}
 
                                             {(() => {
-                                                if (order.orderStatus.toUpperCase() !== 'DELIVERED') return null;
+                                                const normalizedStatus = order.orderStatus.toUpperCase();
+                                                if (normalizedStatus !== 'DELIVERED') return null;
 
                                                 const hasRefundRequest = order.items?.some(it => it.isRequestRefund);
                                                 if (hasRefundRequest) return null;

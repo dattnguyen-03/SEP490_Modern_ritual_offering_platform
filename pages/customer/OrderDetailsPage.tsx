@@ -364,7 +364,7 @@ const OrderDetailsPage: React.FC = () => {
                                 )}
                                 {order.orderStatus.toUpperCase() === 'DELIVERED' && (
                                     <div className="flex gap-3">
-                                        {!refundInfo && (
+                                        {order.orderStatus.toUpperCase() === 'DELIVERED' && !refundInfo && (
                                             <button onClick={() => setIsRefundModalOpen(true)} className="px-6 py-3 bg-white text-rose-600 border border-rose-100 rounded-2xl font-black text-sm hover:bg-rose-50 transition-all shadow-sm">
                                                 Yêu cầu hoàn tiền
                                             </button>
