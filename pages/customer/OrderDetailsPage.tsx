@@ -350,6 +350,64 @@ const OrderDetailsPage: React.FC = () => {
                             </div>
                         </div>
 
+                        {/* Proof Images */}
+                        {(hasPreparationImages || hasDeliveryImages) && (
+                            <div className="bg-white p-10 rounded-[3rem] border border-slate-100 shadow-xl shadow-slate-100/50 space-y-8">
+                                <div className="flex items-center gap-3">
+                                    <span className="material-symbols-outlined text-primary">visibility</span>
+                                    <h3 className="text-xl font-black text-slate-800 tracking-tight">Hình ảnh minh chứng</h3>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                    {hasPreparationImages && (
+                                        <div className="space-y-4">
+                                            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
+                                                <span className="material-symbols-outlined text-sm">inventory_2</span>
+                                                Chuẩn bị vật phẩm
+                                            </p>
+                                            <div className="flex flex-wrap gap-4">
+                                                {preparationImages.map((img: string, i: number) => (
+                                                    <div 
+                                                        key={i} 
+                                                        className="size-20 rounded-2xl overflow-hidden border-2 border-slate-50 cursor-pointer hover:border-primary transition-all shadow-sm hover:shadow-md active:scale-95"
+                                                        onClick={() => {
+                                                            setProofModalImages(preparationImages);
+                                                            setProofModalTitle('Ảnh chuẩn bị vật phẩm');
+                                                            setIsProofModalOpen(true);
+                                                        }}
+                                                    >
+                                                        <img src={img} className="w-full h-full object-cover" alt={`Preparation proof ${i + 1}`} />
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+                                    {hasDeliveryImages && (
+                                        <div className="space-y-4 border-t md:border-t-0 md:border-l border-slate-50 pt-8 md:pt-0 md:pl-8">
+                                            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
+                                                <span className="material-symbols-outlined text-sm">local_shipping</span>
+                                                Giao hàng thực tế
+                                            </p>
+                                            <div className="flex flex-wrap gap-4">
+                                                {deliveryImages.map((img: string, i: number) => (
+                                                    <div 
+                                                        key={i} 
+                                                        className="size-20 rounded-2xl overflow-hidden border-2 border-slate-50 cursor-pointer hover:border-primary transition-all shadow-sm hover:shadow-md active:scale-95"
+                                                        onClick={() => {
+                                                            setProofModalImages(deliveryImages);
+                                                            setProofModalTitle('Ảnh giao hàng');
+                                                            setIsProofModalOpen(true);
+                                                        }}
+                                                    >
+                                                        <img src={img} className="w-full h-full object-cover" alt={`Delivery proof ${i + 1}`} />
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+
                         {/* Items List */}
                         <div className="space-y-6">
                             <div className="flex items-center justify-between px-4">
