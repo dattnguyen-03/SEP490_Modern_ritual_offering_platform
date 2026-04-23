@@ -255,16 +255,18 @@ const OrderDetailsPage: React.FC = () => {
             case 'DELIVERED':
             case 'COMPLETED': return 'bg-emerald-50 text-emerald-600 border-emerald-100';
             case 'CANCELLED': return 'bg-rose-50 text-rose-600 border-rose-100';
+            case 'REFUNDED': return 'bg-slate-50 text-slate-600 border-slate-100';
             default: return 'bg-slate-50 text-black border-slate-100';
         }
     };
 
-    const getTrackingStepIndex = (status: string) => {
+    const getTrackingStepIndex = (status: string, hasRefund: boolean) => {
         const normalized = status?.toUpperCase() || '';
         if (['PENDING', 'CONFIRMED', 'PAID'].includes(normalized)) return 0;
         if (['PREPARING', 'PROCESSING'].includes(normalized)) return 1;
         if (['SHIPPING', 'DELIVERING'].includes(normalized)) return 2;
-        if (['DELIVERED', 'COMPLETED', 'REFUNDED'].includes(normalized)) return 3;
+        if (['DELIVERED', 'COMPLETED'].includes(normalized)) return 3;
+        if (normalized === 'REFUNDED') return hasRefund ? 4 : 3;
         return 0;
     };
 
@@ -280,8 +282,8 @@ const OrderDetailsPage: React.FC = () => {
     const hasPreparationImages = preparationImages.length > 0;
     const hasDeliveryImages = deliveryImages.length > 0;
 
-    const trackingStepIndex = getTrackingStepIndex(order.orderStatus);
     const hasRefundStep = Boolean(refundInfo?.refundId);
+    const trackingStepIndex = getTrackingStepIndex(order.orderStatus, hasRefundStep);
     const trackingSteps = [
         { label: 'Xác nhận', desc: 'Tiếp nhận đơn' },
         { label: 'Chuẩn bị', desc: 'Sửa soạn lễ vật' },
@@ -304,6 +306,45 @@ const OrderDetailsPage: React.FC = () => {
                     </div>
                 </div>
 
+                {/* Refund Notice */}
+                {refundInfo && !refundDismissed && (
+                    <div className={`mb-8 p-6 rounded-[2.5rem] border-2 flex flex-col md:flex-row items-center justify-between gap-6 animate-fadeIn ${
+                        refundInfo.status === 'Approved' ? 'bg-emerald-50 border-emerald-100 text-emerald-800' :
+                        refundInfo.status === 'Rejected' ? 'bg-rose-50 border-rose-100 text-rose-800' :
+                        'bg-blue-50 border-blue-100 text-blue-800'
+                    }`}>
+                        <div className="flex items-center gap-5">
+                            <div className={`size-14 rounded-2xl flex items-center justify-center shadow-sm ${
+                                refundInfo.status === 'Approved' ? 'bg-emerald-100 text-emerald-600' :
+                                refundInfo.status === 'Rejected' ? 'bg-rose-100 text-rose-600' :
+                                'bg-blue-100 text-blue-600'
+                            }`}>
+                                <span className="material-symbols-outlined text-2xl">
+                                    {refundInfo.status === 'Approved' ? 'check_circle' : refundInfo.status === 'Rejected' ? 'cancel' : 'info'}
+                                </span>
+                            </div>
+                            <div>
+                                <h4 className="font-black tracking-tight text-lg">Yêu cầu hoàn tiền: {
+                                    refundInfo.status === 'Approved' ? 'Đã chấp nhận' : 
+                                    refundInfo.status === 'Rejected' ? 'Đã từ chối' : 
+                                    'Đang xử lý'
+                                }</h4>
+                                <p className="text-sm font-bold opacity-80 mt-0.5">Mã hoàn tiền: {refundInfo.refundId.substring(0, 8).toUpperCase()}</p>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            {refundInfo.status === 'Rejected' && (
+                                <button onClick={handleEscalateRefund} disabled={escalating} className="px-6 py-3 bg-rose-600 text-white rounded-2xl font-black text-sm hover:bg-rose-700 transition-all shadow-lg shadow-rose-200">
+                                    {escalating ? 'Đang gửi...' : 'Khiếu nại lên Quản trị'}
+                                </button>
+                            )}
+                            <button onClick={handleDismissRefundNotice} className="px-4 py-3 bg-white/50 hover:bg-white rounded-2xl font-black text-sm transition-all border border-transparent hover:border-current/10">
+                                Đóng
+                            </button>
+                        </div>
+                    </div>
+                )}
+
                 {/* Main Grid */}
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
                     {/* Left Column (Items & Tracking) */}
@@ -321,9 +362,16 @@ const OrderDetailsPage: React.FC = () => {
                                     </button>
                                 )}
                                 {order.orderStatus.toUpperCase() === 'DELIVERED' && (
-                                    <button onClick={handleCompleteOrder} disabled={completing} className="px-8 py-4 bg-emerald-600 text-white rounded-[1.5rem] font-black text-sm hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-200">
-                                        {completing ? '...' : 'Hoàn thành đơn'}
-                                    </button>
+                                    <div className="flex gap-3">
+                                        {!refundInfo && (
+                                            <button onClick={() => setIsRefundModalOpen(true)} className="px-6 py-3 bg-white text-rose-600 border border-rose-100 rounded-2xl font-black text-sm hover:bg-rose-50 transition-all shadow-sm">
+                                                Yêu cầu hoàn tiền
+                                            </button>
+                                        )}
+                                        <button onClick={handleCompleteOrder} disabled={completing} className="px-8 py-4 bg-emerald-600 text-white rounded-[1.5rem] font-black text-sm hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-200">
+                                            {completing ? '...' : 'Hoàn thành đơn'}
+                                        </button>
+                                    </div>
                                 )}
                             </div>
                         </div>
@@ -436,6 +484,12 @@ const OrderDetailsPage: React.FC = () => {
                                                             <span className="text-[10px] font-black uppercase text-black tracking-widest leading-none mt-0.5">SL:</span>
                                                             <span className="text-xs font-black text-slate-700">×{item.quantity}</span>
                                                         </div>
+                                                        {item.isRequestRefund && (
+                                                            <div className="px-3 py-1.5 bg-orange-50 rounded-xl border border-orange-100 flex items-center gap-2 shadow-sm">
+                                                                <span className="material-symbols-outlined text-[14px] text-orange-600">assignment_return</span>
+                                                                <span className="text-[10px] font-black uppercase text-orange-600 tracking-widest leading-none mt-0.5">Đã yêu cầu hoàn tiền</span>
+                                                            </div>
+                                                        )}
                                                         <div className="ml-auto flex flex-col items-end gap-1">
                                                             <span className="bg-blue-50 text-blue-600 px-4 py-2 rounded-2xl border border-blue-100 shadow-sm text-sm font-black whitespace-nowrap tracking-tight">
                                                                 +{((item.price || 0)).toLocaleString('vi-VN')}đ
@@ -471,7 +525,7 @@ const OrderDetailsPage: React.FC = () => {
                                                     <p className="text-2xl font-black text-primary tracking-tight">{(item.lineTotal || 0).toLocaleString('vi-VN')}đ</p>
                                                 </div>
 
-                                                {order.orderStatus.toUpperCase() === 'COMPLETED' && (
+                                                {order.orderStatus.toUpperCase() === 'COMPLETED' && !item.isRequestRefund && (
                                                     <div className="flex justify-end">
                                                         <button
                                                             onClick={e => {

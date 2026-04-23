@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { orderService, Order } from '../../services/orderService';
 import { vendorService } from '../../services/vendorService';
 import { refundService, RefundRecord } from '../../services/refundService';
+import { getProfile } from '../../services/auth';
 import toast from '../../services/toast';
 import LoadingScreen from '../../components/LoadingScreen';
 
@@ -30,15 +31,6 @@ const MyOrdersPage: React.FC = () => {
                 return getTime(b) - getTime(a);
             });
             setOrders(sortedOrders);
-
-            // Lấy profileId từ đơn hàng đầu tiên (hoặc bất kỳ đơn nào) để filter refunds
-            const profileId = sortedOrders.find(o => o.customer?.profileId)?.customer?.profileId;
-            if (profileId) {
-                await fetchRefunds(profileId);
-            } else {
-                // Nếu chưa có đơn hàng, vẫn thử lấy refund nhưng có thể sẽ bị rỗng nếu k có profileId để filter
-                await fetchRefunds("");
-            }
         } catch (error) {
             console.error('Lỗi khi lấy danh sách đơn hàng:', error);
             toast.error('Không thể tải danh sách đơn hàng.');
@@ -60,8 +52,23 @@ const MyOrdersPage: React.FC = () => {
 
     const loadAllData = async () => {
         setLoading(true);
-        await fetchOrders();
-        setLoading(false);
+        try {
+            // Fetch profile first to get the correct profileId for refunds
+            const profile = await getProfile();
+            const profileId = profile?.profileId || "";
+            
+            // Run both fetches in parallel
+            await Promise.all([
+                fetchOrders(),
+                fetchRefunds(profileId)
+            ]);
+        } catch (error) {
+            console.error('Lỗi khi tải dữ liệu:', error);
+            // Fallback: still try to fetch orders if profile fetch fails
+            await fetchOrders();
+        } finally {
+            setLoading(false);
+        }
     };
 
     useEffect(() => {
