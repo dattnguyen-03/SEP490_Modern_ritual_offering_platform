@@ -97,6 +97,16 @@ const ShippingConfigPage: React.FC<ShippingConfigPageProps> = ({ onNavigate }) =
     return new Intl.NumberFormat('vi-VN').format(amount) + ' ₫';
   };
 
+  const parseCurrencyInput = (value: string): number => {
+    const digits = String(value || '').replace(/\D/g, '');
+    if (!digits) return 0;
+    return Number(digits);
+  };
+
+  const formatCurrencyInput = (value: number): string => {
+    return Number(value || 0).toLocaleString('vi-VN');
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-white py-12 flex items-center justify-center">
@@ -256,10 +266,11 @@ const ShippingConfigPage: React.FC<ShippingConfigPageProps> = ({ onNavigate }) =
                   <label className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] ml-1">Phí cố định (VND)</label>
                   <div className="relative group">
                     <input
-                      type="number"
+                      type="text"
+                      inputMode="numeric"
                       required
-                      value={formData.basePrice}
-                      onChange={(e) => setFormData({ ...formData, basePrice: Number(e.target.value) })}
+                      value={formatCurrencyInput(formData.basePrice)}
+                      onChange={(e) => setFormData({ ...formData, basePrice: parseCurrencyInput(e.target.value) })}
                       className="w-full bg-slate-50 border-2 border-transparent rounded-[1.25rem] px-6 py-5 outline-none focus:border-primary/30 focus:bg-white transition-all font-bold text-slate-800 text-lg group-hover:bg-white border-slate-100"
                     />
                     <div className="absolute right-6 top-1/2 -translate-y-1/2 text-slate-200 font-black text-xs uppercase group-focus-within:text-primary transition-colors">VND</div>
@@ -271,10 +282,11 @@ const ShippingConfigPage: React.FC<ShippingConfigPageProps> = ({ onNavigate }) =
                   <label className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] ml-1">Đơn giá/km thêm (VND)</label>
                   <div className="relative group">
                     <input
-                      type="number"
+                      type="text"
+                      inputMode="numeric"
                       required
-                      value={formData.pricePerKm}
-                      onChange={(e) => setFormData({ ...formData, pricePerKm: Number(e.target.value) })}
+                      value={formatCurrencyInput(formData.pricePerKm)}
+                      onChange={(e) => setFormData({ ...formData, pricePerKm: parseCurrencyInput(e.target.value) })}
                       className="w-full bg-slate-50 border-2 border-transparent rounded-[1.25rem] px-6 py-5 outline-none focus:border-primary/30 focus:bg-white transition-all font-bold text-slate-800 text-lg group-hover:bg-white border-slate-100"
                     />
                     <div className="absolute right-6 top-1/2 -translate-y-1/2 text-slate-200 font-black text-xs uppercase group-focus-within:text-primary transition-colors">/km</div>
@@ -301,10 +313,11 @@ const ShippingConfigPage: React.FC<ShippingConfigPageProps> = ({ onNavigate }) =
                   <label className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] ml-1">Ngưỡng miễn phí vận chuyển (VND)</label>
                   <div className="relative group">
                     <input
-                      type="number"
+                      type="text"
+                      inputMode="numeric"
                       required
-                      value={formData.freeShipThreshold}
-                      onChange={(e) => setFormData({ ...formData, freeShipThreshold: Number(e.target.value) })}
+                      value={formatCurrencyInput(formData.freeShipThreshold)}
+                      onChange={(e) => setFormData({ ...formData, freeShipThreshold: parseCurrencyInput(e.target.value) })}
                       className="w-full bg-slate-50 border-2 border-transparent rounded-[1.25rem] px-6 py-5 outline-none focus:border-primary/30 focus:bg-white transition-all font-bold text-slate-800 text-lg group-hover:bg-white border-slate-100"
                     />
                     <div className="absolute right-6 top-1/2 -translate-y-1/2 text-emerald-300 font-black text-[10px] uppercase tracking-widest group-focus-within:text-emerald-500 transition-all">Free Over</div>
