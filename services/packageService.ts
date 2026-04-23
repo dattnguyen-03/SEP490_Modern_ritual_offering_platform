@@ -42,6 +42,16 @@ class PackageService {
       }));
   }
 
+  private normalizeVariantId(id: string | number | undefined): string | number | undefined {
+    if (id == null) return undefined;
+    if (typeof id === 'number' && Number.isFinite(id)) return id;
+    const asNumber = Number(id);
+    if (Number.isFinite(asNumber) && String(asNumber) === String(id).trim()) {
+      return asNumber;
+    }
+    return String(id).trim() || undefined;
+  }
+
   private extractBackendErrorMessage(errText: string): string | null {
     const raw = String(errText || '').trim();
     if (!raw) return null;
@@ -116,20 +126,18 @@ class PackageService {
       }[];
     },
     variantImageMode: 'modern' | 'legacy',
+    mutationMode: 'create' | 'update',
   ) {
     const cleanedPackageImages = (payload.packageImageUrls || []).filter((url) => String(url || '').trim());
     const packagePrimaryIndex = typeof payload.primaryImageIndex === 'number' && payload.primaryImageIndex >= 0 && payload.primaryImageIndex < cleanedPackageImages.length
       ? payload.primaryImageIndex
       : 0;
-    const packagePrimaryImageUrl = cleanedPackageImages[packagePrimaryIndex] || cleanedPackageImages[0] || '';
-
     return {
       packageName: payload.packageName,
       description: payload.description,
       categoryId: payload.categoryId,
       packageImageUrls: cleanedPackageImages,
       primaryImageIndex: packagePrimaryIndex,
-      ...(packagePrimaryImageUrl ? { imageUrl: packagePrimaryImageUrl, ImageUrl: packagePrimaryImageUrl, packageAvatarUrl: packagePrimaryImageUrl, packageImageUrl: packagePrimaryImageUrl } : {}),
       action: payload.action,
       variants: payload.variants.map((variant) => {
         const cleanedVariantImages = (variant.variantImageUrls || []).filter((url) => String(url || '').trim());
@@ -139,13 +147,10 @@ class PackageService {
           ? variant.primaryVariantImageIndex
           : 0;
         const primaryImageUrl = cleanedVariantImages[safePrimaryIndex] || cleanedVariantImages[0] || '';
-        const variantId = variant.variantId ?? variant.packageVariantId ?? variant.id;
-        const identifierFields = variantId != null
-          ? {
-              variantId,
-              packageVariantId: variantId,
-              id: variantId,
-            }
+        const variantIdRaw = variant.variantId ?? variant.packageVariantId ?? variant.id;
+        const normalizedVariantId = this.normalizeVariantId(variantIdRaw as any);
+        const identifierFields = mutationMode === 'update' && normalizedVariantId != null
+          ? { variantId: normalizedVariantId }
           : {};
 
         if (variantImageMode === 'legacy') {
@@ -230,11 +235,12 @@ class PackageService {
       return { response, responseText };
     };
 
-    const modernPayload = this.buildPackageMutationPayload(payload, 'modern');
+    const mutationMode: 'create' | 'update' = method === 'PUT' ? 'update' : 'create';
+    const modernPayload = this.buildPackageMutationPayload(payload, 'modern', mutationMode);
     let result = await send(modernPayload);
 
-    if (!result.response.ok && result.response.status === 400) {
-      const legacyPayload = this.buildPackageMutationPayload(payload, 'legacy');
+    if (method === 'POST' && !result.response.ok && result.response.status === 400) {
+      const legacyPayload = this.buildPackageMutationPayload(payload, 'legacy', mutationMode);
       const legacyResult = await send(legacyPayload);
       if (legacyResult.response.ok) {
         const data: any = legacyResult.responseText ? JSON.parse(legacyResult.responseText) : {};
@@ -1029,6 +1035,7 @@ class PackageService {
       primaryImageIndex: number;
       action: string;
       variants: {
+        variantId?: string | number;
         variantName: string;
         description: string;
         price: number;

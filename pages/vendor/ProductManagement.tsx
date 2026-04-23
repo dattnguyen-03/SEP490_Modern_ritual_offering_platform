@@ -23,6 +23,7 @@ interface Product {
   rating: number;
   orders: number;
   status: 'active' | 'inactive' | 'draft';
+  approvalStatus?: string;
   created: string;
 }
 
@@ -241,6 +242,30 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onNavigate }) => 
       .filter((id: number) => Number.isInteger(id) && id > 0);
   };
 
+  const normalizeApprovalStatus = (raw: unknown): PackageStatusFilter => {
+    const value = String(raw || '').trim();
+    if (!value) return '';
+    if (value === 'Approved') return 'Approved';
+    if (value === 'Rejected') return 'Rejected';
+    if (value === 'Draft') return 'Draft';
+
+    // Role-based pending states from backend should be treated as "Chờ duyệt"
+    if (
+      value === 'Pending' ||
+      value === 'WaitingStaffApproval' ||
+      value === 'WaitingAdminApproval' ||
+      value === 'WaitingVendorApproval' ||
+      value === 'WaitingApproval' ||
+      value === 'VendorActionRequired' ||
+      value === 'StaffActionRequired' ||
+      value === 'AdminActionRequired'
+    ) {
+      return 'Pending';
+    }
+
+    return '';
+  };
+
   const getCategoryId = (label: string) => {
     const entry = Object.entries(categoryLabelMap).find(([k, v]) => v === label);
     return entry ? parseInt(entry[0]) : 5;
@@ -293,6 +318,7 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onNavigate }) => 
       // Fallback về selectedStatus vì product đang ở filter đó (e.g. "Approved")
       const rawApproval = pkgDetails.approvalStatus || pkgDetails.packageStatus || pkgDetails.status || selectedStatus || '';
       pkgDetails.approvalStatus = rawApproval;
+      pkgDetails.normalizedApprovalStatus = normalizeApprovalStatus(rawApproval);
 
       // Khi package isActive=true, force variant isActive=true
       // Vì API thường trả isActive=false cho variant dù package đang hoạt động
@@ -525,17 +551,24 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onNavigate }) => 
 
     try {
       console.log('🔄 Loading packages for vendor...', { selectedStatus, vendorProfileId });
-      const packages = await packageService.getPackagesByStatus(selectedStatus, 1, 100);
+      const packages = await packageService.getPackagesByStatus('', 1, 100);
+
+      const statusFiltered = selectedStatus
+        ? packages.filter((item: any) => {
+          const normalized = normalizeApprovalStatus(item.approvalStatus || item.packageStatus || item.status);
+          return normalized === selectedStatus;
+        })
+        : packages;
 
       // Lọc chỉ lấy sản phẩm của vendor hiện tại
       // Ưu tiên dùng vendorProfileId đã fetch từ profile
       const source = vendorProfileId
-        ? packages.filter((item: any) => {
+        ? statusFiltered.filter((item: any) => {
           const itemVendorId = String(item.vendorProfileId || item.vendorId || '').trim();
           const match = itemVendorId === vendorProfileId;
           return match;
         })
-        : packages;
+        : statusFiltered;
 
       console.log(`📦 Loaded ${source.length} products after filtering (Total from API: ${packages.length})`);
 
@@ -561,6 +594,7 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onNavigate }) => 
           rating: Number(item.ratingAvg || 0),
           orders: Number(item.totalSold || 0),
           status: Boolean(item.isActive) ? 'active' : 'inactive',
+          approvalStatus: normalizeApprovalStatus(item.approvalStatus || item.packageStatus || item.status),
           created: String(item.createdAt || ''),
         };
       });
@@ -1329,17 +1363,26 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onNavigate }) => 
                         </td>
                         <td className="px-6 py-4 font-semibold text-gray-800">{product.orders}</td>
                         <td className="px-6 py-4">
-                          <span className="font-bold text-gray-800">{product.rating > 0 ? product.rating.toFixed(1) : 'N/A'}</span>
+                          <span className="font-bold text-gray-800">{product.rating > 0 ? product.rating.toFixed(1) : '0'}</span>
                         </td>
                         <td className="px-6 py-4">
-                          <span className={`inline-flex px-3 py-1 rounded-full text-sm font-bold whitespace-nowrap ${product.status === 'active'
-                            ? 'bg-green-100 text-green-700'
-                            : product.status === 'inactive'
-                              ? 'bg-gray-100 text-gray-700'
-                              : 'bg-yellow-100 text-yellow-700'
-                            }`}>
-                            {product.status === 'active' ? 'Hoạt Động' : product.status === 'inactive' ? 'Ngừng' : 'Nháp'}
-                          </span>
+                          {(() => {
+                            const approval = normalizeApprovalStatus(product.approvalStatus);
+                            if (approval === 'Pending') {
+                              return <span className="inline-flex px-3 py-1 rounded-full text-sm font-bold whitespace-nowrap bg-yellow-100 text-yellow-700">Chờ Duyệt</span>;
+                            }
+                            if (approval === 'Rejected') {
+                              return <span className="inline-flex px-3 py-1 rounded-full text-sm font-bold whitespace-nowrap bg-red-100 text-red-700">Bị Từ Chối</span>;
+                            }
+                            if (approval === 'Draft') {
+                              return <span className="inline-flex px-3 py-1 rounded-full text-sm font-bold whitespace-nowrap bg-amber-100 text-amber-700">Nháp</span>;
+                            }
+                            return (
+                              <span className={`inline-flex px-3 py-1 rounded-full text-sm font-bold whitespace-nowrap ${product.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'}`}>
+                                {product.status === 'active' ? 'Hoạt Động' : 'Ngừng'}
+                              </span>
+                            );
+                          })()}
                         </td>
                         <td className="px-6 py-4">
                           <div className="flex gap-2">
@@ -2199,7 +2242,7 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onNavigate }) => 
                     <div className="space-y-4 text-sm relative z-10">
                       <div className="flex justify-between items-center border-b border-gray-50 pb-3">
                         <span className="text-gray-500 font-semibold">Ngày khởi tạo</span>
-                        <span className="font-bold text-gray-800 bg-gray-50 px-3 py-1.5 rounded-xl">{viewProductDetails.createdAt ? new Date(viewProductDetails.createdAt).toLocaleString('vi-VN') : 'N/A'}</span>
+                        <span className="font-bold text-gray-800 bg-gray-50 px-3 py-1.5 rounded-xl">{viewProductDetails.createdAt ? new Date(viewProductDetails.createdAt).toLocaleString('vi-VN') : '0'}</span>
                       </div>
                       <div className="flex justify-between items-center pb-1">
                         <span className="text-gray-500 font-semibold">Số lượng đã bán</span>
