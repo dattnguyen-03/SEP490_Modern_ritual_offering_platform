@@ -9,6 +9,39 @@ class PackageService {
   private managementCollectionEndpointUnavailable = false;
   private hasWarnedMissingManagementCollection = false;
 
+  private sanitizeAddOnIds(ids?: number[]): number[] {
+    if (!Array.isArray(ids)) return [];
+    return Array.from(new Set(ids
+      .map((id) => Number(id))
+      .filter((id) => Number.isInteger(id) && id > 0)));
+  }
+
+  private sanitizeNewAddOns(newAddOns?: Array<{
+    addOnName: string;
+    description?: string;
+    price: number;
+    imageUrl?: string;
+    maxQtyPerOrder?: number;
+  }>) {
+    if (!Array.isArray(newAddOns)) return [];
+    return newAddOns
+      .map((item) => ({
+        addOnName: String(item?.addOnName || '').trim(),
+        description: String(item?.description || '').trim(),
+        price: Number(item?.price || 0),
+        imageUrl: String(item?.imageUrl || '').trim(),
+        maxQtyPerOrder: Number(item?.maxQtyPerOrder || 0),
+      }))
+      .filter((item) => item.addOnName && item.price > 0)
+      .map((item) => ({
+        addOnName: item.addOnName,
+        description: item.description,
+        price: item.price,
+        ...(item.imageUrl ? { imageUrl: item.imageUrl } : {}),
+        ...(item.maxQtyPerOrder > 0 ? { maxQtyPerOrder: item.maxQtyPerOrder } : {}),
+      }));
+  }
+
   private extractBackendErrorMessage(errText: string): string | null {
     const raw = String(errText || '').trim();
     if (!raw) return null;
@@ -65,6 +98,21 @@ class PackageService {
         imageUrl?: string;
         variantImageUrls?: string[];
         primaryVariantImageIndex?: number;
+        swaps?: {
+          originalItemName: string;
+          originalItemAllocatedPrice: number;
+          replacementItemName: string;
+          surcharge: number;
+          displayOrder: number;
+        }[];
+      }[];
+      addOnIds?: number[];
+      newAddOns?: {
+        addOnName: string;
+        description?: string;
+        price: number;
+        imageUrl?: string;
+        maxQtyPerOrder?: number;
       }[];
     },
     variantImageMode: 'modern' | 'legacy',
@@ -106,6 +154,7 @@ class PackageService {
             variantName: variant.variantName,
             description: variant.description,
             price: variant.price,
+            swaps: Array.isArray(variant.swaps) ? variant.swaps : [],
             ...(primaryImageUrl ? { imageUrl: primaryImageUrl } : {}),
             ...(primaryImageUrl ? { ImageUrl: primaryImageUrl } : {}),
           };
@@ -118,9 +167,12 @@ class PackageService {
           price: variant.price,
           variantImageUrls: cleanedVariantImages,
           primaryVariantImageIndex: safePrimaryIndex,
+          swaps: Array.isArray(variant.swaps) ? variant.swaps : [],
           ...(primaryImageUrl ? { imageUrl: primaryImageUrl, ImageUrl: primaryImageUrl } : {}),
         };
       }),
+      addOnIds: this.sanitizeAddOnIds(payload.addOnIds),
+      newAddOns: this.sanitizeNewAddOns(payload.newAddOns),
     };
   }
 
@@ -144,6 +196,21 @@ class PackageService {
         imageUrl?: string;
         variantImageUrls?: string[];
         primaryVariantImageIndex?: number;
+        swaps?: {
+          originalItemName: string;
+          originalItemAllocatedPrice: number;
+          replacementItemName: string;
+          surcharge: number;
+          displayOrder: number;
+        }[];
+      }[];
+      addOnIds?: number[];
+      newAddOns?: {
+        addOnName: string;
+        description?: string;
+        price: number;
+        imageUrl?: string;
+        maxQtyPerOrder?: number;
       }[];
     },
   ): Promise<any> {
@@ -968,6 +1035,21 @@ class PackageService {
         imageUrl?: string;
         variantImageUrls?: string[];
         primaryVariantImageIndex?: number;
+        swaps?: {
+          originalItemName: string;
+          originalItemAllocatedPrice: number;
+          replacementItemName: string;
+          surcharge: number;
+          displayOrder: number;
+        }[];
+      }[];
+      addOnIds?: number[];
+      newAddOns?: {
+        addOnName: string;
+        description?: string;
+        price: number;
+        imageUrl?: string;
+        maxQtyPerOrder?: number;
       }[];
     }
   ): Promise<any> {
@@ -996,6 +1078,21 @@ class PackageService {
       imageUrl?: string;
       variantImageUrls?: string[];
       primaryVariantImageIndex?: number;
+      swaps?: {
+        originalItemName: string;
+        originalItemAllocatedPrice: number;
+        replacementItemName: string;
+        surcharge: number;
+        displayOrder: number;
+      }[];
+    }[];
+    addOnIds?: number[];
+    newAddOns?: {
+      addOnName: string;
+      description?: string;
+      price: number;
+      imageUrl?: string;
+      maxQtyPerOrder?: number;
     }[];
   }): Promise<any> {
     try {
