@@ -26,6 +26,14 @@ interface Product {
   created: string;
 }
 
+interface VariantSwap {
+  originalItemName: string;
+  originalItemAllocatedPrice: number;
+  replacementItemName: string;
+  surcharge: number;
+  displayOrder: number;
+}
+
 type PackageStatusFilter = '' | 'Draft' | 'Pending' | 'Approved' | 'Rejected';
 
 const ProductManagement: React.FC<ProductManagementProps> = ({ onNavigate }) => {
@@ -55,7 +63,21 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onNavigate }) => 
     packageImageUrls: string[];
     primaryImageIndex: number;
     addOnIds: number[];
-    variants: { variantId?: string | number; variantName: string; description: string; price: number; imageUrls: string[]; primaryImageIndex?: number }[];
+    variants: {
+      variantId?: string | number;
+      variantName: string;
+      description: string;
+      price: number;
+      imageUrls: string[];
+      primaryImageIndex?: number;
+      swaps?: {
+        originalItemName: string;
+        originalItemAllocatedPrice: number;
+        replacementItemName: string;
+        surcharge: number;
+        displayOrder: number;
+      }[];
+    }[];
   } | null>(null);
 
   const [showAddForm, setShowAddForm] = useState(false);
@@ -69,7 +91,21 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onNavigate }) => 
     packageImageUrls: string[];
     primaryImageIndex: number;
     addOnIds: number[];
-    variants: { variantId?: string | number; variantName: string; description: string; price: number; imageUrls: string[]; primaryImageIndex?: number }[];
+    variants: {
+      variantId?: string | number;
+      variantName: string;
+      description: string;
+      price: number;
+      imageUrls: string[];
+      primaryImageIndex?: number;
+      swaps?: {
+        originalItemName: string;
+        originalItemAllocatedPrice: number;
+        replacementItemName: string;
+        surcharge: number;
+        displayOrder: number;
+      }[];
+    }[];
   }>({
     packageName: '',
     description: '',
@@ -77,7 +113,7 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onNavigate }) => 
     packageImageUrls: [],
     primaryImageIndex: 0,
     addOnIds: [],
-    variants: [{ variantName: '', description: '', price: 0, imageUrls: [], primaryImageIndex: 0 }],
+    variants: [{ variantName: '', description: '', price: 0, imageUrls: [], primaryImageIndex: 0, swaps: [] }],
   });
 
   const [categories, setCategories] = useState<CeremonyCategory[]>([]);
@@ -173,6 +209,25 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onNavigate }) => 
 
   const formatCurrencyInput = (value: number): string => {
     return Number(value || 0).toLocaleString('vi-VN');
+  };
+
+  const createEmptySwap = (displayOrder: number): VariantSwap => ({
+    originalItemName: '',
+    originalItemAllocatedPrice: 0,
+    replacementItemName: '',
+    surcharge: 0,
+    displayOrder,
+  });
+
+  const normalizeSwaps = (swaps: any): VariantSwap[] => {
+    if (!Array.isArray(swaps)) return [];
+    return swaps.map((s: any, idx: number) => ({
+      originalItemName: String(s?.originalItemName || ''),
+      originalItemAllocatedPrice: Number(s?.originalItemAllocatedPrice || 0),
+      replacementItemName: String(s?.replacementItemName || ''),
+      surcharge: Number(s?.surcharge || 0),
+      displayOrder: Number(s?.displayOrder ?? (idx + 1)),
+    }));
   };
 
   const extractSelectedAddOnIds = (pkg: any): number[] => {
@@ -380,6 +435,7 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onNavigate }) => 
           price: Number(v.price) || 0,
           imageUrls: merged,
           primaryImageIndex: safePrimary,
+          swaps: normalizeSwaps((v as any).availableSwaps ?? (v as any).swaps),
         };
       }),
     });
@@ -421,6 +477,13 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onNavigate }) => 
             imageUrl?: string;
             variantImageUrls?: string[];
             primaryVariantImageIndex?: number;
+            swaps?: {
+              originalItemName: string;
+              originalItemAllocatedPrice: number;
+              replacementItemName: string;
+              surcharge: number;
+              displayOrder: number;
+            }[];
           };
 
           const cleaned = (v.imageUrls || []).filter(u => u.trim());
@@ -428,6 +491,15 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onNavigate }) => 
           const safePrimary = preferredPrimary >= 0 && preferredPrimary < cleaned.length ? preferredPrimary : 0;
           base.variantImageUrls = cleaned;
           base.primaryVariantImageIndex = safePrimary;
+          base.swaps = Array.isArray(v.swaps)
+            ? v.swaps.map((s, idx) => ({
+              originalItemName: String(s.originalItemName || ''),
+              originalItemAllocatedPrice: Number(s.originalItemAllocatedPrice || 0),
+              replacementItemName: String(s.replacementItemName || ''),
+              surcharge: Number(s.surcharge || 0),
+              displayOrder: Number(s.displayOrder ?? (idx + 1)),
+            })).filter((s) => s.originalItemName && s.replacementItemName)
+            : [];
 
           return base;
         }),
@@ -618,18 +690,34 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onNavigate }) => 
             imageUrl?: string;
             variantImageUrls?: string[];
             primaryVariantImageIndex?: number;
+            swaps?: {
+              originalItemName: string;
+              originalItemAllocatedPrice: number;
+              replacementItemName: string;
+              surcharge: number;
+              displayOrder: number;
+            }[];
           };
 
           const cleaned = (v.imageUrls || []).filter(u => u.trim());
           base.variantImageUrls = cleaned;
           base.primaryVariantImageIndex = cleaned.length > 0 ? 0 : 0;
+          base.swaps = Array.isArray(v.swaps)
+            ? v.swaps.map((s, idx) => ({
+              originalItemName: String(s.originalItemName || ''),
+              originalItemAllocatedPrice: Number(s.originalItemAllocatedPrice || 0),
+              replacementItemName: String(s.replacementItemName || ''),
+              surcharge: Number(s.surcharge || 0),
+              displayOrder: Number(s.displayOrder ?? (idx + 1)),
+            })).filter((s) => s.originalItemName && s.replacementItemName)
+            : [];
 
           return base;
         }),
       });
       toast.success(action === 'Draft' ? 'Lưu nháp thành công!' : 'Gửi phê duyệt thành công!');
       setShowAddForm(false);
-      setCreateForm({ packageName: '', description: '', categoryId: 1, packageImageUrls: [], primaryImageIndex: 0, addOnIds: [], variants: [{ variantName: '', description: '', price: 0, imageUrls: [] }] });
+      setCreateForm({ packageName: '', description: '', categoryId: 1, packageImageUrls: [], primaryImageIndex: 0, addOnIds: [], variants: [{ variantName: '', description: '', price: 0, imageUrls: [], swaps: [] }] });
       loadPackages();
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Lỗi khi tạo sản phẩm';
@@ -866,7 +954,7 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onNavigate }) => 
                   <div className="flex items-center justify-between mb-2">
                     <label className="text-xs font-black text-gray-400 uppercase tracking-widest">Biến thể gói <span className="text-red-500">*</span></label>
                     <button
-                      onClick={() => setCreateForm({ ...createForm, variants: [...createForm.variants, { variantName: '', description: '', price: 0, imageUrls: [] }] })}
+                      onClick={() => setCreateForm({ ...createForm, variants: [...createForm.variants, { variantName: '', description: '', price: 0, imageUrls: [], swaps: [] }] })}
                       className="text-xs font-bold text-primary hover:text-primary/70 transition px-3 py-1 border border-primary/30 rounded-full bg-primary/5"
                     >
                       + Thêm biến thể
@@ -918,6 +1006,114 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onNavigate }) => 
                           />
                         </div>
 
+                        <div className="mt-3 rounded-xl border border-gray-200 bg-gray-50/70 p-3">
+                          <div className="flex items-center justify-between mb-2">
+                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Danh sách đổi món (Swaps)</label>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const vars = [...createForm.variants];
+                                const current = vars[idx] || { variantName: '', description: '', price: 0, imageUrls: [], swaps: [] as VariantSwap[] };
+                                const currentSwaps = Array.isArray(current.swaps) ? current.swaps : [];
+                                vars[idx] = { ...current, swaps: [...currentSwaps, createEmptySwap(currentSwaps.length + 1)] };
+                                setCreateForm({ ...createForm, variants: vars });
+                              }}
+                              className="text-[10px] font-black text-primary border border-primary/30 rounded-full px-2 py-1 hover:bg-primary/5"
+                            >
+                              + Thêm swap
+                            </button>
+                          </div>
+
+                          {Array.isArray(v.swaps) && v.swaps.length > 0 ? (
+                            <div className="space-y-2">
+                              {v.swaps.map((swap, sIdx) => (
+                                <div key={`create-swap-${idx}-${sIdx}`} className="rounded-lg border border-gray-200 bg-white p-2">
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                                    <input
+                                      type="text"
+                                      value={swap.originalItemName}
+                                      onChange={(e) => {
+                                        const vars = [...createForm.variants];
+                                        const current = vars[idx];
+                                        const swaps = Array.isArray(current?.swaps) ? [...current.swaps] : [];
+                                        swaps[sIdx] = { ...swaps[sIdx], originalItemName: e.target.value };
+                                        vars[idx] = { ...current, swaps };
+                                        setCreateForm({ ...createForm, variants: vars });
+                                      }}
+                                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-xs focus:border-primary focus:outline-none"
+                                      placeholder="Món gốc"
+                                    />
+                                    <input
+                                      type="text"
+                                      value={swap.replacementItemName}
+                                      onChange={(e) => {
+                                        const vars = [...createForm.variants];
+                                        const current = vars[idx];
+                                        const swaps = Array.isArray(current?.swaps) ? [...current.swaps] : [];
+                                        swaps[sIdx] = { ...swaps[sIdx], replacementItemName: e.target.value };
+                                        vars[idx] = { ...current, swaps };
+                                        setCreateForm({ ...createForm, variants: vars });
+                                      }}
+                                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-xs focus:border-primary focus:outline-none"
+                                      placeholder="Món thay thế"
+                                    />
+                                    <input
+                                      type="text"
+                                      inputMode="numeric"
+                                      value={formatCurrencyInput(swap.originalItemAllocatedPrice)}
+                                      onChange={(e) => {
+                                        const vars = [...createForm.variants];
+                                        const current = vars[idx];
+                                        const swaps = Array.isArray(current?.swaps) ? [...current.swaps] : [];
+                                        swaps[sIdx] = { ...swaps[sIdx], originalItemAllocatedPrice: parseCurrencyInput(e.target.value) };
+                                        vars[idx] = { ...current, swaps };
+                                        setCreateForm({ ...createForm, variants: vars });
+                                      }}
+                                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-xs focus:border-primary focus:outline-none"
+                                      placeholder="Giá món gốc"
+                                    />
+                                    <div className="flex items-center gap-2">
+                                      <input
+                                        type="text"
+                                        inputMode="numeric"
+                                        value={formatCurrencyInput(swap.surcharge)}
+                                        onChange={(e) => {
+                                          const vars = [...createForm.variants];
+                                          const current = vars[idx];
+                                          const swaps = Array.isArray(current?.swaps) ? [...current.swaps] : [];
+                                          swaps[sIdx] = { ...swaps[sIdx], surcharge: parseCurrencyInput(e.target.value) };
+                                          vars[idx] = { ...current, swaps };
+                                          setCreateForm({ ...createForm, variants: vars });
+                                        }}
+                                        className="w-full px-3 py-2 border border-gray-200 rounded-lg text-xs focus:border-primary focus:outline-none"
+                                        placeholder="Phụ thu"
+                                      />
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          const vars = [...createForm.variants];
+                                          const current = vars[idx];
+                                          const swaps = Array.isArray(current?.swaps) ? current.swaps.filter((_, i) => i !== sIdx) : [];
+                                          vars[idx] = {
+                                            ...current,
+                                            swaps: swaps.map((s, i) => ({ ...s, displayOrder: i + 1 })),
+                                          };
+                                          setCreateForm({ ...createForm, variants: vars });
+                                        }}
+                                        className="shrink-0 px-2 py-2 rounded-lg border border-red-200 text-red-500 text-xs font-black hover:bg-red-50"
+                                      >
+                                        Xóa
+                                      </button>
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <div className="text-xs text-gray-400 italic border border-dashed border-gray-200 rounded-lg px-3 py-2 bg-white">Chưa có swap nào cho gói này.</div>
+                          )}
+                        </div>
+
                         {/* Variant Images */}
                         <div className="mt-3">
                           <div className="flex items-center justify-between mb-2">
@@ -938,7 +1134,7 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onNavigate }) => 
                                     const urls = await packageService.uploadVariantImages(files);
                                     setCreateForm(f => {
                                       const vars = [...f.variants];
-                                      const current = vars[idx] || { variantName: '', description: '', price: 0, imageUrls: [] };
+                                      const current = vars[idx] || { variantName: '', description: '', price: 0, imageUrls: [], swaps: [] };
                                       vars[idx] = { ...current, imageUrls: [...(current.imageUrls || []), ...urls] };
                                       return { ...f, variants: vars };
                                     });
@@ -1466,7 +1662,7 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onNavigate }) => 
                           onClick={() => {
                             setEditForm(f => f ? {
                               ...f,
-                              variants: [...f.variants, { variantName: '', description: '', price: 0, imageUrls: [], primaryImageIndex: 0 }]
+                              variants: [...f.variants, { variantName: '', description: '', price: 0, imageUrls: [], primaryImageIndex: 0, swaps: [] }]
                             } : f);
                           }}
                           className="px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest bg-primary text-white hover:opacity-90 transition"
@@ -1589,6 +1785,132 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onNavigate }) => 
                                     placeholder="Mô tả gói..."
                                   />
 
+                                  <div className="mt-4 rounded-xl border border-primary/20 bg-white/80 p-3">
+                                    <div className="flex items-center justify-between mb-2">
+                                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Danh sách đổi món (Swaps)</label>
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          setEditForm((f) => {
+                                            if (!f) return f;
+                                            const vars = [...f.variants];
+                                            const current = vars[idx] || { variantName: '', description: '', price: 0, imageUrls: [], primaryImageIndex: 0, swaps: [] as VariantSwap[] };
+                                            const currentSwaps = Array.isArray(current.swaps) ? current.swaps : [];
+                                            vars[idx] = { ...current, swaps: [...currentSwaps, createEmptySwap(currentSwaps.length + 1)] };
+                                            return { ...f, variants: vars };
+                                          });
+                                        }}
+                                        className="text-[10px] font-black text-primary border border-primary/30 rounded-full px-2 py-1 hover:bg-primary/5"
+                                      >
+                                        + Thêm swap
+                                      </button>
+                                    </div>
+
+                                    {Array.isArray(v.swaps) && v.swaps.length > 0 ? (
+                                      <div className="space-y-2">
+                                        {v.swaps.map((swap: VariantSwap, sIdx: number) => (
+                                          <div key={`edit-swap-${idx}-${sIdx}`} className="rounded-lg border border-gray-200 bg-white p-2">
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                                              <input
+                                                type="text"
+                                                value={swap.originalItemName}
+                                                onChange={(e) => {
+                                                  setEditForm((f) => {
+                                                    if (!f) return f;
+                                                    const vars = [...f.variants];
+                                                    const current = vars[idx];
+                                                    const swaps = Array.isArray(current?.swaps) ? [...current.swaps] : [];
+                                                    swaps[sIdx] = { ...swaps[sIdx], originalItemName: e.target.value };
+                                                    vars[idx] = { ...current, swaps };
+                                                    return { ...f, variants: vars };
+                                                  });
+                                                }}
+                                                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-xs focus:border-primary focus:outline-none"
+                                                placeholder="Món gốc"
+                                              />
+                                              <input
+                                                type="text"
+                                                value={swap.replacementItemName}
+                                                onChange={(e) => {
+                                                  setEditForm((f) => {
+                                                    if (!f) return f;
+                                                    const vars = [...f.variants];
+                                                    const current = vars[idx];
+                                                    const swaps = Array.isArray(current?.swaps) ? [...current.swaps] : [];
+                                                    swaps[sIdx] = { ...swaps[sIdx], replacementItemName: e.target.value };
+                                                    vars[idx] = { ...current, swaps };
+                                                    return { ...f, variants: vars };
+                                                  });
+                                                }}
+                                                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-xs focus:border-primary focus:outline-none"
+                                                placeholder="Món thay thế"
+                                              />
+                                              <input
+                                                type="text"
+                                                inputMode="numeric"
+                                                value={formatCurrencyInput(swap.originalItemAllocatedPrice)}
+                                                onChange={(e) => {
+                                                  setEditForm((f) => {
+                                                    if (!f) return f;
+                                                    const vars = [...f.variants];
+                                                    const current = vars[idx];
+                                                    const swaps = Array.isArray(current?.swaps) ? [...current.swaps] : [];
+                                                    swaps[sIdx] = { ...swaps[sIdx], originalItemAllocatedPrice: parseCurrencyInput(e.target.value) };
+                                                    vars[idx] = { ...current, swaps };
+                                                    return { ...f, variants: vars };
+                                                  });
+                                                }}
+                                                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-xs focus:border-primary focus:outline-none"
+                                                placeholder="Giá món gốc"
+                                              />
+                                              <div className="flex items-center gap-2">
+                                                <input
+                                                  type="text"
+                                                  inputMode="numeric"
+                                                  value={formatCurrencyInput(swap.surcharge)}
+                                                  onChange={(e) => {
+                                                    setEditForm((f) => {
+                                                      if (!f) return f;
+                                                      const vars = [...f.variants];
+                                                      const current = vars[idx];
+                                                      const swaps = Array.isArray(current?.swaps) ? [...current.swaps] : [];
+                                                      swaps[sIdx] = { ...swaps[sIdx], surcharge: parseCurrencyInput(e.target.value) };
+                                                      vars[idx] = { ...current, swaps };
+                                                      return { ...f, variants: vars };
+                                                    });
+                                                  }}
+                                                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-xs focus:border-primary focus:outline-none"
+                                                  placeholder="Phụ thu"
+                                                />
+                                                <button
+                                                  type="button"
+                                                  onClick={() => {
+                                                    setEditForm((f) => {
+                                                      if (!f) return f;
+                                                      const vars = [...f.variants];
+                                                      const current = vars[idx];
+                                                      const swaps = Array.isArray(current?.swaps) ? current.swaps.filter((_, i) => i !== sIdx) : [];
+                                                      vars[idx] = {
+                                                        ...current,
+                                                        swaps: swaps.map((s, i) => ({ ...s, displayOrder: i + 1 })),
+                                                      };
+                                                      return { ...f, variants: vars };
+                                                    });
+                                                  }}
+                                                  className="shrink-0 px-2 py-2 rounded-lg border border-red-200 text-red-500 text-xs font-black hover:bg-red-50"
+                                                >
+                                                  Xóa
+                                                </button>
+                                              </div>
+                                            </div>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    ) : (
+                                      <div className="text-xs text-gray-400 italic border border-dashed border-gray-200 rounded-lg px-3 py-2 bg-white">Chưa có swap nào cho gói này.</div>
+                                    )}
+                                  </div>
+
                                   <div className="mt-4">
                                     <div className="flex items-center justify-between mb-2">
                                       <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Hình ảnh gói</label>
@@ -1609,7 +1931,7 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onNavigate }) => 
                                               setEditForm(f => {
                                                 if (!f) return f;
                                                 const vars = [...f.variants];
-                                                const current = vars[idx] || { variantName: '', description: '', price: 0, imageUrls: [], primaryImageIndex: 0 };
+                                                const current = vars[idx] || { variantName: '', description: '', price: 0, imageUrls: [], primaryImageIndex: 0, swaps: [] };
                                                 const nextUrls = [...(current.imageUrls || []), ...urls];
                                                 vars[idx] = { ...current, imageUrls: nextUrls, primaryImageIndex: typeof current.primaryImageIndex === 'number' ? current.primaryImageIndex : 0 };
                                                 return { ...f, variants: vars };
