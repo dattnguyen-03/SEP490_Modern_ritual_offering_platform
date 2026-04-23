@@ -122,6 +122,16 @@ const DiscountPolicyManagement: React.FC<DiscountPolicyManagementProps> = ({ onN
     }
   };
 
+  const parseCurrencyInput = (value: string): number => {
+    const digits = String(value || '').replace(/\D/g, '');
+    if (!digits) return 0;
+    return Number(digits);
+  };
+
+  const formatCurrencyInput = (value: number): string => {
+    return Number(value || 0).toLocaleString('vi-VN');
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-white py-12 flex items-center justify-center">
@@ -284,13 +294,20 @@ const DiscountPolicyManagement: React.FC<DiscountPolicyManagementProps> = ({ onN
                       <label className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] ml-1">Mức giảm ({formData.discountType === 'Percentage' ? '%' : 'VND'})</label>
                       <div className="relative group">
                         <input
-                          type="number"
+                          type="text"
                           required
                           min={0}
                           inputMode="numeric"
-                          max={formData.discountType === 'Percentage' ? 100 : undefined}
-                          value={formData.discountValue}
-                          onChange={(e) => setFormData({ ...formData, discountValue: Number(e.target.value) })}
+                          value={formData.discountType === 'Percentage' ? String(formData.discountValue || 0) : formatCurrencyInput(formData.discountValue)}
+                          onChange={(e) => {
+                            if (formData.discountType === 'Percentage') {
+                              const raw = String(e.target.value || '').replace(/\D/g, '');
+                              const percent = Math.min(100, Number(raw || 0));
+                              setFormData({ ...formData, discountValue: percent });
+                              return;
+                            }
+                            setFormData({ ...formData, discountValue: parseCurrencyInput(e.target.value) });
+                          }}
                           className="w-full bg-slate-50 border-2 border-transparent rounded-[1.25rem] px-6 py-5 outline-none focus:border-primary/30 focus:bg-white transition-all font-bold text-slate-800 text-lg group-hover:bg-white border-slate-100 appearance-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                           placeholder={formData.discountType === 'Percentage' ? 'Ví dụ: 5' : 'Ví dụ: 100,000'}
                         />
