@@ -645,12 +645,15 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onNavigate }) => 
         {/* Header Section */}
         <div className="mb-12 flex flex-col md:flex-row md:items-center justify-between gap-8">
           <div className="flex items-start gap-5">
-            {/* <button
+            <button
               onClick={() => onNavigate('/vendor/dashboard')}
-              className="px-6 py-4 bg-white rounded-2xl shadow-sm border border-slate-100 flex items-center justify-center text-slate-700 flex-shrink-0 hover:bg-slate-50 hover:text-black transition-all group font-black text-[10px] uppercase tracking-widest"
+              className="px-6 py-4 bg-white rounded-2xl shadow-sm border border-slate-100 flex items-center justify-center text-slate-700 flex-shrink-0 hover:bg-slate-900 hover:text-white transition-all group font-black text-[10px] uppercase tracking-widest gap-2"
             >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+              </svg>
               Quay lại Dashboard
-            </button> */}
+            </button>
             <div>
               <h1 className="text-4xl font-black text-slate-900 tracking-tight mb-2">Sản Phẩm</h1>
               <p className="text-black font-bold text-sm">Quản lý danh mục sản phẩm mâm cúng của bạn.</p>
