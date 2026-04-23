@@ -1,7 +1,10 @@
 import { ApiResponse, PackageAddOn } from '../types';
 import { getAuthToken } from './auth';
+import { API_BASE_URL } from './api';
 
-const API_BASE_URL = '/api';
+const isSuccessful = (data: any): boolean => {
+  return Boolean(data?.isSuccess || data?.isSucceeded || data?.statusCode === 'OK');
+};
 
 class AddOnService {
   async getAllAddOns(): Promise<PackageAddOn[]> {
@@ -20,7 +23,7 @@ class AddOnService {
       }
 
       const data: ApiResponse<PackageAddOn[]> = await response.json();
-      if (data.isSuccess && data.result) {
+      if (isSuccessful(data) && Array.isArray(data.result)) {
         return data.result;
       }
       return [];
@@ -46,7 +49,7 @@ class AddOnService {
       }
 
       const data: ApiResponse<PackageAddOn> = await response.json();
-      if (data.isSuccess && data.result) {
+      if (isSuccessful(data) && data.result) {
         return data.result;
       }
       return null;

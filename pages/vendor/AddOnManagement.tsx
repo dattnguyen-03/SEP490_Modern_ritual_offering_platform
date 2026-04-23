@@ -11,6 +11,7 @@ interface AddOnManagementProps {
 const AddOnManagement: React.FC<AddOnManagementProps> = ({ onNavigate }) => {
   const [addOns, setAddOns] = useState<PackageAddOn[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingDetail, setLoadingDetail] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [editingAddOn, setEditingAddOn] = useState<PackageAddOn | null>(null);
   const [formData, setFormData] = useState<Omit<PackageAddOn, 'addOnId'>>({
@@ -27,30 +28,49 @@ const AddOnManagement: React.FC<AddOnManagementProps> = ({ onNavigate }) => {
     loadAddOns();
   }, []);
 
+  const getItemTypeLabel = (itemType?: string) => {
+    const normalized = String(itemType || '').trim().toLowerCase();
+    if (normalized === 'food') return 'Thực phẩm';
+    if (normalized === 'object') return 'Vật phẩm';
+    if (normalized === 'service') return 'Dịch vụ';
+    return 'Khác';
+  };
+
   const loadAddOns = async () => {
     setLoading(true);
     try {
       const data = await addOnService.getAllAddOns();
       setAddOns(data);
     } catch (error) {
-      toast.error('Không thể tải danh sách add-on');
+      toast.error('Không thể tải danh sách món thêm');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleOpenModal = (addOn?: PackageAddOn) => {
+  const handleOpenModal = async (addOn?: PackageAddOn) => {
     if (addOn) {
-      setEditingAddOn(addOn);
-      setFormData({
-        addOnName: addOn.addOnName,
-        description: addOn.description || '',
-        retailPrice: addOn.retailPrice,
-        itemType: addOn.itemType,
-        maxQuantity: addOn.maxQuantity,
-        displayOrder: addOn.displayOrder,
-        isActive: addOn.isActive,
-      });
+      setLoadingDetail(true);
+      try {
+        const detail = await addOnService.getAddOnById(addOn.addOnId);
+        const source = detail || addOn;
+        if (!detail) {
+          toast.warning('Không tải được chi tiết món thêm, đang dùng dữ liệu danh sách.');
+        }
+
+        setEditingAddOn(source);
+        setFormData({
+          addOnName: source.addOnName,
+          description: source.description || '',
+          retailPrice: source.retailPrice,
+          itemType: source.itemType,
+          maxQuantity: source.maxQuantity,
+          displayOrder: source.displayOrder,
+          isActive: source.isActive,
+        });
+      } finally {
+        setLoadingDetail(false);
+      }
     } else {
       setEditingAddOn(null);
       setFormData({
@@ -74,7 +94,7 @@ const AddOnManagement: React.FC<AddOnManagementProps> = ({ onNavigate }) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.addOnName.trim()) {
-      toast.warning('Vui lòng nhập tên add-on');
+      toast.warning('Vui lòng nhập tên món thêm');
       return;
     }
 
@@ -82,7 +102,7 @@ const AddOnManagement: React.FC<AddOnManagementProps> = ({ onNavigate }) => {
       if (editingAddOn) {
         const success = await addOnService.updateAddOn(editingAddOn.addOnId, formData);
         if (success) {
-          toast.success('Cập nhật add-on thành công');
+          toast.success('Cập nhật món thêm thành công');
           handleCloseModal();
           loadAddOns();
         } else {
@@ -91,11 +111,11 @@ const AddOnManagement: React.FC<AddOnManagementProps> = ({ onNavigate }) => {
       } else {
         const newAddOn = await addOnService.createAddOn(formData);
         if (newAddOn) {
-          toast.success('Thêm add-on thành công');
+          toast.success('Thêm món thêm thành công');
           handleCloseModal();
           loadAddOns();
         } else {
-          toast.error('Thêm add-on thất bại');
+          toast.error('Thêm món thêm thất bại');
         }
       }
     } catch (error) {
@@ -119,7 +139,7 @@ const AddOnManagement: React.FC<AddOnManagementProps> = ({ onNavigate }) => {
       try {
         const success = await addOnService.deleteAddOn(id);
         if (success) {
-          toast.success('Đã xóa add-on');
+          toast.success('Đã xóa món thêm');
           loadAddOns();
         } else {
           toast.error('Xóa thất bại');
@@ -131,7 +151,7 @@ const AddOnManagement: React.FC<AddOnManagementProps> = ({ onNavigate }) => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 p-6 md:p-10 font-sans text-slate-800">
+    <div className="min-h-screen bg-white p-6 md:p-10 font-sans text-slate-800">
       <div className="max-w-6xl mx-auto">
         {/* Header Section */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-10">
@@ -178,20 +198,20 @@ const AddOnManagement: React.FC<AddOnManagementProps> = ({ onNavigate }) => {
             </div>
           ) : addOns.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 text-center px-6">
-              <h3 className="text-xl font-black text-slate-900">Chưa có add-on nào</h3>
+              <h3 className="text-xl font-black text-slate-900">Chưa có món thêm nào</h3>
               <p className="text-slate-500 mt-2 max-w-sm">Hãy bắt đầu bằng cách thêm các vật phẩm như hoa, quả, hoặc dịch vụ đi kèm.</p>
               <button
                 onClick={() => handleOpenModal()}
                 className="mt-8 px-6 py-3 border-2 border-slate-200 rounded-xl font-bold hover:bg-slate-50 transition-all"
               >
-                Tạo add-on đầu tiên
+                Tạo món thêm đầu tiên
               </button>
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-left">
                 <thead>
-                  <tr className="bg-slate-50 border-b border-slate-100">
+                  <tr className="bg-white border-b border-slate-100">
                     <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Tên Món Thêm</th>
                     <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Loại</th>
                     <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Giá Bán</th>
@@ -221,7 +241,7 @@ const AddOnManagement: React.FC<AddOnManagementProps> = ({ onNavigate }) => {
                           ? 'bg-purple-50 text-purple-600 border border-purple-100'
                           : 'bg-blue-50 text-blue-600 border border-blue-100'
                           }`}>
-                          {addOn.itemType || 'Unknown'}
+                          {getItemTypeLabel(addOn.itemType)}
                         </span>
                       </td>
                       <td className="px-8 py-6 font-black text-slate-900">
@@ -265,138 +285,112 @@ const AddOnManagement: React.FC<AddOnManagementProps> = ({ onNavigate }) => {
         </div>
       </div>
 
-      {/* Modern Modal / Side Drawer */}
+      {/* Modal chỉnh sửa / thêm món thêm */}
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-end bg-slate-900/40 backdrop-blur-sm transition-all duration-300">
-          <div
-            className="absolute inset-0"
-            onClick={handleCloseModal}
-          ></div>
-          <div className="relative w-full max-w-md h-full bg-white shadow-2xl overflow-y-auto transform transition-transform duration-300 ease-out flex flex-col translate-x-0 animate-in slide-in-from-right">
-            {/* Modal Header */}
-            <div className="p-8 border-b border-slate-100 flex items-center justify-between sticky top-0 bg-white z-10">
-              <div>
-                <h2 className="text-2xl font-black text-slate-900">{editingAddOn ? 'Chỉnh Sửa Add-on' : 'Thêm Add-on Mới'}</h2>
-                <p className="text-sm text-slate-500 font-medium mt-1">Cung cấp thông tin chi tiết về add-on.</p>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/55 backdrop-blur-sm">
+          <div className="absolute inset-0" onClick={handleCloseModal}></div>
+          <form onSubmit={handleSubmit} className="relative w-full max-w-2xl max-h-[90vh] bg-white rounded-[2rem] shadow-2xl flex flex-col overflow-hidden">
+            <div className="flex items-center gap-3 px-6 py-5 border-b border-gray-200 bg-white rounded-t-[2rem] flex-shrink-0">
+              <div className="flex-1">
+                <h2 className="text-xl font-black text-gray-900">{editingAddOn ? 'Chỉnh sửa món thêm' : 'Thêm món thêm mới'}</h2>
+                <p className="text-sm text-gray-500 mt-0.5">Cập nhật thông tin món thêm cho cửa hàng của bạn</p>
               </div>
               <button
+                type="button"
                 onClick={handleCloseModal}
-                className="w-10 h-10 flex items-center justify-center rounded-full bg-slate-50 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
+                className="w-9 h-9 flex items-center justify-center rounded-full border border-gray-200 bg-white hover:bg-gray-50 transition text-gray-500 flex-shrink-0"
+              >×</button>
             </div>
 
-            {/* Modal Body */}
-            <form onSubmit={handleSubmit} className="p-8 space-y-8 flex-1">
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Tên Add-on</label>
+            <div className="overflow-y-auto flex-1 p-6 space-y-5">
+              {loadingDetail && (
+                <div className="text-xs font-semibold text-slate-500 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2">
+                  Đang tải chi tiết món thêm...
+                </div>
+              )}
+
+              <div>
+                <label className="text-xs font-black text-gray-400 uppercase tracking-widest block mb-1.5">Tên món thêm <span className="text-red-500">*</span></label>
                 <input
                   type="text"
                   value={formData.addOnName}
                   onChange={(e) => setFormData({ ...formData, addOnName: e.target.value })}
-                  className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold focus:bg-white focus:ring-4 focus:ring-black/5 focus:border-black outline-none transition-all placeholder:text-slate-300"
-                  placeholder="Nhập tên vật phẩm/dịch vụ..."
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-2xl text-sm text-gray-900 focus:border-primary focus:outline-none transition font-semibold"
+                  placeholder="Ví dụ: Heo quay nguyên con 3kg..."
                 />
               </div>
 
-              {/* Description */}
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Mô tả</label>
+              <div>
+                <label className="text-xs font-black text-gray-400 uppercase tracking-widest block mb-1.5">Mô tả</label>
                 <textarea
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold focus:bg-white focus:ring-4 focus:ring-black/5 focus:border-black outline-none transition-all placeholder:text-slate-300 min-h-[100px] resize-none"
-                  placeholder="Mô tả ngắn gọn về add-on..."
+                  rows={4}
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-2xl text-sm text-gray-700 focus:border-primary focus:outline-none transition resize-none"
+                  placeholder="Mô tả ngắn gọn về món thêm..."
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Loại</label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="text-xs font-black text-gray-400 uppercase tracking-widest block mb-1.5">Loại món thêm</label>
                   <select
                     value={formData.itemType}
                     onChange={(e) => setFormData({ ...formData, itemType: e.target.value })}
-                    className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold focus:bg-white transition-all outline-none"
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-2xl text-sm text-sky-700 font-bold bg-sky-50 focus:border-primary focus:outline-none transition"
                   >
-                    <option value="Food">Thực phẩm (Food)</option>
-                    <option value="Object">Vật phẩm (Object)</option>
-                    <option value="Service">Dịch vụ (Service)</option>
+                    <option value="Food">Thực phẩm</option>
+                    <option value="Object">Vật phẩm</option>
+                    <option value="Service">Dịch vụ</option>
                   </select>
                 </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Giá Bán (VNĐ)</label>
+
+                <div>
+                  <label className="text-xs font-black text-gray-400 uppercase tracking-widest block mb-1.5">Giá bán (VNĐ) <span className="text-red-500">*</span></label>
                   <input
                     type="number"
+                    min={0}
                     value={formData.retailPrice}
                     onChange={(e) => setFormData({ ...formData, retailPrice: Number(e.target.value) })}
-                    className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold focus:bg-white transition-all outline-none"
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-2xl text-sm text-gray-900 focus:border-primary focus:outline-none transition font-semibold"
                     placeholder="0"
                   />
                 </div>
               </div>
 
-              {/* Quantity & Order */}
-              {/* <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">SL Tối Đa</label>
-                  <input
-                    type="number"
-                    value={formData.maxQuantity || 0}
-                    onChange={(e) => setFormData({ ...formData, maxQuantity: Number(e.target.value) })}
-                    className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold focus:bg-white transition-all outline-none"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Thứ Tự Hiển Thị</label>
-                  <input
-                    type="number"
-                    value={formData.displayOrder || 0}
-                    onChange={(e) => setFormData({ ...formData, displayOrder: Number(e.target.value) })}
-                    className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold focus:bg-white transition-all outline-none"
-                  />
-                </div>
-              </div> */}
-
-              {/* Status */}
-              <div className="flex items-center justify-between p-5 bg-slate-50 rounded-2xl border border-slate-100">
+              <div className="flex items-center justify-between p-4 rounded-2xl border-2 border-gray-200 bg-white">
                 <div>
-                  <p className="font-black text-slate-900">Trạng Thái Hoạt Động</p>
-                  <p className="text-xs text-slate-500 font-bold mt-1">Cho phép khách hàng nhìn thấy và đặt.</p>
+                  <p className="font-black text-slate-900">Trạng thái hoạt động</p>
+                  <p className="text-xs text-slate-500 font-medium mt-1">Cho phép khách hàng nhìn thấy và đặt món thêm này.</p>
                 </div>
                 <button
                   type="button"
                   onClick={() => setFormData({ ...formData, isActive: !formData.isActive })}
-                  className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors focus:outline-none ${formData.isActive ? 'bg-black' : 'bg-slate-200'
-                    }`}
+                  className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors focus:outline-none ${formData.isActive ? 'bg-black' : 'bg-slate-300'}`}
                 >
                   <span
-                    className={`${formData.isActive ? 'translate-x-6' : 'translate-x-1'
-                      } inline-block h-5 w-5 transform rounded-full bg-white transition-transform duration-200 ease-in-out`}
+                    className={`${formData.isActive ? 'translate-x-6' : 'translate-x-1'} inline-block h-5 w-5 transform rounded-full bg-white transition-transform duration-200 ease-in-out`}
                   />
                 </button>
               </div>
-            </form>
+            </div>
 
-            {/* Modal Footer */}
-            <div className="p-8 border-t border-slate-100 bg-white sticky bottom-0 grid grid-cols-2 gap-4">
+            <div className="flex gap-3 px-6 py-5 border-t border-gray-200 bg-white rounded-b-[2rem] flex-shrink-0">
               <button
                 type="button"
                 onClick={handleCloseModal}
-                className="px-6 py-4 bg-slate-100 text-slate-600 rounded-2xl font-black uppercase tracking-widest text-[10px] hover:bg-slate-200 transition-all shadow-sm"
+                className="flex-1 py-3 border-2 border-gray-300 text-gray-700 rounded-2xl font-black text-sm hover:bg-gray-50 transition-all"
               >
-                Hủy Bỏ
+                Hủy bỏ
               </button>
               <button
-                onClick={handleSubmit}
-                className="px-6 py-4 bg-black text-white rounded-2xl font-black uppercase tracking-widest text-[10px] hover:shadow-xl hover:shadow-black/20 hover:-translate-y-1 transition-all shadow-lg"
+                type="submit"
+                className="flex-1 py-3 bg-black text-white rounded-2xl font-black text-sm hover:opacity-90 transition-all shadow-md"
               >
-                {editingAddOn ? 'Lưu Thay Đổi' : 'Xác Nhận Thêm'}
+                {editingAddOn ? 'Lưu thay đổi' : 'Xác nhận thêm'}
               </button>
             </div>
-          </div>
+          </form>
         </div>
       )}
     </div>
