@@ -88,18 +88,22 @@ const getDisplayStatusClass = (tx: WalletTransaction): string => {
   return getTransactionStatusClass(tx.status);
 };
 
-/** Màu số tiền theo loại giao dịch (không theo dấu amount) */
+/** Màu số tiền theo loại giao dịch — Vendor */
 const getAmountColorByType = (type: string, amount: number): string => {
   const t = String(type || '').trim().toLowerCase();
-  // Đỏ: tiền ra khỏi vendor hoặc gây bất lợi
-  if (['refundcustomer', 'refundorder', 'penalty', 'penaltyvendor',
-       'withdrawal', 'withdraw', 'platformfee'].includes(t)) return 'text-rose-600';
-  // Cam: tiền bị giữ (ký quỹ)
-  if (['withholdingdeduction'].includes(t)) return 'text-amber-600';
-  // Xanh: tiền vào / có lợi cho vendor
-  if (['vendorincome', 'deposit', 'topup', 'withholdingrelease',
-       'vendorcompensation', 'debtsettlement'].includes(t)) return 'text-emerald-600';
-  // Mặc định: theo dấu amount
+
+  // 🟢 Xanh: tiền vào / có lợi
+  if (['vendorincome', 'vendorcompensation', 'withholdingdeduction',
+       'systemadjustment', 'adjust', 'deposit', 'topup'].includes(t)) return 'text-emerald-600';
+
+  // 🔴 Đỏ: tiền ra / bất lợi
+  if (['withdrawal', 'withdraw', 'refundcustomer', 'refundorder',
+       'penaltyvendor', 'penalty', 'debtsettlement', 'platformfee'].includes(t)) return 'text-rose-600';
+
+  // 🟡 Vàng: trung gian (giải phóng ký quỹ)
+  if (['withholdingrelease'].includes(t)) return 'text-amber-500';
+
+  // Mặc định theo dấu amount
   return amount >= 0 ? 'text-emerald-600' : 'text-rose-600';
 };
 
