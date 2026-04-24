@@ -1262,7 +1262,7 @@ const OrderManagement: React.FC<OrderManagementProps> = ({ onNavigate: _onNaviga
                         </div>
                       ))}
                       <div className="flex justify-between px-4 py-3 bg-primary/5 border-t border-primary/10">
-                        <span className="font-bold text-gray-700">Thực nhận (Net)</span>
+                        <span className="font-bold text-gray-700">Thực nhận</span>
                         <span className="text-xl font-black text-primary">{formatVnd(selectedOrder.pricing?.vendorNetAmount)}</span>
                       </div>
                       <div className="px-4 py-2 bg-white border-t border-gray-50">
