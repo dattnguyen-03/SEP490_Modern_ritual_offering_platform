@@ -24,6 +24,26 @@ const STATUS_TO_STAGE: Record<string, number> = {
   'Completed': 4,
 };
 
+const normalizeStatus = (status: unknown): string => {
+  const map: Record<string, string> = {
+    paid: 'Paid',
+    confirmed: 'Confirmed',
+    processing: 'Processing',
+    preparing: 'Processing',
+    shipping: 'Delivering',
+    delivering: 'Delivering',
+    delivered: 'Delivered',
+    completed: 'Completed',
+    pending: 'Pending',
+    cancelled: 'Cancelled',
+    refunded: 'Refunded',
+    paymentfailed: 'PaymentFailed',
+  };
+
+  const key = String(status || '').trim().toLowerCase();
+  return map[key] || String(status || '').trim();
+};
+
 // Stage definitions
 const TIMELINE_STAGES = [
   {
@@ -78,13 +98,38 @@ const hasMeaningfulText = (v: unknown): boolean => {
   return n !== '' && n !== 'n/a' && n !== 'na' && n !== 'null' && n !== 'undefined';
 };
 
+const getTrackingSortTime = (createdAt: unknown): number => {
+  const date = new Date(String(createdAt || ''));
+  return Number.isNaN(date.getTime()) ? 0 : date.getTime();
+};
+
 const OrderStatusTimeline: React.FC<OrderStatusTimelineProps> = ({
   orderId,
   currentStatus,
   trackingLists = [],
 }) => {
-  const currentStage = STATUS_TO_STAGE[currentStatus] || 1;
-  const normalizedStatus = currentStatus || 'Pending';
+  const normalizedTracking = [...trackingLists]
+    .sort((a, b) => getTrackingSortTime(a.createdAt) - getTrackingSortTime(b.createdAt))
+    .map((item) => ({
+      ...item,
+      normalizedStatus: normalizeStatus(item.status),
+    }))
+    .filter((item) => hasMeaningfulText(item.normalizedStatus));
+
+  const latestTrackingStatus = normalizedTracking.length > 0
+    ? normalizedTracking[normalizedTracking.length - 1].normalizedStatus
+    : '';
+
+  const normalizedFallbackStatus = normalizeStatus(currentStatus);
+  const normalizedStatus = latestTrackingStatus || normalizedFallbackStatus || 'Pending';
+  const currentStage = STATUS_TO_STAGE[normalizedStatus] || 1;
+  const stageTimestampByStage = normalizedTracking.reduce<Record<number, string>>((acc, item) => {
+    const stage = STATUS_TO_STAGE[item.normalizedStatus];
+    if (stage && hasMeaningfulText(item.createdAt)) {
+      acc[stage] = item.createdAt;
+    }
+    return acc;
+  }, {});
 
   // Calculate which stages are completed
   const isStageCompleted = (stageNumber: number) => stageNumber < currentStage;
@@ -156,6 +201,19 @@ const OrderStatusTimeline: React.FC<OrderStatusTimelineProps> = ({
                   style={{ maxWidth: '96px' }}
                 >
                   {stage.description}
+                </p>
+
+                <p
+                  className={`text-[11px] font-semibold mt-1.5 ${
+                    isStageCompleted(stage.number) || isStageActive(stage.number)
+                      ? 'text-slate-700'
+                      : 'text-gray-300'
+                  }`}
+                  style={{ maxWidth: '120px' }}
+                >
+                  {stageTimestampByStage[stage.number]
+                    ? formatDateTimeVi(stageTimestampByStage[stage.number])
+                    : 'Chưa có mốc'}
                 </p>
               </div>
             </div>
