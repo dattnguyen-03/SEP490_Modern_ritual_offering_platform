@@ -239,25 +239,6 @@ const VendorDashboard: React.FC<VendorDashboardProps> = ({ onNavigate }) => {
           {dashboardStatsError}
         </div>
       )}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {vendorStats.map((stat, idx) => (
-          <div key={idx} className="bg-white rounded-2xl border border-gold/10 shadow-sm p-6 hover:shadow-lg transition-all">
-            <div className="flex items-start justify-between mb-2">
-              <div className="w-11 h-11 rounded-2xl bg-ritual-bg flex items-center justify-center text-primary">
-                <span className="material-symbols-outlined text-2xl">{(stat as any).icon || 'leaderboard'}</span>
-              </div>
-              {(stat as any).growth !== undefined && (
-                <span className={`text-[10px] font-black px-2 py-1 rounded-lg ${(stat as any).growth >= 0 ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'}`}>
-                  {(stat as any).growth >= 0 ? '+' : ''}{(stat as any).growth}%
-                </span>
-              )}
-            </div>
-            <p className="text-sm text-black mb-1 uppercase font-bold tracking-widest">{stat.label}</p>
-            <p className="text-2xl font-black text-primary">{stat.value}</p>
-          </div>
-        ))}
-      </div>
-
       {/* Integrated Statistics View */}
       <StatisticsView 
         isStaff={false} 
