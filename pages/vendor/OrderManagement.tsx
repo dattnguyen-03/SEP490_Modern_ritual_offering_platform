@@ -408,7 +408,7 @@ const OrderManagement: React.FC<OrderManagementProps> = ({ onNavigate: _onNaviga
     setStatusSuccess(null);
     try {
       if (newStatus === 'Cancelled') {
-        await orderService.cancelOrder(selectedOrder.orderId, statusReason);
+        await orderService.cancelOrder(selectedOrder.orderId, statusReason, 'vendor');
       } else {
         await orderService.updateOrderStatus(selectedOrder.orderId, newStatus, statusReason, deliveryProofImages);
       }

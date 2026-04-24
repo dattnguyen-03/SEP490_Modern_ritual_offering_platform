@@ -110,7 +110,7 @@ const MyOrdersPage: React.FC = () => {
 
         setCancellingId(orderId);
         try {
-            const success = await orderService.cancelOrder(orderId, reason);
+            const success = await orderService.cancelOrder(orderId, reason, 'customer');
             if (success) {
                 toast.success('Hủy đơn hàng thành công');
                 await fetchOrders();

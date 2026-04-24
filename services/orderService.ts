@@ -1057,11 +1057,16 @@ class OrderService {
     }
 
     // Cancel an order
-    async cancelOrder(orderId: string, reason?: string): Promise<boolean> {
+    async cancelOrder(
+        orderId: string,
+        reason?: string,
+        scope: 'auto' | 'customer' | 'vendor' = 'auto',
+    ): Promise<boolean> {
         try {
             const normalizedReason = typeof reason === 'string' ? reason.trim() : '';
             const user = getCurrentUser();
-            const isVendor = user?.role === 'vendor' || user?.roles?.includes('vendor');
+            const isVendorByRole = user?.role === 'vendor' || user?.roles?.includes('vendor');
+            const isVendor = scope === 'vendor' ? true : scope === 'customer' ? false : isVendorByRole;
             const url = isVendor
                 ? `${API_BASE_URL}/orders/vendor/${orderId}/cancel`
                 : `${API_BASE_URL}/orders/customer/${orderId}/cancel`;

@@ -195,7 +195,7 @@ const OrderDetailsPage: React.FC = () => {
         const reason = result.value || 'Khách hàng thay đổi ý định';
         setCancelling(true);
         try {
-            const success = await orderService.cancelOrder(order.orderId, reason);
+            const success = await orderService.cancelOrder(order.orderId, reason, 'customer');
             if (success) {
                 toast.success('Hủy đơn hàng thành công');
                 await fetchOrder();
