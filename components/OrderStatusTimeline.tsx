@@ -93,16 +93,16 @@ const OrderStatusTimeline: React.FC<OrderStatusTimelineProps> = ({
   return (
     <div className="space-y-4">
       {/* Header with current status */}
-      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-[1.5rem] border border-blue-200 p-5 md:p-6">
-        <p className="text-xs font-bold uppercase text-blue-500 tracking-widest mb-2">TRANG THÁI HIỆN TẠI</p>
-        <h2 className="text-3xl md:text-4xl font-black text-blue-900 mb-4">
+      <div className="bg-gradient-to-r from-slate-50 to-gray-100 rounded-[1.5rem] border border-slate-200 p-5 md:p-6">
+        <p className="text-xs font-bold uppercase text-slate-600 tracking-widest mb-2">TRANG THÁI HIỆN TẠI</p>
+        <h2 className="text-3xl md:text-4xl font-black text-slate-900 mb-4">
           {getStatusLabel(normalizedStatus)}
         </h2>
 
         {/* Order ID */}
         <div>
-          <p className="text-xs font-bold uppercase text-blue-400 tracking-widest mb-1">THEO DÕI ĐƠN HÀNG</p>
-          <p className="text-sm font-mono font-bold text-blue-700 break-all">{orderId}</p>
+          <p className="text-xs font-bold uppercase text-slate-500 tracking-widest mb-1">THEO DÕI ĐƠN HÀNG</p>
+          <p className="text-sm font-mono font-bold text-slate-800 break-all">{orderId}</p>
         </div>
       </div>
 
@@ -114,7 +114,7 @@ const OrderStatusTimeline: React.FC<OrderStatusTimelineProps> = ({
           <div className="absolute top-6 left-0 right-0 h-1 bg-gray-200" 
                style={{ 
                  width: `${((currentStage - 1) / (TIMELINE_STAGES.length - 1)) * 100}%`,
-                 backgroundColor: '#3B82F6',
+                 backgroundColor: '#0f172a',
                  transition: 'width 0.3s ease',
                  zIndex: 0
                }}>
@@ -126,9 +126,9 @@ const OrderStatusTimeline: React.FC<OrderStatusTimelineProps> = ({
               <div
                 className={`w-11 h-11 rounded-full flex items-center justify-center font-black text-base mb-2 transition-all border-4 ${
                   isStageCompleted(stage.number)
-                    ? 'bg-blue-500 text-white border-white shadow-lg shadow-blue-500/30'
+                    ? 'bg-slate-900 text-white border-white shadow-lg shadow-slate-900/30'
                     : isStageActive(stage.number)
-                    ? 'bg-blue-500 text-white border-white shadow-lg shadow-blue-500/50 scale-110'
+                    ? 'bg-slate-900 text-white border-white shadow-lg shadow-slate-900/50 scale-110'
                     : 'bg-gray-100 text-gray-400 border-gray-100'
                 }`}
               >
