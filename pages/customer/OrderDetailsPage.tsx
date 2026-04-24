@@ -140,6 +140,16 @@ const OrderDetailsPage: React.FC = () => {
 
     const handleEscalateRefund = async () => {
         if (!refundInfo) return;
+
+        const result = await toast.confirm({
+            title: 'Xác nhận khiếu nại',
+            text: 'Bạn có chắc muốn gửi khiếu nại lên Quản trị viên? Hành động này không thể hoàn tác.',
+            confirmButtonText: 'Gửi khiếu nại',
+            cancelButtonText: 'Hủy',
+            icon: 'warning',
+        });
+        if (!result.isConfirmed) return;
+
         setEscalating(true);
         try {
             const ok = await refundService.escalateRefund(refundInfo.refundId, true);

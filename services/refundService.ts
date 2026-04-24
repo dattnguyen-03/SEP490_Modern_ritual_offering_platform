@@ -5,11 +5,16 @@ export interface CreateRefundItem {
     orderItemId: string;
 }
 
+export type RefundType = 'Full' | 'SpecificItems' | 'PartialItem';
+
 export interface RefundRequest {
     orderId: string;
     reason: string;
     proofImages: File[];
-    createRefundItems: CreateRefundItem[];
+    createRefundItems?: CreateRefundItem[];
+    refundType: RefundType;
+    targetItemId?: string;
+    partialAmount?: number;
 }
 
 export interface CreateRefundResult {
@@ -166,10 +171,21 @@ class RefundService {
                 formData.append('ProofImages', file);
             });
 
-            request.createRefundItems.forEach((item) => {
-                // Đảm bảo truyền đúng field BE nhận
-                formData.append('ItemIds', item.orderItemId);
-            });
+            formData.append('RefundType', request.refundType);
+
+            if (request.createRefundItems && request.createRefundItems.length > 0) {
+                request.createRefundItems.forEach((item) => {
+                    formData.append('ItemIds', item.orderItemId);
+                });
+            }
+
+            if (request.targetItemId) {
+                formData.append('TargetItemId', request.targetItemId);
+            }
+
+            if (request.partialAmount !== undefined) {
+                formData.append('PartialAmount', request.partialAmount.toString());
+            }
 
             // Log FormData contents for debugging
             console.log('📤 Refund FormData:');

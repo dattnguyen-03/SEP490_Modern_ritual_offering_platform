@@ -88,6 +88,24 @@ const getDisplayStatusClass = (tx: WalletTransaction): string => {
   return getTransactionStatusClass(tx.status);
 };
 
+/** Màu số tiền theo loại giao dịch (không theo dấu amount) */
+const getAmountColorByType = (type: string, amount: number): string => {
+  const t = String(type || '').trim().toLowerCase();
+  // Đỏ: tiền ra khỏi vendor hoặc gây bất lợi
+  if (['refundcustomer', 'refundorder', 'penalty', 'penaltyvendor',
+       'withdrawal', 'withdraw', 'platformfee'].includes(t)) return 'text-rose-600';
+  // Cam: tiền bị giữ (ký quỹ)
+  if (['withholdingdeduction'].includes(t)) return 'text-amber-600';
+  // Xanh: tiền vào / có lợi cho vendor
+  if (['vendorincome', 'deposit', 'topup', 'withholdingrelease',
+       'vendorcompensation', 'debtsettlement'].includes(t)) return 'text-emerald-600';
+  // Mặc định: theo dấu amount
+  return amount >= 0 ? 'text-emerald-600' : 'text-rose-600';
+};
+
+/** Dấu trước số tiền — luôn là + (amount từ BE đã là số dương) */
+const getAmountPrefixByType = (_type: string, _amount: number): string => '+';
+
 const getTransactionTypeLabel = (type: string, amount: number): string => {
   const normalized = String(type || '').trim().toLowerCase();
 
@@ -489,8 +507,8 @@ const VendorTransactionPage: React.FC<VendorTransactionPageProps> = ({ onNavigat
                     </div>
 
                     <div className="text-right min-w-[160px]">
-                      <p className={`text-base md:text-lg font-extrabold tabular-nums ${incoming ? 'text-emerald-600' : 'text-rose-600'}`}>
-                        {incoming ? '+' : '-'}{formatCurrency(Math.abs(tx.amount))}
+                      <p className={`text-base md:text-lg font-extrabold tabular-nums ${getAmountColorByType(tx.type, tx.amount)}`}>
+                        {getAmountPrefixByType(tx.type, tx.amount)}{formatCurrency(Math.abs(tx.amount))}
                       </p>
                       {/* {tx.balanceAfter !== null && (
                         <p className="mt-1 text-xs text-black font-bold">
@@ -538,8 +556,8 @@ const VendorTransactionPage: React.FC<VendorTransactionPageProps> = ({ onNavigat
               <div className="grid grid-cols-2 gap-8">
                 <div>
                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Số tiền</p>
-                  <p className={`text-2xl font-black tabular-nums ${detailTx.amount >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
-                    {detailTx.amount >= 0 ? '+' : ''}{formatCurrency(detailTx.amount)}
+                  <p className={`text-2xl font-black tabular-nums ${getAmountColorByType(detailTx.type, detailTx.amount)}`}>
+                    {getAmountPrefixByType(detailTx.type, detailTx.amount)}{formatCurrency(Math.abs(detailTx.amount))}
                   </p>
                 </div>
                 {/* <div>
@@ -575,8 +593,8 @@ const VendorTransactionPage: React.FC<VendorTransactionPageProps> = ({ onNavigat
                           <p className="text-xs font-black text-slate-800 uppercase tracking-tight">{getTransactionTypeLabel(rtx.type, rtx.amount)}</p>
                           <p className="text-[9px] text-slate-400 font-bold">{formatDateTimeVi(rtx.createdAt).split(' ')[0]}</p>
                         </div>
-                        <p className={`text-sm font-black tabular-nums ${rtx.amount >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
-                          {rtx.amount >= 0 ? '+' : ''}{formatCurrency(rtx.amount)}
+                        <p className={`text-sm font-black tabular-nums ${getAmountColorByType(rtx.type, rtx.amount)}`}>
+                          {getAmountPrefixByType(rtx.type, rtx.amount)}{formatCurrency(Math.abs(rtx.amount))}
                         </p>
                       </div>
                     ))}
