@@ -195,7 +195,7 @@ const OrderDetailsPage: React.FC = () => {
         const reason = result.value || 'Khách hàng thay đổi ý định';
         setCancelling(true);
         try {
-            const success = await orderService.cancelOrder(order.orderId, reason);
+            const success = await orderService.cancelOrder(order.orderId, reason, 'customer');
             if (success) {
                 toast.success('Hủy đơn hàng thành công');
                 await fetchOrder();
@@ -271,14 +271,45 @@ const OrderDetailsPage: React.FC = () => {
     };
 
     const getTrackingStepIndex = (status: string, hasRefund: boolean) => {
-        const normalized = status?.toUpperCase() || '';
+        const normalized = String(status || '').trim().toUpperCase();
         if (['PENDING', 'CONFIRMED', 'PAID'].includes(normalized)) return 0;
         if (['PREPARING', 'PROCESSING'].includes(normalized)) return 1;
         if (['SHIPPING', 'DELIVERING'].includes(normalized)) return 2;
-        if (['DELIVERED', 'COMPLETED', 'REFUNDED'].includes(normalized)) {
+        if (['DELIVERED', 'COMPLETED'].includes(normalized)) return 3;
+        if (normalized === 'REFUNDED') {
             return hasRefund ? 4 : 3;
         }
         return 0;
+    };
+
+    const normalizeTrackingStatus = (status: string): string => {
+        const map: Record<string, string> = {
+            paid: 'PAID',
+            confirmed: 'CONFIRMED',
+            pending: 'PENDING',
+            processing: 'PROCESSING',
+            preparing: 'PROCESSING',
+            shipping: 'DELIVERING',
+            delivering: 'DELIVERING',
+            delivered: 'DELIVERED',
+            completed: 'COMPLETED',
+            refunded: 'REFUNDED',
+            cancelled: 'CANCELLED',
+            paymentfailed: 'PAYMENTFAILED',
+        };
+
+        const key = String(status || '').trim().toLowerCase();
+        return map[key] || String(status || '').trim().toUpperCase();
+    };
+
+    const getTrackingSortTime = (createdAt: string): number => {
+        const date = new Date(String(createdAt || ''));
+        return Number.isNaN(date.getTime()) ? 0 : date.getTime();
+    };
+
+    const formatTrackingTime = (value: string): string => {
+        const date = new Date(String(value || ''));
+        return Number.isNaN(date.getTime()) ? '' : date.toLocaleString('vi-VN');
     };
 
     if (loading) return <LoadingScreen message="Đang tải chi tiết đơn hàng..." />;
@@ -294,7 +325,33 @@ const OrderDetailsPage: React.FC = () => {
     const hasDeliveryImages = deliveryImages.length > 0;
 
     const hasRefundStep = Boolean(refundInfo?.refundId);
-    const trackingStepIndex = getTrackingStepIndex(order.orderStatus, hasRefundStep);
+    const normalizedTracking = [...(order.trackingLists || [])]
+        .sort((a, b) => getTrackingSortTime(a.createdAt) - getTrackingSortTime(b.createdAt))
+        .map((item) => ({
+            ...item,
+            normalizedStatus: normalizeTrackingStatus(item.status),
+        }))
+        .filter((item) => item.normalizedStatus);
+
+    const latestTrackingStatus = normalizedTracking.length > 0
+        ? normalizedTracking[normalizedTracking.length - 1].normalizedStatus
+        : '';
+
+    const timelineStatus = latestTrackingStatus || normalizeTrackingStatus(order.orderStatus);
+    const trackingStepIndex = getTrackingStepIndex(timelineStatus, hasRefundStep);
+
+    const stageTimestampByStep = normalizedTracking.reduce<Record<number, string>>((acc, item) => {
+        const stepIndex = getTrackingStepIndex(item.normalizedStatus, hasRefundStep);
+        if (item.createdAt) {
+            acc[stepIndex] = item.createdAt;
+        }
+        return acc;
+    }, {});
+
+    if (hasRefundStep && refundInfo?.createdAt && !stageTimestampByStep[4]) {
+        stageTimestampByStep[4] = refundInfo.createdAt;
+    }
+
     const trackingSteps = [
         { label: 'Xác nhận', desc: 'Tiếp nhận đơn' },
         { label: 'Chuẩn bị', desc: 'Sửa soạn lễ vật' },
@@ -402,6 +459,9 @@ const OrderDetailsPage: React.FC = () => {
                                             <div className="text-center">
                                                 <p className="text-sm font-black text-slate-800 tracking-tight">{step.label}</p>
                                                 <p className="text-[10px] text-black font-bold uppercase mt-0.5">{step.desc}</p>
+                                                <p className="text-[10px] text-slate-500 font-semibold mt-1">
+                                                    {stageTimestampByStep[i] ? formatTrackingTime(stageTimestampByStep[i]) : 'Chưa có mốc'}
+                                                </p>
                                             </div>
                                         </div>
                                     ))}

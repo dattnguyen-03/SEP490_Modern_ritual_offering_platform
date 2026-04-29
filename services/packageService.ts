@@ -818,7 +818,7 @@ class PackageService {
    * @returns Product
    */
   mapToProduct(apiPackage: ApiPackage, vendorMap?: Map<string, VendorProfile>): Product {
-    // Find default variant or use first variant for pricing
+    // Find default variant for fallback values
     const variantsSource = apiPackage.packageVariants || (apiPackage as any).variants || [];
     const defaultVariant = variantsSource[0];
 
@@ -890,6 +890,18 @@ class PackageService {
 
     console.log('📦 Final parsed variants:', parsedVariants || []);
 
+    const normalizedMinPrice = Number((apiPackage as any).minPrice);
+    const variantMinPrice = parsedVariants
+      .map((variant) => Number(variant.price))
+      .filter((price) => Number.isFinite(price) && price > 0)
+      .reduce((min, price) => Math.min(min, price), Number.POSITIVE_INFINITY);
+
+    const finalPrice = Number.isFinite(normalizedMinPrice) && normalizedMinPrice > 0
+      ? normalizedMinPrice
+      : Number.isFinite(variantMinPrice)
+        ? variantMinPrice
+        : Number(defaultVariant?.price || 2500000);
+
     // Get vendor info from map if available
     const vendorId = apiPackage.vendorProfileId || (apiPackage as any).vendorId;
     const vendor = vendorId ? vendorMap?.get(vendorId) : undefined;
@@ -916,7 +928,7 @@ class PackageService {
       name: pkgName,
       description: apiPackage.description || 'Mâm cúng truyền thống with đầy đủ lễ vật',
       category: (apiPackage as any).categoryName || (apiPackage as any).ceremonyCategory?.name || this.mapCategoryIdToOccasion(apiPackage.categoryId?.toString() || '1'),
-      price: defaultVariant?.price || 2500000,
+      price: finalPrice,
       image: finalImage,
       gallery: finalGallery,
       rating: apiPackage.ratingAvg || 0,

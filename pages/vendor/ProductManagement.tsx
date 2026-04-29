@@ -763,11 +763,11 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onNavigate }) => 
 
   return (
     <div className="min-h-screen bg-white p-6 font-sans text-slate-800">
-      <div className="max-w-[1650px] mx-auto">
+      <div className="max-w-[1400px] mx-auto">
         {/* Header Section */}
         <div className="mb-12 flex flex-col md:flex-row md:items-center justify-between gap-8">
           <div className="flex items-start gap-5">
-            <button
+            {/* <button
               onClick={() => onNavigate('/vendor/dashboard')}
               className="px-6 py-4 bg-white rounded-2xl shadow-sm border border-slate-100 flex items-center justify-center text-slate-700 flex-shrink-0 hover:bg-slate-900 hover:text-white transition-all group font-black text-[10px] uppercase tracking-widest gap-2"
             >
@@ -775,7 +775,7 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onNavigate }) => 
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
               </svg>
               Quay lại Dashboard
-            </button>
+            </button> */}
             <div>
               <h1 className="text-4xl font-black text-slate-900 tracking-tight mb-2">Sản Phẩm</h1>
               <p className="text-black font-bold text-sm">Quản lý danh mục sản phẩm mâm cúng của bạn.</p>
@@ -1315,75 +1315,75 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onNavigate }) => 
 
           {!loadingProducts && !productsError && filteredProducts.length > 0 && (
             <>
-              <div className="overflow-x-auto">
-                <table className="w-full">
+              <div className="overflow-x-hidden">
+                <table className="w-full table-fixed">
                   <thead>
                     <tr className="bg-slate-100 border-b border-slate-300">
-                      <th className="px-6 py-4 text-left text-sm font-bold text-slate-800 whitespace-nowrap">Sản Phẩm</th>
-                      <th className="px-6 py-4 text-left text-sm font-bold text-slate-800 whitespace-nowrap">Danh Mục</th>
-                      <th className="px-6 py-4 text-left text-sm font-bold text-slate-800 whitespace-nowrap">Giá</th>
-                      <th className="px-6 py-4 text-left text-sm font-bold text-slate-800 whitespace-nowrap">Đơn Hàng</th>
-                      <th className="px-6 py-4 text-left text-sm font-bold text-slate-800 whitespace-nowrap">Đánh Giá</th>
-                      <th className="px-6 py-4 text-left text-sm font-bold text-slate-800 whitespace-nowrap">Trạng Thái</th>
-                      <th className="px-6 py-4 text-left text-sm font-bold text-slate-800 whitespace-nowrap">Hành Động</th>
+                      <th className="w-[24%] px-2 md:px-3 py-4 text-left text-sm font-bold text-slate-800">Sản Phẩm</th>
+                      <th className="w-[16%] px-2 md:px-3 py-4 text-left text-sm font-bold text-slate-800">Danh Mục</th>
+                      <th className="w-[11%] px-2 md:px-3 py-4 text-left text-sm font-bold text-slate-800 whitespace-nowrap">Giá</th>
+                      <th className="w-[8%] px-2 md:px-3 py-4 text-left text-sm font-bold text-slate-800 whitespace-nowrap">Đơn Hàng</th>
+                      <th className="w-[8%] px-2 md:px-3 py-4 text-left text-sm font-bold text-slate-800 whitespace-nowrap">Đánh Giá</th>
+                      <th className="w-[16%] px-2 md:px-3 py-4 text-left text-sm font-bold text-slate-800">Trạng Thái</th>
+                      <th className="w-[17%] px-2 md:px-3 py-4 text-left text-sm font-bold text-slate-800">Hành Động</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-200">
                     {paginatedProducts.map((product) => (
                       <tr key={product.id} className="hover:bg-slate-50 transition-colors">
-                        <td className="px-6 py-4">
-                          <div className="flex items-center gap-3">
+                        <td className="px-2 md:px-3 py-4">
+                          <div className="flex items-center gap-3 min-w-0">
                             <img
                               src={toImageSrc(product.image)}
                               alt={product.name}
-                              className="w-12 h-12 rounded-xl object-cover border border-slate-200 bg-slate-100"
+                              className="w-9 h-9 rounded-lg object-cover border border-slate-200 bg-slate-100 shrink-0"
                               loading="lazy"
                               onError={(e) => {
                                 (e.target as HTMLImageElement).src = fallbackProductImage;
                               }}
                             />
-                            <div>
-                              <p className="font-semibold text-gray-800">{product.name}</p>
+                            <div className="min-w-0">
+                              <p className="font-semibold text-gray-800 leading-6 whitespace-normal break-words text-sm md:text-base">{product.name}</p>
                               {/* <p className="text-xs text-gray-500">ID: {product.id}</p> */}
                             </div>
                           </div>
                         </td>
-                        <td className="px-6 py-4">
-                          <span className="inline-flex px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-semibold whitespace-nowrap">
+                        <td className="px-2 md:px-3 py-4">
+                          <span className="inline-flex px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-semibold whitespace-nowrap max-w-full overflow-hidden text-ellipsis">
                             {mapCategory(product.categoryId)}
                           </span>
                         </td>
-                        <td className="px-6 py-4 font-bold text-primary">
+                        <td className="px-2 md:px-3 py-4 font-bold text-primary whitespace-nowrap">
                           {product.price.toLocaleString('vi-VN')}
                         </td>
-                        <td className="px-6 py-4 font-semibold text-gray-800">{product.orders}</td>
-                        <td className="px-6 py-4">
+                        <td className="px-2 md:px-3 py-4 font-semibold text-gray-800">{product.orders}</td>
+                        <td className="px-2 md:px-3 py-4">
                           <span className="font-bold text-gray-800">{product.rating > 0 ? product.rating.toFixed(1) : '0'}</span>
                         </td>
-                        <td className="px-6 py-4">
+                        <td className="px-2 md:px-3 py-4">
                           {(() => {
                             const approval = normalizeApprovalStatus(product.approvalStatus);
                             if (approval === 'Pending') {
-                              return <span className="inline-flex px-3 py-1 rounded-full text-sm font-bold whitespace-nowrap bg-yellow-100 text-yellow-700">Chờ Duyệt</span>;
+                              return <span className="inline-flex px-2 py-1 rounded-full text-xs font-bold whitespace-nowrap bg-yellow-100 text-yellow-700">Chờ Duyệt</span>;
                             }
                             if (approval === 'Rejected') {
-                              return <span className="inline-flex px-3 py-1 rounded-full text-sm font-bold whitespace-nowrap bg-red-100 text-red-700">Bị Từ Chối</span>;
+                              return <span className="inline-flex px-2 py-1 rounded-full text-xs font-bold whitespace-nowrap bg-red-100 text-red-700">Bị Từ Chối</span>;
                             }
                             if (approval === 'Draft') {
-                              return <span className="inline-flex px-3 py-1 rounded-full text-sm font-bold whitespace-nowrap bg-amber-100 text-amber-700">Nháp</span>;
+                              return <span className="inline-flex px-2 py-1 rounded-full text-xs font-bold whitespace-nowrap bg-amber-100 text-amber-700">Nháp</span>;
                             }
                             return (
-                              <span className={`inline-flex px-3 py-1 rounded-full text-sm font-bold whitespace-nowrap ${product.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'}`}>
+                              <span className={`inline-flex px-2 py-1 rounded-full text-xs font-bold whitespace-nowrap ${product.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'}`}>
                                 {product.status === 'active' ? 'Hoạt Động' : 'Ngừng'}
                               </span>
                             );
                           })()}
                         </td>
-                        <td className="px-6 py-4">
-                          <div className="flex gap-2">
+                        <td className="px-2 md:px-3 py-4">
+                          <div className="flex gap-1.5">
                             <button
                               onClick={() => handleViewDetails(product)}
-                              className="px-3 py-2 text-blue-600 border border-blue-300 hover:bg-blue-100 rounded-lg transition-colors text-sm font-semibold whitespace-nowrap"
+                              className="w-full max-w-[92px] px-2 py-1.5 text-blue-600 border border-blue-300 hover:bg-blue-100 rounded-lg transition-colors text-xs font-semibold whitespace-nowrap"
                               title="Xem chi tiết"
                             >
                               Chi Tiết

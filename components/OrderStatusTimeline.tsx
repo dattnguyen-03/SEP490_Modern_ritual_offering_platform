@@ -24,6 +24,26 @@ const STATUS_TO_STAGE: Record<string, number> = {
   'Completed': 4,
 };
 
+const normalizeStatus = (status: unknown): string => {
+  const map: Record<string, string> = {
+    paid: 'Paid',
+    confirmed: 'Confirmed',
+    processing: 'Processing',
+    preparing: 'Processing',
+    shipping: 'Delivering',
+    delivering: 'Delivering',
+    delivered: 'Delivered',
+    completed: 'Completed',
+    pending: 'Pending',
+    cancelled: 'Cancelled',
+    refunded: 'Refunded',
+    paymentfailed: 'PaymentFailed',
+  };
+
+  const key = String(status || '').trim().toLowerCase();
+  return map[key] || String(status || '').trim();
+};
+
 // Stage definitions
 const TIMELINE_STAGES = [
   {
@@ -78,13 +98,38 @@ const hasMeaningfulText = (v: unknown): boolean => {
   return n !== '' && n !== 'n/a' && n !== 'na' && n !== 'null' && n !== 'undefined';
 };
 
+const getTrackingSortTime = (createdAt: unknown): number => {
+  const date = new Date(String(createdAt || ''));
+  return Number.isNaN(date.getTime()) ? 0 : date.getTime();
+};
+
 const OrderStatusTimeline: React.FC<OrderStatusTimelineProps> = ({
   orderId,
   currentStatus,
   trackingLists = [],
 }) => {
-  const currentStage = STATUS_TO_STAGE[currentStatus] || 1;
-  const normalizedStatus = currentStatus || 'Pending';
+  const normalizedTracking = [...trackingLists]
+    .sort((a, b) => getTrackingSortTime(a.createdAt) - getTrackingSortTime(b.createdAt))
+    .map((item) => ({
+      ...item,
+      normalizedStatus: normalizeStatus(item.status),
+    }))
+    .filter((item) => hasMeaningfulText(item.normalizedStatus));
+
+  const latestTrackingStatus = normalizedTracking.length > 0
+    ? normalizedTracking[normalizedTracking.length - 1].normalizedStatus
+    : '';
+
+  const normalizedFallbackStatus = normalizeStatus(currentStatus);
+  const normalizedStatus = latestTrackingStatus || normalizedFallbackStatus || 'Pending';
+  const currentStage = STATUS_TO_STAGE[normalizedStatus] || 1;
+  const stageTimestampByStage = normalizedTracking.reduce<Record<number, string>>((acc, item) => {
+    const stage = STATUS_TO_STAGE[item.normalizedStatus];
+    if (stage && hasMeaningfulText(item.createdAt)) {
+      acc[stage] = item.createdAt;
+    }
+    return acc;
+  }, {});
 
   // Calculate which stages are completed
   const isStageCompleted = (stageNumber: number) => stageNumber < currentStage;
@@ -93,16 +138,16 @@ const OrderStatusTimeline: React.FC<OrderStatusTimelineProps> = ({
   return (
     <div className="space-y-4">
       {/* Header with current status */}
-      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-[1.5rem] border border-blue-200 p-5 md:p-6">
-        <p className="text-xs font-bold uppercase text-blue-500 tracking-widest mb-2">TRANG THÁI HIỆN TẠI</p>
-        <h2 className="text-3xl md:text-4xl font-black text-blue-900 mb-4">
+      <div className="bg-gradient-to-r from-slate-50 to-gray-100 rounded-[1.5rem] border border-slate-200 p-5 md:p-6">
+        <p className="text-xs font-bold uppercase text-slate-600 tracking-widest mb-2">TRANG THÁI HIỆN TẠI</p>
+        <h2 className="text-3xl md:text-4xl font-black text-slate-900 mb-4">
           {getStatusLabel(normalizedStatus)}
         </h2>
 
         {/* Order ID */}
         <div>
-          <p className="text-xs font-bold uppercase text-blue-400 tracking-widest mb-1">THEO DÕI ĐƠN HÀNG</p>
-          <p className="text-sm font-mono font-bold text-blue-700 break-all">{orderId}</p>
+          <p className="text-xs font-bold uppercase text-slate-500 tracking-widest mb-1">THEO DÕI ĐƠN HÀNG</p>
+          <p className="text-sm font-mono font-bold text-slate-800 break-all">{orderId}</p>
         </div>
       </div>
 
@@ -114,7 +159,7 @@ const OrderStatusTimeline: React.FC<OrderStatusTimelineProps> = ({
           <div className="absolute top-6 left-0 right-0 h-1 bg-gray-200" 
                style={{ 
                  width: `${((currentStage - 1) / (TIMELINE_STAGES.length - 1)) * 100}%`,
-                 backgroundColor: '#3B82F6',
+                 backgroundColor: '#0f172a',
                  transition: 'width 0.3s ease',
                  zIndex: 0
                }}>
@@ -126,9 +171,9 @@ const OrderStatusTimeline: React.FC<OrderStatusTimelineProps> = ({
               <div
                 className={`w-11 h-11 rounded-full flex items-center justify-center font-black text-base mb-2 transition-all border-4 ${
                   isStageCompleted(stage.number)
-                    ? 'bg-blue-500 text-white border-white shadow-lg shadow-blue-500/30'
+                    ? 'bg-slate-900 text-white border-white shadow-lg shadow-slate-900/30'
                     : isStageActive(stage.number)
-                    ? 'bg-blue-500 text-white border-white shadow-lg shadow-blue-500/50 scale-110'
+                    ? 'bg-slate-900 text-white border-white shadow-lg shadow-slate-900/50 scale-110'
                     : 'bg-gray-100 text-gray-400 border-gray-100'
                 }`}
               >
@@ -156,6 +201,19 @@ const OrderStatusTimeline: React.FC<OrderStatusTimelineProps> = ({
                   style={{ maxWidth: '96px' }}
                 >
                   {stage.description}
+                </p>
+
+                <p
+                  className={`text-[11px] font-semibold mt-1.5 ${
+                    isStageCompleted(stage.number) || isStageActive(stage.number)
+                      ? 'text-slate-700'
+                      : 'text-gray-300'
+                  }`}
+                  style={{ maxWidth: '120px' }}
+                >
+                  {stageTimestampByStage[stage.number]
+                    ? formatDateTimeVi(stageTimestampByStage[stage.number])
+                    : 'Chưa có mốc'}
                 </p>
               </div>
             </div>

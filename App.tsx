@@ -209,7 +209,7 @@ const AppContent: React.FC<{
             </div>
           </aside>
 
-          <div className="flex-1 w-full">
+          <div className="flex-1 w-full min-w-0">
             {children}
           </div>
         </div>
@@ -264,7 +264,7 @@ const AppContent: React.FC<{
             </div>
           </aside>
 
-          <div className="flex-1 w-full">
+          <div className="flex-1 w-full min-w-0">
             {children}
           </div>
         </div>

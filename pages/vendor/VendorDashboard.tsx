@@ -241,9 +241,8 @@ const VendorDashboard: React.FC<VendorDashboardProps> = ({ onNavigate }) => {
           <button
             key={key}
             onClick={() => setMainTab(key)}
-            className={`flex items-center gap-2 px-6 py-2.5 rounded-[1.5rem] text-xs font-black uppercase tracking-widest transition-all ${
-              mainTab === key ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-slate-500 hover:text-primary hover:bg-ritual-bg'
-            }`}
+            className={`flex items-center gap-2 px-6 py-2.5 rounded-[1.5rem] text-xs font-black uppercase tracking-widest transition-all ${mainTab === key ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-slate-500 hover:text-primary hover:bg-ritual-bg'
+              }`}
           >
             <span className="material-symbols-outlined text-base">{icon}</span>
             {label}
@@ -253,119 +252,100 @@ const VendorDashboard: React.FC<VendorDashboardProps> = ({ onNavigate }) => {
 
       {mainTab === 'compare' && <VendorComparePage onNavigate={onNavigate} />}
       {mainTab === 'overview' && <div className="space-y-12">
-      {/* Stats Grid */}
-      {dashboardStatsError && (
-        <div className="rounded-2xl border border-red-200 bg-red-50 text-red-700 px-4 py-3 text-sm font-medium">
-          {dashboardStatsError}
-        </div>
-      )}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {vendorStats.map((stat, idx) => (
-          <div key={idx} className="bg-white rounded-2xl border border-gold/10 shadow-sm p-6 hover:shadow-lg transition-all">
-            <div className="flex items-start justify-between mb-2">
-              <div className="w-11 h-11 rounded-2xl bg-ritual-bg flex items-center justify-center text-primary">
-                <span className="material-symbols-outlined text-2xl">{(stat as any).icon || 'leaderboard'}</span>
-              </div>
-              {(stat as any).growth !== undefined && (
-                <span className={`text-[10px] font-black px-2 py-1 rounded-lg ${(stat as any).growth >= 0 ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'}`}>
-                  {(stat as any).growth >= 0 ? '+' : ''}{(stat as any).growth}%
-                </span>
-              )}
+        {/* Stats Grid */}
+        {dashboardStatsError && (
+          <div className="rounded-2xl border border-red-200 bg-red-50 text-red-700 px-4 py-3 text-sm font-medium">
+            {dashboardStatsError}
+          </div>
+        )}
+        {/* Integrated Statistics View */}
+        <StatisticsView
+          isStaff={false}
+          hideHeader={false}
+          title="Phân tích kinh doanh"
+          subtitle="Theo dõi doanh thu và hiệu suất sản phẩm"
+        />
+
+        {/* Tab Content */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Pending Orders */}
+          <div className="lg:col-span-2 bg-white rounded-[2rem] border border-gold/10 shadow-sm p-8">
+            <div className="flex items-center justify-between mb-8">
+              <h2 className="text-2xl font-bold text-primary flex items-center gap-2">
+                <span className="material-symbols-outlined">pending_actions</span>
+                Đơn hàng chờ xử lý
+              </h2>
+              <span className="bg-red-100 text-red-700 text-xs font-bold px-3 py-1 rounded-lg">{paidPendingOrders.length}</span>
             </div>
-            <p className="text-sm text-black mb-1 uppercase font-bold tracking-widest">{stat.label}</p>
-            <p className="text-2xl font-black text-primary">{stat.value}</p>
-          </div>
-        ))}
-      </div>
+            <div className="space-y-4">
+              {isLoadingPaidPendingOrders && (
+                <div className="p-8 text-center text-black">Đang tải đơn hàng...</div>
+              )}
 
-      {/* Integrated Statistics View */}
-      <StatisticsView 
-        isStaff={false} 
-        hideHeader={false} 
-        title="Phân tích kinh doanh" 
-        subtitle="Theo dõi doanh thu và hiệu suất sản phẩm" 
-      />
+              {!isLoadingPaidPendingOrders && paidPendingOrdersError && (
+                <div className="p-8 text-center">
+                  <p className="text-sm text-red-600 font-semibold mb-3">{paidPendingOrdersError}</p>
+                  <button
+                    onClick={loadPaidPendingOrders}
+                    className="px-6 py-2 border-2 border-primary text-primary rounded-lg text-xs font-bold uppercase hover:bg-primary/5 transition-all"
+                  >
+                    Thử lại
+                  </button>
+                </div>
+              )}
 
-      {/* Tab Content */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Pending Orders */}
-        <div className="lg:col-span-2 bg-white rounded-[2rem] border border-gold/10 shadow-sm p-8">
-          <div className="flex items-center justify-between mb-8">
-            <h2 className="text-2xl font-bold text-primary flex items-center gap-2">
-              <span className="material-symbols-outlined">pending_actions</span>
-              Đơn hàng chờ xử lý
-            </h2>
-            <span className="bg-red-100 text-red-700 text-xs font-bold px-3 py-1 rounded-lg">{paidPendingOrders.length}</span>
-          </div>
-          <div className="space-y-4">
-            {isLoadingPaidPendingOrders && (
-              <div className="p-8 text-center text-black">Đang tải đơn hàng...</div>
-            )}
+              {!isLoadingPaidPendingOrders && !paidPendingOrdersError && paidPendingOrders.length === 0 && (
+                <div className="p-8 text-center text-black bg-white rounded-2xl border-2 border-dashed border-gray-100">
+                  Chưa có đơn hàng đã thanh toán đang chờ xử lý.
+                </div>
+              )}
 
-            {!isLoadingPaidPendingOrders && paidPendingOrdersError && (
-              <div className="p-8 text-center">
-                <p className="text-sm text-red-600 font-semibold mb-3">{paidPendingOrdersError}</p>
-                <button
-                  onClick={loadPaidPendingOrders}
-                  className="px-6 py-2 border-2 border-primary text-primary rounded-lg text-xs font-bold uppercase hover:bg-primary/5 transition-all"
+              {!isLoadingPaidPendingOrders && !paidPendingOrdersError && paidPendingOrders.map((order) => (
+                <div
+                  key={order.orderId}
+                  onClick={() => onNavigate('/vendor/orders')}
+                  className="flex items-center justify-between p-5 bg-ritual-bg/30 rounded-2xl border border-gold/10 hover:border-primary transition-all cursor-pointer group"
                 >
-                  Thử lại
-                </button>
-              </div>
-            )}
+                  <div>
+                    <p className="text-[10px] font-bold uppercase text-gold tracking-[0.2em] mb-1">#{order.orderId}</p>
+                    <p className="font-bold text-primary group-hover:text-gold transition-colors">{getOrderTitle(order)}</p>
+                    <p className="text-xs text-black mt-1">Khách: {getDisplayCustomerName(order)}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-black text-primary tracking-tight mb-1">{Number(order.totalAmount || 0).toLocaleString('vi-VN')}₫</p>
+                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter mb-1">(Đã gồm ship)</p>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{formatRelativeTime(order.createdAt)}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
 
-            {!isLoadingPaidPendingOrders && !paidPendingOrdersError && paidPendingOrders.length === 0 && (
-              <div className="p-8 text-center text-black bg-white rounded-2xl border-2 border-dashed border-gray-100">
-                Chưa có đơn hàng đã thanh toán đang chờ xử lý.
-              </div>
-            )}
-
-            {!isLoadingPaidPendingOrders && !paidPendingOrdersError && paidPendingOrders.map((order) => (
-              <div
-                key={order.orderId}
-                onClick={() => onNavigate('/vendor/orders')}
-                className="flex items-center justify-between p-5 bg-ritual-bg/30 rounded-2xl border border-gold/10 hover:border-primary transition-all cursor-pointer group"
+          {/* Recent Products Summary */}
+          <div className="bg-white rounded-[2rem] border border-gold/10 shadow-sm p-8">
+            <h3 className="text-xl font-bold text-primary mb-6 flex items-center gap-2">
+              <span className="material-symbols-outlined">inventory</span>
+              Sản phẩm nổi bật
+            </h3>
+            <div className="space-y-4">
+              {products.map((product) => (
+                <div key={product.id} className="p-4 bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+                  <p className="font-bold text-sm text-primary mb-1">{product.name}</p>
+                  <div className="flex justify-between text-xs font-bold">
+                    <span className="text-gold">{product.price.toLocaleString()}₫</span>
+                    <span className="text-slate-400">{product.orders} đơn</span>
+                  </div>
+                </div>
+              ))}
+              <button
+                onClick={() => onNavigate('/vendor/products')}
+                className="w-full mt-4 py-3 border-2 border-primary text-primary rounded-xl font-bold text-xs uppercase hover:bg-primary/5 transition-all"
               >
-                <div>
-                  <p className="text-[10px] font-bold uppercase text-gold tracking-[0.2em] mb-1">#{order.orderId}</p>
-                  <p className="font-bold text-primary group-hover:text-gold transition-colors">{getOrderTitle(order)}</p>
-                  <p className="text-xs text-black mt-1">Khách: {getDisplayCustomerName(order)}</p>
-                </div>
-                <div className="text-right">
-                  <p className="font-black text-primary tracking-tight mb-1">{Number(order.totalAmount || 0).toLocaleString('vi-VN')}₫</p>
-                  <p className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter mb-1">(Đã gồm ship)</p>
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{formatRelativeTime(order.createdAt)}</p>
-                </div>
-              </div>
-            ))}
+                Tất cả sản phẩm
+              </button>
+            </div>
           </div>
         </div>
-
-        {/* Recent Products Summary */}
-        <div className="bg-white rounded-[2rem] border border-gold/10 shadow-sm p-8">
-          <h3 className="text-xl font-bold text-primary mb-6 flex items-center gap-2">
-            <span className="material-symbols-outlined">inventory</span>
-            Sản phẩm nổi bật
-          </h3>
-          <div className="space-y-4">
-            {products.map((product) => (
-              <div key={product.id} className="p-4 bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
-                <p className="font-bold text-sm text-primary mb-1">{product.name}</p>
-                <div className="flex justify-between text-xs font-bold">
-                  <span className="text-gold">{product.price.toLocaleString()}₫</span>
-                  <span className="text-slate-400">{product.orders} đơn</span>
-                </div>
-              </div>
-            ))}
-            <button
-              onClick={() => onNavigate('/vendor/products')}
-              className="w-full mt-4 py-3 border-2 border-primary text-primary rounded-xl font-bold text-xs uppercase hover:bg-primary/5 transition-all"
-            >
-              Tất cả sản phẩm
-            </button>
-          </div>
-        </div>
-      </div>
       </div>}
     </div>
   );
