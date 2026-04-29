@@ -10,6 +10,7 @@ import { systemConfigService, SystemConfig, CreateSystemConfigRequest, UpdateSys
 import TransactionManagement from '../staff/TransactionManagement';
 import AuditLogPage from '../staff/AuditLogPage';
 import StatisticsView from '../../components/StatisticsView';
+import VendorComparePage from '../vendor/VendorComparePage';
 
 interface AdminDashboardProps {
   onNavigate: (path: string) => void;
@@ -47,6 +48,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) => {
   const setActiveTab = (tab: string) => {
     setSearchParams({ tab }, { replace: true });
   };
+  const [statsSubTab, setStatsSubTab] = useState<'overview' | 'compare'>('overview');
   const [withdrawalRequests, setWithdrawalRequests] = useState<WithdrawalListItem[]>([]);
   const [isLoadingWithdrawals, setIsLoadingWithdrawals] = useState(false);
   const [withdrawalsError, setWithdrawalsError] = useState<string | null>(null);
@@ -1447,8 +1449,30 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) => {
             {/* Tab Content */}
             
             {activeTab === 'statistics' && (
-              <div className="bg-white rounded-[2rem] border border-gold/10 shadow-sm p-8">
-                <StatisticsView isStaff={true} />
+              <div className="space-y-8">
+                {/* Sub-tab Switcher */}
+                <div className="flex bg-white rounded-[2rem] border border-gold/10 shadow-sm p-2 gap-2 w-fit">
+                  {( [['overview', 'dashboard', 'Tổng quan'], ['compare', 'compare_arrows', 'So sánh']] as const).map(([key, icon, label]) => (
+                    <button
+                      key={key}
+                      onClick={() => setStatsSubTab(key)}
+                      className={`flex items-center gap-2 px-6 py-2.5 rounded-[1.5rem] text-xs font-black uppercase tracking-widest transition-all ${
+                        statsSubTab === key ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-slate-500 hover:text-primary hover:bg-ritual-bg'
+                      }`}
+                    >
+                      <span className="material-symbols-outlined text-base">{icon}</span>
+                      {label}
+                    </button>
+                  ))}
+                </div>
+
+                {statsSubTab === 'overview' ? (
+                  <div className="bg-white rounded-[2rem] border border-gold/10 shadow-sm p-8">
+                    <StatisticsView isStaff={true} />
+                  </div>
+                ) : (
+                  <VendorComparePage onNavigate={onNavigate} isAdmin={true} />
+                )}
               </div>
             )}
 

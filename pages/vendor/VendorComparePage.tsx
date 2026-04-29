@@ -8,7 +8,10 @@ import { statisticsService, VendorDashboardResult } from '../../services/statist
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarElement, ArcElement, Title, Tooltip, Legend, Filler);
 
-interface VendorComparePageProps { onNavigate: (path: string) => void; }
+interface VendorComparePageProps { 
+  onNavigate: (path: string) => void; 
+  isAdmin?: boolean;
+}
 
 type GroupBy = 'day' | 'month' | 'year';
 
@@ -109,20 +112,21 @@ const PeriodInput: React.FC<{ cfg: PeriodCfg; onChange: (c: PeriodCfg) => void; 
   </div>
 );
 
-const VendorComparePage: React.FC<VendorComparePageProps> = ({ onNavigate: _ }) => {
+const VendorComparePage: React.FC<VendorComparePageProps> = ({ onNavigate: _, isAdmin = false }) => {
   const [groupBy, setGroupBy] = useState<GroupBy>('year');
   const [cfgA, setCfgA] = useState<PeriodCfg>(() => defaultPeriod('year', 0));
   const [cfgB, setCfgB] = useState<PeriodCfg>(() => defaultPeriod('year', 1));
-  const [dataA, setDataA] = useState<VendorDashboardResult | null>(null);
-  const [dataB, setDataB] = useState<VendorDashboardResult | null>(null);
+  const [dataA, setDataA] = useState<any>(null);
+  const [dataB, setDataB] = useState<any>(null);
   const [loading, setLoading] = useState(false);
 
   const runFetch = async (a: PeriodCfg, b: PeriodCfg) => {
     setLoading(true);
+    const fetchFn = isAdmin ? statisticsService.getOverview : statisticsService.getVendorDashboard;
     try {
       const [ra, rb] = await Promise.all([
-        statisticsService.getVendorDashboard({ startDate: a.startDate, endDate: a.endDate }).catch(() => null),
-        statisticsService.getVendorDashboard({ startDate: b.startDate, endDate: b.endDate }).catch(() => null),
+        fetchFn({ startDate: a.startDate, endDate: a.endDate }).catch(() => null),
+        fetchFn({ startDate: b.startDate, endDate: b.endDate }).catch(() => null),
       ]);
       setDataA(ra);
       setDataB(rb);
