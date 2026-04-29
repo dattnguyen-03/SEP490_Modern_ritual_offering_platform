@@ -14,6 +14,7 @@ import { Line, Doughnut } from 'react-chartjs-2';
 import { orderService, VendorOrder } from '../../services/orderService';
 import { statisticsService, VendorDashboardResult } from '../../services/statisticsService';
 import StatisticsView from '../../components/StatisticsView';
+import VendorComparePage from './VendorComparePage';
 
 ChartJS.register(
   CategoryScale,
@@ -31,6 +32,7 @@ interface VendorDashboardProps {
 }
 
 const VendorDashboard: React.FC<VendorDashboardProps> = ({ onNavigate }) => {
+  const [mainTab, setMainTab] = useState<'overview' | 'compare'>('overview');
   const [activeTab, setActiveTab] = useState<'overview' | 'products' | 'orders' | 'shippings' | 'settings'>('overview');
   const [allVendorOrders, setAllVendorOrders] = useState<VendorOrder[]>([]);
   const [paidPendingOrders, setPaidPendingOrders] = useState<VendorOrder[]>([]);
@@ -232,7 +234,25 @@ const VendorDashboard: React.FC<VendorDashboardProps> = ({ onNavigate }) => {
   ];
 
   return (
-    <div className="space-y-12">
+    <div className="space-y-8">
+      {/* Main Tab Switcher */}
+      <div className="flex bg-white rounded-[2rem] border border-gold/10 shadow-sm p-2 gap-2 w-fit">
+        {([['overview', 'dashboard', 'Tổng quan'], ['compare', 'compare_arrows', 'So sánh']] as const).map(([key, icon, label]) => (
+          <button
+            key={key}
+            onClick={() => setMainTab(key)}
+            className={`flex items-center gap-2 px-6 py-2.5 rounded-[1.5rem] text-xs font-black uppercase tracking-widest transition-all ${
+              mainTab === key ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-slate-500 hover:text-primary hover:bg-ritual-bg'
+            }`}
+          >
+            <span className="material-symbols-outlined text-base">{icon}</span>
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {mainTab === 'compare' && <VendorComparePage onNavigate={onNavigate} />}
+      {mainTab === 'overview' && <div className="space-y-12">
       {/* Stats Grid */}
       {dashboardStatsError && (
         <div className="rounded-2xl border border-red-200 bg-red-50 text-red-700 px-4 py-3 text-sm font-medium">
@@ -346,6 +366,7 @@ const VendorDashboard: React.FC<VendorDashboardProps> = ({ onNavigate }) => {
           </div>
         </div>
       </div>
+      </div>}
     </div>
   );
 };

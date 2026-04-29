@@ -36,6 +36,7 @@ import VendorWithdrawPage from './pages/vendor/VendorWithdrawPage';
 import DiscountPolicyManagement from './pages/vendor/DiscountPolicyManagement';
 import VendorBannerManagement from './pages/vendor/VendorBannerManagement';
 import AddOnManagement from './pages/vendor/AddOnManagement';
+import VendorComparePage from './pages/vendor/VendorComparePage';
 
 // Admin Pages
 import AdminDashboard from './pages/admin/AdminDashboard';
