@@ -164,9 +164,26 @@ export interface VendorOrder {
     deliveredDeadline?: string;
 }
 
+export interface VendorOrderCalendarItem {
+    date: string;
+    totalOrders: number;
+    totalRevenue: number;
+    paidCount?: number;
+    confirmedCount?: number;
+    processingCount?: number;
+    deliveringCount?: number;
+    deliveredCount?: number;
+    completedCount?: number;
+    cancelledCount?: number;
+    capacityStatus?: string | null;
+    totalProductionWeight?: number;
+    dailyCapacityWeight?: number;
+}
+
 export interface PreparationPlan {
     targetDate: string;
     totalPendingOrders: number;
+    totalAllOrders?: number;
     totalAddOnsToPrepare: Array<{
         addOnName: string;
         totalQuantity: number;
@@ -185,6 +202,17 @@ export interface PreparationPlan {
             addOns: string[];
             swaps: string[];
         }>;
+    }>;
+    ordersByStatus?: Array<{
+        orderId: string;
+        customerName?: string;
+        customerPhone?: string;
+        deliveryTime?: string;
+        finalAmount?: number;
+        orderStatus?: string;
+        orderStatusLabel?: string;
+        totalItems?: number;
+        hasRefund?: boolean;
     }>;
 }
 
@@ -873,6 +901,49 @@ class OrderService {
         }
     }
 
+    // Get calendar orders for the current vendor
+    async getVendorOrderCalendar(year: number, month: number): Promise<VendorOrderCalendarItem[]> {
+        try {
+            const url = `${API_BASE_URL}/orders/vendor/calendar?year=${year}&month=${month}`;
+            const response = await fetchWithAuth(url, {
+                method: 'GET',
+                headers: this.getHeaders('GET'),
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text().catch(() => '');
+                console.error(`Vendor Order Calendar API Error (Status: ${response.status}):`, errorText);
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            const isSuccess = data?.isSuccess || data?.isSucceeded || data?.statusCode === 'OK';
+            const payload = isSuccess ? (data?.result ?? data?.data ?? data) : data;
+            const rawDays = Array.isArray(payload?.days) ? payload.days : (Array.isArray(payload) ? payload : []);
+
+            return rawDays
+                .map((day: any) => ({
+                    date: String(day.date || '').slice(0, 10),
+                    totalOrders: Number(day.totalOrders) || 0,
+                    totalRevenue: Number(day.totalRevenue) || 0,
+                    paidCount: Number(day.paidCount) || 0,
+                    confirmedCount: Number(day.confirmedCount) || 0,
+                    processingCount: Number(day.processingCount) || 0,
+                    deliveringCount: Number(day.deliveringCount) || 0,
+                    deliveredCount: Number(day.deliveredCount) || 0,
+                    completedCount: Number(day.completedCount) || 0,
+                    cancelledCount: Number(day.cancelledCount) || 0,
+                    capacityStatus: day.capacityStatus ?? null,
+                    totalProductionWeight: Number(day.totalProductionWeight) || 0,
+                    dailyCapacityWeight: Number(day.dailyCapacityWeight) || 0,
+                }))
+                .filter(item => item.date);
+        } catch (error) {
+            console.error('Failed to fetch Vendor Order Calendar:', error);
+            throw error;
+        }
+    }
+
     // Get details for a specific order as a vendor
     async getVendorOrderDetails(orderId: string): Promise<Order | null> {
         try {
@@ -1124,9 +1195,9 @@ class OrderService {
     }
 
     // Get preparation plan for a specific date (vendor)
-    async getPreparationPlan(date: string): Promise<PreparationPlan | null> {
+    async getPreparationPlan(date: string, allOrders: boolean = false): Promise<PreparationPlan | null> {
         try {
-            const url = `${API_BASE_URL}/orders/vendor/daily-plan?date=${date}`;
+            const url = `${API_BASE_URL}/orders/vendor/daily-plan?date=${date}${allOrders ? '&allOrders=true' : ''}`;
             const response = await fetchWithAuth(url, {
                 method: 'GET',
                 headers: this.getHeaders('GET'),

@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { orderService, VendorOrder, Order, VendorOrderItem } from '../../services/orderService';
+import { orderService, VendorOrder, Order, VendorOrderItem, VendorOrderCalendarItem, PreparationPlan } from '../../services/orderService';
 import { getProfile } from '../../services/auth';
 import VendorRefundTab from './VendorRefundTab';
 import VendorReviewTab from './VendorReviewTab';
@@ -68,6 +68,13 @@ const formatVnd = (value: unknown): string => {
   return Number.isFinite(n) ? `${n.toLocaleString('vi-VN')}đ` : '0đ';
 };
 
+const formatPercent = (value: unknown): string => {
+  const n = typeof value === 'number' ? value : Number(value);
+  if (!Number.isFinite(n)) return '0%';
+  const pct = n > 1 ? n : n * 100;
+  return `${Math.round(pct)}%`;
+};
+
 const formatDateVi = (value: unknown): string => {
   if (!value) return 'N/A';
   const d = new Date(String(value));
@@ -133,6 +140,54 @@ const parseViDateToYmd = (value: string): string | null => {
   if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) return null;
 
   return toYmd(date);
+};
+
+const WEEKDAY_LABELS = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
+
+const getMonthMatrix = (year: number, month: number) => {
+  const firstDay = new Date(year, month - 1, 1);
+  const startDay = (firstDay.getDay() + 6) % 7;
+  const daysInMonth = new Date(year, month, 0).getDate();
+  const weeks: Array<Array<number | null>> = [];
+  let day = 1;
+
+  for (let w = 0; w < 6; w += 1) {
+    const week: Array<number | null> = [];
+    for (let d = 0; d < 7; d += 1) {
+      if ((w === 0 && d < startDay) || day > daysInMonth) {
+        week.push(null);
+      } else {
+        week.push(day);
+        day += 1;
+      }
+    }
+    weeks.push(week);
+    if (day > daysInMonth) break;
+  }
+
+  return weeks;
+};
+
+const formatMonthLabel = (year: number, month: number) => `Tháng ${month}/${year}`;
+
+const formatOrderCode = (value: string) => {
+  const raw = String(value || '').trim();
+  if (!raw) return 'ORD';
+  if (raw.length <= 10) return raw.toUpperCase();
+  return `ORD-${raw.slice(-6).toUpperCase()}`;
+};
+
+const getCalendarDateKey = (value: unknown): string | null => {
+  const d = parseDate(value);
+  return d ? toYmd(d) : null;
+};
+
+const getCapacityLabel = (value?: string | null) => {
+  const key = String(value || '').trim().toLowerCase();
+  if (key === 'warning') return 'Gần đầy';
+  if (key === 'full') return 'Đã đầy';
+  if (key === 'ok') return 'Ổn định';
+  return 'N/A';
 };
 
 const getStatusBadge = (status: unknown) =>
@@ -229,6 +284,29 @@ const OrderManagement: React.FC<OrderManagementProps> = ({ onNavigate: _onNaviga
   const [toDateText, setToDateText] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
 
+  // ── calendar state ─────────────────────────────────────────────────────────
+  const today = new Date();
+  const [calendarYear, setCalendarYear] = useState(today.getFullYear());
+  const [calendarMonth, setCalendarMonth] = useState(today.getMonth() + 1);
+  const [calendarOrders, setCalendarOrders] = useState<VendorOrderCalendarItem[]>([]);
+  const [calendarLoading, setCalendarLoading] = useState(false);
+  const [calendarError, setCalendarError] = useState<string | null>(null);
+  const [selectedCalendarDate, setSelectedCalendarDate] = useState(toYmd(today));
+  const [dailyPlanItems, setDailyPlanItems] = useState<Array<{
+    orderId: string;
+    deliveryTime?: string;
+    status?: string;
+    statusLabel?: string;
+    customerName?: string;
+    customerPhone?: string;
+    finalAmount?: number;
+  }>>([]);
+  const [dailyPlanDetail, setDailyPlanDetail] = useState<PreparationPlan | null>(null);
+  const [showDailyPrepPlan, setShowDailyPrepPlan] = useState(false);
+  const [dailyPlanLoading, setDailyPlanLoading] = useState(false);
+  const [dailyPlanError, setDailyPlanError] = useState<string | null>(null);
+  const [selectedDailyPlanItem, setSelectedDailyPlanItem] = useState<{ orderId: string; deliveryTime?: string; status?: string } | null>(null);
+
   // ── preparation state ───────────────────────────────────────────────────────
   const [prepPlan, setPrepPlan] = useState<any>(null);
   const [prepLoading, setPrepLoading] = useState(false);
@@ -245,12 +323,11 @@ const OrderManagement: React.FC<OrderManagementProps> = ({ onNavigate: _onNaviga
   const [deliveryProofImages, setDeliveryProofImages] = useState<File[]>([]);
 
   // ── tab state ───────────────────────────────────────────────────────────────
-  const [mainTab, setMainTab] = useState<'orders' | 'refunds' | 'reviews' | 'preparation'>(() => {
+  const [mainTab, setMainTab] = useState<'orders' | 'refunds' | 'reviews'>(() => {
     const params = new URLSearchParams(window.location.search);
     const tab = params.get('tab');
     if (tab === 'refund' || tab === 'refunds') return 'refunds';
     if (tab === 'review' || tab === 'reviews') return 'reviews';
-    if (tab === 'preparation') return 'preparation';
     return 'orders';
   });
   const [pendingRefunds, setPendingRefunds] = useState(0);
@@ -388,6 +465,104 @@ const OrderManagement: React.FC<OrderManagementProps> = ({ onNavigate: _onNaviga
     fetchPrepPlan();
   }, [fetchPrepPlan]);
 
+  const fetchCalendarOrders = useCallback(async () => {
+    if (mainTab !== 'orders') return;
+    try {
+      setCalendarLoading(true);
+      setCalendarError(null);
+      const items = await orderService.getVendorOrderCalendar(calendarYear, calendarMonth);
+      setCalendarOrders(items);
+    } catch {
+      setCalendarError('Không thể tải lịch đơn hàng. Vui lòng thử lại.');
+    } finally {
+      setCalendarLoading(false);
+    }
+  }, [mainTab, calendarYear, calendarMonth]);
+
+  useEffect(() => {
+    fetchCalendarOrders();
+  }, [fetchCalendarOrders]);
+
+  const orderLookup = useMemo(() => {
+    return orders.reduce<Record<string, VendorOrder>>((acc, order) => {
+      if (order.orderId) acc[order.orderId] = order;
+      return acc;
+    }, {});
+  }, [orders]);
+
+  const fetchDailyPlan = useCallback(async () => {
+    if (mainTab !== 'orders') return;
+    try {
+      setDailyPlanLoading(true);
+      setDailyPlanError(null);
+      const dateParam = toMdy(selectedCalendarDate);
+      const plan = await orderService.getPreparationPlan(dateParam, true);
+      setDailyPlanDetail(plan || null);
+      if (!plan) {
+        setDailyPlanItems([]);
+        return;
+      }
+
+      const items: Array<{
+        orderId: string;
+        deliveryTime?: string;
+        status?: string;
+        statusLabel?: string;
+        customerName?: string;
+        customerPhone?: string;
+        finalAmount?: number;
+      }> = [];
+
+      if (Array.isArray(plan.ordersByStatus)) {
+        plan.ordersByStatus.forEach((item) => {
+          const orderId = String(item.orderId || '').trim();
+          if (!orderId) return;
+          items.push({
+            orderId,
+            deliveryTime: String(item.deliveryTime || '').slice(0, 5),
+            status: item.orderStatus,
+            statusLabel: item.orderStatusLabel,
+            customerName: item.customerName,
+            customerPhone: item.customerPhone,
+            finalAmount: Number(item.finalAmount) || undefined,
+          });
+        });
+      }
+
+      const merged = items.map((item) => {
+        const order = orderLookup[item.orderId];
+        return {
+          ...item,
+          status: item.status || order?.orderStatus,
+          deliveryTime: item.deliveryTime || order?.deliveryTime?.slice(0, 5),
+          customerName: item.customerName || order?.customerName,
+          customerPhone: item.customerPhone || order?.customerPhone,
+          finalAmount: Number(item.finalAmount) || order?.finalAmount,
+        };
+      });
+
+      setDailyPlanItems(merged);
+    } catch {
+      setDailyPlanError('Không thể tải danh sách đơn hàng theo ngày.');
+      setDailyPlanDetail(null);
+    } finally {
+      setDailyPlanLoading(false);
+    }
+  }, [mainTab, selectedCalendarDate, orderLookup]);
+
+  useEffect(() => {
+    fetchDailyPlan();
+  }, [fetchDailyPlan]);
+
+  useEffect(() => {
+    const firstDay = toYmd(new Date(calendarYear, calendarMonth - 1, 1));
+    setSelectedCalendarDate(firstDay);
+  }, [calendarYear, calendarMonth]);
+
+  useEffect(() => {
+    setShowDailyPrepPlan(false);
+  }, [selectedCalendarDate]);
+
   // Enrich visible orders when page or orders change
   useEffect(() => {
     const enrichVisibleOrders = async () => {
@@ -495,6 +670,16 @@ const OrderManagement: React.FC<OrderManagementProps> = ({ onNavigate: _onNaviga
     }
   };
 
+  const closeOrderDetail = () => {
+    setSelectedOrder(null);
+    setSelectedDailyPlanItem(null);
+    setNewStatus('');
+    setStatusReason('');
+    setStatusError(null);
+    setStatusSuccess(null);
+    setDeliveryProofImages([]);
+  };
+
   // ── derived ─────────────────────────────────────────────────────────────────
   const filteredOrders = orders
     .filter(o => filterStatus === 'all' || normalizeStatus(o.orderStatus) === filterStatus)
@@ -506,8 +691,7 @@ const OrderManagement: React.FC<OrderManagementProps> = ({ onNavigate: _onNaviga
       if (fromDate && ymd < fromDate) return false;
       if (toDate && ymd > toDate) return false;
       return true;
-    })
-    .sort((a, b) => (parseDate(b.createdAt)?.getTime() ?? 0) - (parseDate(a.createdAt)?.getTime() ?? 0));
+    });
 
   const totalPages = Math.max(1, Math.ceil(filteredOrders.length / itemsPerPage));
   const safeCurrentPage = Math.min(currentPage, totalPages);
@@ -515,6 +699,37 @@ const OrderManagement: React.FC<OrderManagementProps> = ({ onNavigate: _onNaviga
     (safeCurrentPage - 1) * itemsPerPage,
     safeCurrentPage * itemsPerPage,
   );
+
+  const calendarOrdersByDate = useMemo(() => {
+    return calendarOrders.reduce<Record<string, VendorOrderCalendarItem>>((acc, item) => {
+      const key = getCalendarDateKey(item.date);
+      if (!key) return acc;
+      acc[key] = item;
+      return acc;
+    }, {});
+  }, [calendarOrders]);
+
+  const selectedDaySummary = useMemo(() => {
+    return calendarOrdersByDate[selectedCalendarDate] || null;
+  }, [calendarOrdersByDate, selectedCalendarDate]);
+
+  const handlePrevMonth = () => {
+    if (calendarMonth === 1) {
+      setCalendarMonth(12);
+      setCalendarYear((prev) => prev - 1);
+    } else {
+      setCalendarMonth((prev) => prev - 1);
+    }
+  };
+
+  const handleNextMonth = () => {
+    if (calendarMonth === 12) {
+      setCalendarMonth(1);
+      setCalendarYear((prev) => prev + 1);
+    } else {
+      setCalendarMonth((prev) => prev + 1);
+    }
+  };
 
   useEffect(() => {
     if (currentPage > totalPages) {
@@ -619,6 +834,11 @@ const OrderManagement: React.FC<OrderManagementProps> = ({ onNavigate: _onNaviga
       </div>
     );
   }
+
+  const hasDailyPrepPlan = Boolean(
+    dailyPlanDetail && Array.isArray(dailyPlanDetail.variantsToPrepare) && dailyPlanDetail.variantsToPrepare.length > 0
+  );
+
   return (
     <div className="bg-white min-h-screen py-12">
       <div className="max-w-7xl mx-auto px-4 md:px-8">
@@ -655,7 +875,7 @@ const OrderManagement: React.FC<OrderManagementProps> = ({ onNavigate: _onNaviga
         </div>
 
         <div className="flex gap-2 mb-6 bg-white p-1.5 rounded-2xl border border-gray-200 shadow-sm w-fit">
-          {(['orders', 'preparation', 'refunds', 'reviews'] as const).map(id => (
+          {(['orders', 'refunds', 'reviews'] as const).map(id => (
             <button
               key={id}
               onClick={() => setMainTab(id)}
@@ -669,7 +889,7 @@ const OrderManagement: React.FC<OrderManagementProps> = ({ onNavigate: _onNaviga
                   {pendingRefunds}
                 </span>
               )}
-              {id === 'orders' ? 'Đơn Hàng' : (id === 'preparation' ? 'Kế hoạch chuẩn bị' : (id === 'refunds' ? 'Yêu cầu hoàn tiền' : 'Đánh giá'))}
+              {id === 'orders' ? 'Đơn Hàng' : (id === 'refunds' ? 'Yêu cầu hoàn tiền' : 'Đánh giá')}
             </button>
           ))}
         </div>
@@ -677,108 +897,175 @@ const OrderManagement: React.FC<OrderManagementProps> = ({ onNavigate: _onNaviga
 
         {mainTab === 'orders' && (
           <>
-            {/* Date filter */}
-            <div className="mb-5 rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-[1fr_1fr_auto] gap-4 items-end">
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-[11px] font-black uppercase tracking-widest text-black">Từ ngày</label>
-                  <div className="w-full border border-gray-200 rounded-xl bg-white focus-within:ring-2 focus-within:ring-primary/30 focus-within:border-primary flex items-center overflow-hidden shadow-[inset_0_1px_2px_rgba(15,23,42,0.03)]">
-                    <input
-                      type="text"
-                      value={fromDateText}
-                      onChange={(e) => handleFromDateTextChange(e.target.value)}
-                      onBlur={handleFromDateTextBlur}
-                      placeholder="dd/mm/yyyy"
-                      className="w-full px-4 py-2.5 text-sm font-semibold text-gray-700 bg-transparent border-none outline-none focus:outline-none focus:ring-0"
-                    />
+            {/* Calendar view */}
+            <div className="mb-8 grid grid-cols-1 xl:grid-cols-[1.2fr_1fr] gap-6">
+              <div className="bg-white rounded-[2rem] border border-gray-200 shadow-sm p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h3 className="text-lg font-black text-slate-900">Lịch đơn hàng</h3>
+                    <p className="text-xs text-slate-500 font-semibold">{formatMonthLabel(calendarYear, calendarMonth)}</p>
+                  </div>
+                  <div className="flex items-center gap-2">
                     <button
                       type="button"
-                      onClick={() => openNativeDatePicker(fromDateInputRef.current)}
-                      className="px-3 py-2.5 border-l border-gray-200 text-black hover:bg-gray-50 transition-colors"
-                      aria-label="Chọn ngày bắt đầu"
+                      onClick={handlePrevMonth}
+                      className="size-9 rounded-xl border border-gray-200 bg-white text-slate-700 hover:bg-gray-50 transition"
+                      aria-label="Tháng trước"
                     >
-                      <span className="material-symbols-outlined text-[18px]">calendar_month</span>
+                      <span className="material-symbols-outlined text-lg">chevron_left</span>
                     </button>
-                  </div>
-                  <input
-                    ref={fromDateInputRef}
-                    type="date"
-                    value={fromDate}
-                    max={toDate || getTodayYmd()}
-                    onChange={(e) => handleFromDateChange(e.target.value)}
-                    className="absolute opacity-0 pointer-events-none w-0 h-0"
-                    tabIndex={-1}
-                    aria-hidden="true"
-                  />
-                </div>
-
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-[11px] font-black uppercase tracking-widest text-black">Đến ngày</label>
-                  <div className="w-full border border-gray-200 rounded-xl bg-white focus-within:ring-2 focus-within:ring-primary/30 focus-within:border-primary flex items-center overflow-hidden shadow-[inset_0_1px_2px_rgba(15,23,42,0.03)]">
-                    <input
-                      type="text"
-                      value={toDateText}
-                      onChange={(e) => handleToDateTextChange(e.target.value)}
-                      onBlur={handleToDateTextBlur}
-                      placeholder="dd/mm/yyyy"
-                      className="w-full px-4 py-2.5 text-sm font-semibold text-gray-700 bg-transparent border-none outline-none focus:outline-none focus:ring-0"
-                    />
                     <button
                       type="button"
-                      onClick={() => openNativeDatePicker(toDateInputRef.current)}
-                      className="px-3 py-2.5 border-l border-gray-200 text-black hover:bg-gray-50 transition-colors"
-                      aria-label="Chọn ngày kết thúc"
+                      onClick={handleNextMonth}
+                      className="size-9 rounded-xl border border-gray-200 bg-white text-slate-700 hover:bg-gray-50 transition"
+                      aria-label="Tháng sau"
                     >
-                      <span className="material-symbols-outlined text-[18px]">calendar_month</span>
+                      <span className="material-symbols-outlined text-lg">chevron_right</span>
                     </button>
                   </div>
-                  <input
-                    ref={toDateInputRef}
-                    type="date"
-                    value={toDate}
-                    min={fromDate || undefined}
-                    max={getTodayYmd()}
-                    onChange={(e) => handleToDateChange(e.target.value)}
-                    className="absolute opacity-0 pointer-events-none w-0 h-0"
-                    tabIndex={-1}
-                    aria-hidden="true"
-                  />
                 </div>
 
-                <button
-                  onClick={() => applyDatePreset('clear')}
-                  className="h-[42px] px-5 rounded-xl text-sm font-black text-black border border-gray-200 bg-white hover:bg-gray-50 transition whitespace-nowrap"
-                >
-                  Xóa lọc ngày
-                </button>
+                <div className="grid grid-cols-7 gap-2 text-[11px] font-black text-slate-400 uppercase tracking-widest">
+                  {WEEKDAY_LABELS.map(label => (
+                    <div key={label} className="text-center py-1 rounded-lg bg-slate-50 text-slate-500">{label}</div>
+                  ))}
+                </div>
+
+                {calendarLoading ? (
+                  <div className="py-16 text-center">
+                    <div className="inline-block animate-spin rounded-full h-9 w-9 border-t-4 border-b-4 border-primary mb-3" />
+                    <p className="text-slate-500 font-bold">Đang tải lịch...</p>
+                  </div>
+                ) : (
+                  <div className="mt-3 space-y-2">
+                    {getMonthMatrix(calendarYear, calendarMonth).map((week, wIdx) => (
+                      <div key={wIdx} className="grid grid-cols-7 gap-2">
+                        {week.map((day, dIdx) => {
+                          if (!day) {
+                            return <div key={`empty-${wIdx}-${dIdx}`} className="h-24 rounded-2xl bg-slate-50" />;
+                          }
+
+                          const ymd = `${calendarYear}-${String(calendarMonth).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                          const daySummary = calendarOrdersByDate[ymd];
+                          const totalOrders = daySummary?.totalOrders || 0;
+                          const isSelected = selectedCalendarDate === ymd;
+                          const isToday = ymd === getTodayYmd();
+
+                          return (
+                            <button
+                              key={ymd}
+                              type="button"
+                              onClick={() => setSelectedCalendarDate(ymd)}
+                              className={`group h-24 rounded-2xl border text-left p-2.5 transition-all ${isSelected
+                                ? 'border-primary bg-primary/10 shadow-[0_10px_28px_-16px_rgba(59,130,246,0.6)] ring-2 ring-primary/20'
+                                : 'border-gray-200 bg-white hover:bg-slate-50 hover:border-slate-300 hover:shadow-sm'
+                                }`}
+                            >
+                              <div className="flex items-center justify-between">
+                                <span className={`text-sm font-black ${isToday ? 'text-primary' : 'text-slate-800'}`}>{day}</span>
+                                {totalOrders > 0 && (
+                                  <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-primary/10 text-primary">
+                                    {totalOrders} đơn
+                                  </span>
+                                )}
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
-              <div className="flex flex-wrap items-center gap-2 mt-4 pt-3 border-t border-slate-100">
-                <span className="text-[11px] font-black uppercase tracking-widest text-black mr-1">Lọc nhanh</span>
-                <button
-                  onClick={() => applyDatePreset('today')}
-                  className="px-3 py-1.5 rounded-lg text-xs font-black border border-gray-200 text-slate-700 bg-white hover:bg-gray-50 transition"
-                >
-                  Hôm nay
-                </button>
-                <button
-                  onClick={() => applyDatePreset('last7')}
-                  className="px-3 py-1.5 rounded-lg text-xs font-black border border-gray-200 text-slate-700 bg-white hover:bg-gray-50 transition"
-                >
-                  7 ngày qua
-                </button>
-                <button
-                  onClick={() => applyDatePreset('last30')}
-                  className="px-3 py-1.5 rounded-lg text-xs font-black border border-gray-200 text-slate-700 bg-white hover:bg-gray-50 transition"
-                >
-                  30 ngày qua
-                </button>
-                <button
-                  onClick={() => applyDatePreset('thisMonth')}
-                  className="px-3 py-1.5 rounded-lg text-xs font-black border border-gray-200 text-slate-700 bg-white hover:bg-gray-50 transition"
-                >
-                  Tháng này
-                </button>
+              <div className="bg-white rounded-[2rem] border border-gray-200 shadow-sm p-6">
+                <div className="flex items-start justify-between gap-3 mb-4">
+                  <div>
+                    <h3 className="text-lg font-black text-slate-900">Chi tiết ngày {formatYmdToVi(selectedCalendarDate)}</h3>
+                    <p className="text-xs text-slate-500 font-semibold">{dailyPlanItems.length} đơn hàng</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setShowDailyPrepPlan(true)}
+                      disabled={!hasDailyPrepPlan}
+                      className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition ${hasDailyPrepPlan
+                        ? 'bg-slate-900 text-white hover:bg-slate-800'
+                        : 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                        }`}
+                    >
+                      Kế hoạch chuẩn bị ngày hôm nay
+                    </button>
+                    {(calendarError || dailyPlanError) && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          fetchCalendarOrders();
+                          fetchDailyPlan();
+                        }}
+                        className="px-4 py-2 rounded-xl border border-gray-200 text-xs font-black text-black hover:bg-gray-50"
+                      >
+                        Thử lại
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {calendarError && (
+                  <div className="mb-4 rounded-xl border border-red-100 bg-red-50 px-3 py-2 text-xs font-bold text-red-600">
+                    {calendarError}
+                  </div>
+                )}
+
+                {dailyPlanError && (
+                  <div className="mb-4 rounded-xl border border-red-100 bg-red-50 px-3 py-2 text-xs font-bold text-red-600">
+                    {dailyPlanError}
+                  </div>
+                )}
+
+                {calendarLoading || dailyPlanLoading ? (
+                  <div className="py-14 text-center">
+                    <div className="inline-block animate-spin rounded-full h-9 w-9 border-t-4 border-b-4 border-primary mb-3" />
+                    <p className="text-slate-500 font-bold">Đang tải chi tiết...</p>
+                  </div>
+                ) : dailyPlanItems.length === 0 ? (
+                  <div className="py-12 text-center border border-dashed border-gray-200 rounded-2xl">
+                    <div className="size-14 rounded-full bg-slate-50 flex items-center justify-center mx-auto mb-3">
+                      <span className="material-symbols-outlined text-slate-300 text-3xl">event_busy</span>
+                    </div>
+                    <p className="text-sm font-bold text-slate-500">Không có đơn hàng cho ngày này.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {dailyPlanItems.map((item, idx) => {
+                      const status = getStatusBadge(item.status || 'Pending');
+                      return (
+                        <button
+                          key={`${item.orderId}-${idx}`}
+                          type="button"
+                          onClick={() => {
+                            setSelectedDailyPlanItem(item);
+                            openDetail(item.orderId);
+                          }}
+                          className="flex w-full items-center justify-between gap-4 rounded-2xl border border-gray-100 bg-gray-50/60 px-4 py-3 text-left transition hover:bg-white hover:shadow-sm"
+                        >
+                          <div>
+                            <p className="text-[11px] font-black uppercase tracking-widest text-slate-400">
+                              {formatOrderCode(item.orderId)}
+                            </p>
+                            <p className="text-xs text-slate-600 flex items-center gap-1 mt-1">
+                              <span className="material-symbols-outlined text-[14px]">alarm</span>
+                              Hẹn giao: {item.deliveryTime || 'N/A'}
+                            </p>
+                          </div>
+                          <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${status.badge}`}>
+                            {item.statusLabel || status.label}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             </div>
 
@@ -1012,154 +1299,7 @@ const OrderManagement: React.FC<OrderManagementProps> = ({ onNavigate: _onNaviga
           </>
         )}
 
-        {mainTab === 'preparation' && (
-          <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            {/* Prep Header & Filter */}
-            <div className="bg-white p-8 rounded-[2.5rem] border border-gray-200 shadow-sm">
-              <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
-                <div>
-                  <h3 className="text-2xl font-black text-slate-900 tracking-tight">Kế hoạch chuẩn bị</h3>
-                  <p className="text-sm text-slate-500 font-medium mt-1">
-                    Ngày đang xem: <span className="text-primary font-bold">{formatYmdToVi(prepDate)}</span>
-                  </p>
-                </div>
-                <div className="flex flex-wrap items-center gap-4">
-                  <div className="flex items-center gap-2 bg-gray-50 p-2 rounded-2xl border border-gray-100">
-                    <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2">Chọn ngày:</span>
-                    <input
-                      type="date"
-                      value={prepDate}
-                      onChange={(e) => setPrepDate(e.target.value)}
-                      className="bg-transparent border-none text-sm font-bold text-slate-900 focus:ring-0 cursor-pointer"
-                    />
-                  </div>
-                  <button
-                    onClick={() => window.print()}
-                    className="flex items-center gap-2 px-6 py-3 bg-slate-900 text-white rounded-2xl font-bold text-xs uppercase tracking-widest hover:bg-slate-800 transition shadow-xl shadow-slate-900/10 active:scale-95"
-                  >
-                    <span className="material-symbols-outlined text-sm">print</span>
-                    In kế hoạch
-                  </button>
-                </div>
-              </div>
-            </div>
 
-            {prepLoading ? (
-              <div className="py-20 text-center">
-                <div className="inline-block animate-spin rounded-full h-10 w-10 border-t-4 border-b-4 border-primary mb-4" />
-                <p className="text-slate-500 font-bold">Đang tải kế hoạch chuẩn bị...</p>
-              </div>
-            ) : !prepPlan || (prepPlan.totalAddOnsToPrepare.length === 0 && prepPlan.variantsToPrepare.length === 0) ? (
-              <div className="py-32 text-center bg-white rounded-[3rem] border border-dashed border-gray-200">
-                <div className="size-24 rounded-full bg-slate-50 flex items-center justify-center mx-auto mb-6">
-                  <span className="material-symbols-outlined text-slate-300 text-5xl">inventory_2</span>
-                </div>
-                <h4 className="text-xl font-bold text-slate-900 mb-2">Không có đơn hàng nào cần chuẩn bị</h4>
-                <p className="text-slate-500 max-w-sm mx-auto">Tất cả các đơn hàng cho ngày {formatYmdToVi(prepDate)} đã hoàn tất hoặc chưa được xác nhận.</p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 xl:grid-cols-12 gap-8">
-
-                {/* Consolidated Add-ons - Left Column */}
-                <div className="xl:col-span-4 space-y-6">
-                  <div className="bg-white rounded-[2.5rem] border border-gray-200 overflow-hidden shadow-sm sticky top-32">
-                    <div className="p-8 border-b border-gray-100 bg-emerald-50/30">
-                      <div className="flex items-center gap-3">
-                        <div className="size-10 rounded-xl bg-emerald-500 flex items-center justify-center text-white">
-                          <span className="material-symbols-outlined">shopping_basket</span>
-                        </div>
-                        <h4 className="text-lg font-black text-slate-900 uppercase tracking-tight">Tổng món kèm cần soạn</h4>
-                      </div>
-                    </div>
-                    <div className="p-8 space-y-4">
-                      {prepPlan.totalAddOnsToPrepare.map((ao: any, idx: number) => (
-                        <div key={idx} className="flex items-center justify-between p-4 bg-gray-50/50 rounded-2xl border border-gray-100 hover:bg-emerald-50/50 hover:border-emerald-100 transition-all group">
-                          <div className="flex items-center gap-3">
-                            <div className="size-2 rounded-full bg-emerald-400" />
-                            <span className="text-sm font-bold text-slate-700 group-hover:text-emerald-900 transition-colors">{ao.addOnName}</span>
-                          </div>
-                          <div className="px-3 py-1 bg-white border border-gray-200 rounded-lg text-sm font-black text-emerald-600">
-                            x{ao.totalQuantity}
-                          </div>
-                        </div>
-                      ))}
-                      {prepPlan.totalAddOnsToPrepare.length === 0 && (
-                        <p className="text-center text-sm text-slate-400 italic py-4">Không có món kèm nào</p>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Detailed Allocations - Right Column */}
-                <div className="xl:col-span-8 space-y-8">
-                  <div className="bg-white rounded-[2.5rem] border border-gray-200 overflow-hidden shadow-sm">
-                    <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-                      <h4 className="text-sm font-black text-slate-900 uppercase tracking-widest">Chi tiết gói lễ &amp; Phân bổ</h4>
-                      <div className="px-3 py-1 bg-primary/10 rounded-lg text-xs font-black text-primary">
-                        {prepPlan.totalPendingOrders} đơn hàng
-                      </div>
-                    </div>
-
-                    <div className="divide-y divide-gray-100">
-                      {prepPlan.variantsToPrepare.map((variant: any, vIdx: number) => (
-                        <div key={vIdx} className="p-5">
-                          {/* Package row */}
-                          <div className="flex items-center justify-between mb-3">
-                            <div className="flex items-center gap-2.5">
-                              <div className="w-1 h-9 rounded-full bg-primary flex-shrink-0" />
-                              <div>
-                                <h5 className="font-black text-slate-900 text-sm leading-tight">{variant.packageName}</h5>
-                                <p className="text-[11px] font-bold text-primary/80 mt-0.5 uppercase tracking-wide">{variant.variantName}</p>
-                              </div>
-                            </div>
-                            <div className="bg-slate-900 text-white px-3 py-1.5 rounded-xl text-xs font-black whitespace-nowrap">
-                              Tổng {variant.totalQuantityRequired} Món
-                            </div>
-                          </div>
-
-                          {/* Allocations */}
-                          <div className="space-y-2 ml-4 border-l-2 border-gray-100 pl-4">
-                            {variant.allocations.map((alloc: any, aIdx: number) => (
-                              <div key={aIdx} className="bg-gray-50 rounded-xl border border-gray-100 px-4 py-3">
-                                <div className="flex items-center justify-between mb-2">
-                                  <div className="flex items-center gap-2">
-                                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">#{alloc.orderId.slice(-6)}</span>
-                                    <span className="px-2 py-0.5 bg-primary/10 text-primary text-[10px] font-black rounded-md">{alloc.deliveryTime.slice(0, 5)}</span>
-                                  </div>
-                                  <span className="text-sm font-black text-slate-800">×{alloc.allocatedQuantity} Món :</span>
-                                </div>
-
-                                {(alloc.swaps.length > 0 || alloc.addOns.length > 0 || alloc.decorationNote) && (
-                                  <div className="flex flex-wrap gap-1.5">
-                                    {alloc.swaps.map((s: string, sIdx: number) => (
-                                      <span key={sIdx} className="px-2 py-0.5 rounded-md bg-amber-50 border border-amber-200 text-amber-800 text-[10px] font-semibold">
-                                        {s.replace(/🔄\s*/g, '').replace(/^Đổi:\s*/i, '').trim()}
-                                      </span>
-                                    ))}
-                                    {alloc.addOns.map((a: string, aIdx2: number) => (
-                                      <span key={aIdx2} className="px-2 py-0.5 rounded-md bg-emerald-50 border border-emerald-200 text-emerald-800 text-[10px] font-semibold">
-                                        {a.replace(/^\+\s*/g, '').trim()}
-                                      </span>
-                                    ))}
-                                    {alloc.decorationNote && (
-                                      <span className="px-2 py-0.5 rounded-md bg-slate-100 border border-slate-200 text-slate-500 text-[10px] italic">
-                                        {alloc.decorationNote}
-                                      </span>
-                                    )}
-                                  </div>
-                                )}
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
 
 
         {mainTab === 'refunds' && (
@@ -1180,10 +1320,162 @@ const OrderManagement: React.FC<OrderManagementProps> = ({ onNavigate: _onNaviga
           </div>
         </div>
       )}
+
+      {showDailyPrepPlan && (
+        <div
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-start justify-center z-50 p-4 overflow-y-auto"
+          onClick={() => setShowDailyPrepPlan(false)}
+        >
+          <div
+            className="bg-gray-50 w-full max-w-5xl my-4 rounded-[2rem] shadow-2xl overflow-hidden max-h-[calc(100vh-2rem)] flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="bg-white px-6 md:px-8 py-5 flex items-center justify-between gap-4 border-b border-gray-100">
+              <div>
+                <h2 className="text-2xl font-black text-gray-900">Kế hoạch chuẩn bị ngày hôm nay</h2>
+                <p className="text-sm text-slate-500 font-semibold mt-1">
+                  Ngày: <span className="text-slate-900 font-bold">{formatYmdToVi(selectedCalendarDate)}</span>
+                </p>
+              </div>
+              <button
+                onClick={() => setShowDailyPrepPlan(false)}
+                className="px-5 py-2.5 bg-white rounded-xl flex items-center justify-center shadow-sm border border-gray-200 hover:bg-gray-50 transition flex-shrink-0 font-bold text-xs uppercase tracking-widest text-gray-600"
+              >
+                Đóng
+              </button>
+            </div>
+
+            <div className="p-4 md:p-6 overflow-y-auto">
+              {!dailyPlanDetail || dailyPlanDetail.variantsToPrepare.length === 0 ? (
+                <div className="py-16 text-center bg-white rounded-3xl border border-dashed border-gray-200">
+                  <div className="size-16 rounded-full bg-slate-50 flex items-center justify-center mx-auto mb-4">
+                    <span className="material-symbols-outlined text-slate-300 text-3xl">inventory_2</span>
+                  </div>
+                  <p className="text-sm font-bold text-slate-500">Không có đơn hàng cần chuẩn bị cho ngày này.</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
+                  <div className="xl:col-span-4 space-y-6">
+                    <div className="bg-white rounded-[2.5rem] border border-gray-200 overflow-hidden shadow-sm sticky top-6">
+                      <div className="p-6 border-b border-gray-100 bg-emerald-50/30">
+                        <div className="flex items-center gap-3">
+                          <div className="size-10 rounded-xl bg-emerald-500 flex items-center justify-center text-white">
+                            <span className="material-symbols-outlined">shopping_basket</span>
+                          </div>
+                          <h4 className="text-sm font-black text-slate-900 uppercase tracking-tight">Tổng món kèm cần soạn</h4>
+                        </div>
+                      </div>
+                      <div className="p-6 space-y-3">
+                        {(dailyPlanDetail.totalAddOnsToPrepare || []).map((ao: any, idx: number) => (
+                          <div key={idx} className="flex items-center justify-between p-3 bg-gray-50/50 rounded-2xl border border-gray-100 hover:bg-emerald-50/50 hover:border-emerald-100 transition-all group">
+                            <div className="flex items-center gap-3">
+                              <div className="size-2 rounded-full bg-emerald-400" />
+                              <span className="text-sm font-bold text-slate-700 group-hover:text-emerald-900 transition-colors">{ao.addOnName}</span>
+                            </div>
+                            <div className="px-3 py-1 bg-white border border-gray-200 rounded-lg text-sm font-black text-emerald-600">
+                              x{ao.totalQuantity}
+                            </div>
+                          </div>
+                        ))}
+                        {(!dailyPlanDetail.totalAddOnsToPrepare || dailyPlanDetail.totalAddOnsToPrepare.length === 0) && (
+                          <p className="text-center text-sm text-slate-400 italic py-4">Không có món kèm nào</p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="xl:col-span-8 space-y-6">
+                    <div className="bg-white rounded-[2.5rem] border border-gray-200 overflow-hidden shadow-sm">
+                      <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+                        <h4 className="text-sm font-black text-slate-900 uppercase tracking-widest">Chi tiết gói lễ &amp; Phân bổ</h4>
+                        <div className="px-3 py-1 bg-primary/10 rounded-lg text-xs font-black text-primary">
+                          {dailyPlanDetail.totalPendingOrders} đơn hàng
+                        </div>
+                      </div>
+
+                      <div className="divide-y divide-gray-100">
+                        {dailyPlanDetail.variantsToPrepare.map((variant: any, vIdx: number) => (
+                          <div key={vIdx} className="p-5">
+                            <div className="flex items-center justify-between mb-3">
+                              <div className="flex items-center gap-2.5">
+                                <div className="w-1 h-9 rounded-full bg-primary flex-shrink-0" />
+                                <div>
+                                  <h5 className="font-black text-slate-900 text-sm leading-tight">{variant.packageName}</h5>
+                                  <p className="text-[11px] font-bold text-primary/80 mt-0.5 uppercase tracking-wide">{variant.variantName}</p>
+                                </div>
+                              </div>
+                              <div className="bg-slate-900 text-white px-3 py-1.5 rounded-xl text-xs font-black whitespace-nowrap">
+                                Tổng {variant.totalQuantityRequired} Món
+                              </div>
+                            </div>
+
+                            <div className="space-y-2 ml-4 border-l-2 border-gray-100 pl-4">
+                              {(variant.allocations || []).map((alloc: any, aIdx: number) => (
+                                <button
+                                  key={aIdx}
+                                  type="button"
+                                  onClick={() => {
+                                    const matched = dailyPlanItems.find((item) => item.orderId === alloc.orderId);
+                                    setSelectedDailyPlanItem({
+                                      orderId: alloc.orderId,
+                                      deliveryTime: (alloc.deliveryTime || '').slice(0, 5) || matched?.deliveryTime,
+                                      status: matched?.status,
+                                    });
+                                    setShowDailyPrepPlan(false);
+                                    openDetail(alloc.orderId);
+                                  }}
+                                  className="w-full bg-gray-50 rounded-xl border border-gray-100 px-4 py-3 text-left transition hover:bg-white hover:shadow-sm"
+                                >
+                                  <div className="flex items-center justify-between mb-2">
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{formatOrderCode(alloc.orderId)}</span>
+                                      <span className="px-2 py-0.5 bg-primary/10 text-primary text-[10px] font-black rounded-md">
+                                        {(alloc.deliveryTime || '').slice(0, 5) || 'N/A'}
+                                      </span>
+                                    </div>
+                                    <span className="text-sm font-black text-slate-800">×{alloc.allocatedQuantity} Món</span>
+                                  </div>
+
+                                  {(Array.isArray(alloc.swaps) && alloc.swaps.length > 0)
+                                    || (Array.isArray(alloc.addOns) && alloc.addOns.length > 0)
+                                    || hasMeaningfulText(alloc.decorationNote) ? (
+                                    <div className="flex flex-wrap gap-1.5">
+                                      {(alloc.swaps || []).map((s: string, sIdx: number) => (
+                                        <span key={sIdx} className="px-2 py-0.5 rounded-md bg-amber-50 border border-amber-200 text-amber-800 text-[10px] font-semibold">
+                                          {String(s).replace(/🔄\s*/g, '').replace(/^Đổi:\s*/i, '').trim()}
+                                        </span>
+                                      ))}
+                                      {(alloc.addOns || []).map((a: string, aIdx2: number) => (
+                                        <span key={aIdx2} className="px-2 py-0.5 rounded-md bg-emerald-50 border border-emerald-200 text-emerald-800 text-[10px] font-semibold">
+                                          {String(a).replace(/^\+\s*/g, '').trim()}
+                                        </span>
+                                      ))}
+                                      {hasMeaningfulText(alloc.decorationNote) && (
+                                        <span className="px-2 py-0.5 rounded-md bg-slate-100 border border-slate-200 text-slate-500 text-[10px] italic">
+                                          {alloc.decorationNote}
+                                        </span>
+                                      )}
+                                    </div>
+                                  ) : null}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {selectedOrder && (
         <div
           className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-start justify-center z-50 p-4 overflow-y-auto"
-          onClick={() => { setSelectedOrder(null); setNewStatus(''); setStatusReason(''); setStatusError(null); setStatusSuccess(null); setDeliveryProofImages([]); }}
+          onClick={closeOrderDetail}
         >
           <div
             className="bg-gray-50 w-full max-w-6xl my-4 rounded-[2rem] shadow-2xl overflow-hidden max-h-[calc(100vh-2rem)] flex flex-col"
@@ -1192,7 +1484,7 @@ const OrderManagement: React.FC<OrderManagementProps> = ({ onNavigate: _onNaviga
             {/* Modal header */}
             <div className="bg-white px-6 md:px-8 py-5 flex items-center gap-4 border-b border-gray-100">
               <button
-                onClick={() => { setSelectedOrder(null); setNewStatus(''); setStatusReason(''); setStatusError(null); setStatusSuccess(null); setDeliveryProofImages([]); }}
+                onClick={closeOrderDetail}
                 className="px-5 py-2.5 bg-white rounded-xl flex items-center justify-center shadow-sm border border-gray-200 hover:bg-gray-50 transition flex-shrink-0 font-bold text-xs uppercase tracking-widest text-gray-600"
               >
                 Đóng
@@ -1239,12 +1531,27 @@ const OrderManagement: React.FC<OrderManagementProps> = ({ onNavigate: _onNaviga
               {/* Left column: items + delivery */}
               <div className="lg:col-span-12 space-y-4">
 
+                {selectedDailyPlanItem && (
+                  <div className="bg-white rounded-[1.25rem] border border-gray-200 p-4 md:p-5 shadow-sm">
+                    <h3 className="text-sm font-bold uppercase tracking-widest text-gray-400 mb-3">Lịch giao theo ngày</h3>
+                    <div className="flex flex-wrap items-center justify-between gap-4">
+                      <div>
+                        <p className="text-xs text-slate-500">Ngày: <span className="font-bold text-slate-900">{formatYmdToVi(selectedCalendarDate)}</span></p>
+                        <p className="text-xs text-slate-500">Giờ: <span className="font-bold text-slate-900">{selectedDailyPlanItem.deliveryTime || selectedOrder.delivery?.deliveryTime?.slice(0, 5) || 'N/A'}</span></p>
+                      </div>
+                      <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${getStatusBadge(selectedDailyPlanItem.status || selectedOrder.orderStatus).badge}`}>
+                        {getStatusBadge(selectedDailyPlanItem.status || selectedOrder.orderStatus).label}
+                      </span>
+                    </div>
+                  </div>
+                )}
+
                 {/* Items */}
                 <div className="bg-white rounded-[1.25rem] border border-gray-200 p-4 md:p-5 shadow-sm">
                   <h3 className="text-sm font-bold uppercase tracking-widest text-gray-400 mb-3 pb-2 border-b border-gray-100">
                     Sản phẩm ({(selectedOrder.items || []).length})
                   </h3>
-                  <div className="space-y-3 max-h-[260px] overflow-y-auto pr-1">
+                  <div className="space-y-3">
                     {(selectedOrder.items || []).map(item => (
                       <div key={item.itemId} className="flex gap-4 p-4 bg-gray-50/50 rounded-2xl border border-gray-100">
                         <div className="size-20 rounded-xl bg-white border border-gray-200 flex-shrink-0 overflow-hidden shadow-sm">
@@ -1484,7 +1791,7 @@ const OrderManagement: React.FC<OrderManagementProps> = ({ onNavigate: _onNaviga
                         { label: 'Phí giao', value: formatVnd(selectedOrder.pricing?.shippingFee) },
                         { label: 'Giảm giá', value: formatVnd(selectedOrder.pricing?.discountAmount) },
                         { label: 'Tổng đơn hàng', value: formatVnd(selectedOrder.pricing?.totalAmount), isBold: true },
-                        { label: 'Hoa hồng sàn', value: `-${selectedOrder.pricing?.commissionRate}%`, color: 'text-rose-500' },
+                        { label: 'Hoa hồng sàn', value: `-${formatPercent(selectedOrder.pricing?.commissionRate)}`, color: 'text-rose-500' },
                         { label: 'Phí dịch vụ', value: `-${formatVnd(selectedOrder.pricing?.platformFee)}`, color: 'text-rose-500' },
                       ].map(row => (
                         <div key={row.label} className={`flex justify-between px-4 py-2.5 bg-white ${(row as any).isBold ? 'border-t border-gray-50 bg-gray-50/30' : ''}`}>
@@ -1539,7 +1846,7 @@ const OrderManagement: React.FC<OrderManagementProps> = ({ onNavigate: _onNaviga
                       </div>
                       <div className="flex justify-between gap-3 px-4 py-2.5 bg-white">
                         <span className="text-gray-500">Hoa hồng</span>
-                        <span className="font-semibold text-gray-800">{((Number(selectedOrder.vendorPricingDetails?.commissionRate) || 0) * 100).toFixed(0)}%</span>
+                        <span className="font-semibold text-gray-800">{formatPercent(selectedOrder.vendorPricingDetails?.commissionRate)}</span>
                       </div>
                       <div className="flex justify-between gap-3 px-4 py-2.5 bg-white">
                         <span className="text-gray-500">Phí nền tảng</span>
