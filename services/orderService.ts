@@ -97,6 +97,7 @@ export interface Order {
         commissionRate: number;
         platformFee: number;
         vendorNetAmount: number;
+        holdFee?: number;
     };
     payment: {
         paymentMethod: string;
@@ -720,6 +721,7 @@ class OrderService {
                         commissionRate,
                         platformFee,
                         vendorNetAmount,
+                        holdFee: Number((raw.pricing as any)?.holdFee ?? (raw as any)?.holdFee) || 0,
                     },
                     payment: {
                         paymentMethod: raw.payment?.paymentMethod || 'N/A',

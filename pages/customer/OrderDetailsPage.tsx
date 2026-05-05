@@ -639,6 +639,15 @@ const OrderDetailsPage: React.FC = () => {
                                         <span>-{(order.pricing as any).discountAmount.toLocaleString('vi-VN')}đ</span>
                                     </div>
                                 )}
+                                {(order.pricing?.holdFee || 0) > 0 && (
+                                    <div className="flex justify-between text-sm font-bold text-amber-600">
+                                        <span className="flex items-center gap-1.5">
+                                            Phí giữ chỗ
+                                            <span className="text-[9px] bg-amber-50 border border-amber-200 text-amber-600 px-1.5 py-0.5 rounded-md font-black uppercase tracking-widest">Tạm giữ</span>
+                                        </span>
+                                        <span>+{(order.pricing.holdFee || 0).toLocaleString('vi-VN')}đ</span>
+                                    </div>
+                                )}
                             </div>
                             <div className="pt-6 border-t-2 border-dashed border-slate-100 flex justify-between items-end">
                                 <span className="text-xs font-black uppercase text-black tracking-widest mb-1">Thanh toán</span>
