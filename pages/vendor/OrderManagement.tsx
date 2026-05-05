@@ -1120,6 +1120,7 @@ const OrderManagement: React.FC<OrderManagementProps> = ({ onNavigate: _onNaviga
                         {[
                           { label: 'Ngày giao', value: formatDateVi(selectedOrder.delivery.deliveryDate) },
                           { label: 'Giờ giao', value: selectedOrder.delivery.deliveryTime?.slice(0, 5) || 'N/A' },
+                          { label: 'Hạn giao hàng', value: formatDateTimeVi(selectedOrder.deliveredDeadline) },
                           { label: 'Phí giao', value: formatVnd(selectedOrder.pricing?.shippingFee) },
                           { label: 'Khoảng cách', value: `${selectedOrder.delivery.shippingDistanceKm} km` },
                         ].map(row => (

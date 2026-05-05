@@ -3257,6 +3257,20 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigate }) => {
                               {profile?.dateOfBirth ? new Date(profile.dateOfBirth).toLocaleDateString('vi-VN') : 'N/A'}
                             </p>
                           </div>
+                          <div className={`p-4 rounded-xl border ${profile?.orderBlockedUntil && new Date(profile.orderBlockedUntil) > new Date() ? 'bg-rose-50 border-rose-200' : 'bg-gray-50 border-gray-200'}`}>
+                            <span className={`text-xs font-bold uppercase ${profile?.orderBlockedUntil && new Date(profile.orderBlockedUntil) > new Date() ? 'text-rose-600' : 'text-black'}`}>Khóa đặt hàng : </span>
+                            <p className={`text-lg font-bold mt-1 ${profile?.orderBlockedUntil && new Date(profile.orderBlockedUntil) > new Date() ? 'text-rose-700' : 'text-primary'}`}>
+                              {profile?.orderBlockedUntil && new Date(profile.orderBlockedUntil) > new Date()
+                                ? new Date(profile.orderBlockedUntil).toLocaleString('vi-VN')
+                                : 'Không bị khóa'}
+                            </p>
+                          </div>
+                          <div className="p-4 rounded-xl bg-gray-50 border border-gray-200">
+                            <span className="text-xs font-bold uppercase text-black">Số đơn hủy trong tháng</span>
+                            <p className="text-lg font-bold text-primary mt-1">
+                              {profile?.canceledOrdersCount ?? 0} đơn
+                            </p>
+                          </div>
                           {profile?.isVendor && profile?.ratingAvg > 0 && (
                             <div className="p-4 rounded-xl bg-gray-50 border border-gray-200">
                               <span className="text-xs font-bold uppercase text-black">Đánh giá trung bình</span>

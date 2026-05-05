@@ -884,7 +884,10 @@ class PackageService {
         price: variant.price,
         description: variant.description,
         items: items.length > 0 ? items : [],
-        availableSwaps: variant.availableSwaps || []
+        availableSwaps: variant.availableSwaps || [],
+        productionWeight: variant.productionWeight,
+        minOrderQuantity: variant.minOrderQuantity,
+        maxOrderQuantity: variant.maxOrderQuantity
       };
     });
 

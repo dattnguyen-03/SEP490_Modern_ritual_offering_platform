@@ -40,6 +40,7 @@ export interface PackageAddOn {
   retailPrice: number;
   itemType: string;
   maxQuantity?: number;
+  maxQtyPerOrder?: number;
   displayOrder?: number;
   isActive: boolean;
 }
@@ -66,6 +67,9 @@ export interface PackageVariant {
   imageUrl?: string;
   variantImages?: string[];
   availableSwaps?: AvailableSwap[];
+  productionWeight?: number;
+  minOrderQuantity?: number;
+  maxOrderQuantity?: number;
 }
 
 export interface ApiPackage {
@@ -97,6 +101,9 @@ export interface ProductVariant {
   description: string;
   items: string[];
   availableSwaps?: AvailableSwap[];
+  productionWeight?: number;
+  minOrderQuantity?: number;
+  maxOrderQuantity?: number;
 }
 
 export interface ApiResponse<T> {

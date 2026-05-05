@@ -589,6 +589,8 @@ export interface UserProfile {
   ratingAvg: number;
   createdAt: string;
   updatedAt: string;
+  orderBlockedUntil: string | null;
+  canceledOrdersCount: number;
 }
 
 export interface VendorCurrentProfile {
@@ -718,7 +720,9 @@ export async function getProfile(): Promise<UserProfile> {
         verificationStatus: null,
         ratingAvg: 0,
         createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
+        updatedAt: new Date().toISOString(),
+        orderBlockedUntil: null,
+        canceledOrdersCount: 0
       };
     }
 

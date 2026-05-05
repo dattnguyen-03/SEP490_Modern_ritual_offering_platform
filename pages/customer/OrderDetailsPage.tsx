@@ -376,26 +376,24 @@ const OrderDetailsPage: React.FC = () => {
 
                 {/* Refund Notice */}
                 {refundInfo && !refundDismissed && (
-                    <div className={`mb-8 p-6 rounded-[2.5rem] border-2 flex flex-col md:flex-row items-center justify-between gap-6 animate-fadeIn ${
-                        refundInfo.status === 'Approved' ? 'bg-emerald-50 border-emerald-100 text-emerald-800' :
-                        refundInfo.status === 'Rejected' ? 'bg-rose-50 border-rose-100 text-rose-800' :
-                        'bg-blue-50 border-blue-100 text-blue-800'
-                    }`}>
+                    <div className={`mb-8 p-6 rounded-[2.5rem] border-2 flex flex-col md:flex-row items-center justify-between gap-6 animate-fadeIn ${refundInfo.status === 'Approved' ? 'bg-emerald-50 border-emerald-100 text-emerald-800' :
+                            refundInfo.status === 'Rejected' ? 'bg-rose-50 border-rose-100 text-rose-800' :
+                                'bg-blue-50 border-blue-100 text-blue-800'
+                        }`}>
                         <div className="flex items-center gap-5">
-                            <div className={`size-14 rounded-2xl flex items-center justify-center shadow-sm ${
-                                refundInfo.status === 'Approved' ? 'bg-emerald-100 text-emerald-600' :
-                                refundInfo.status === 'Rejected' ? 'bg-rose-100 text-rose-600' :
-                                'bg-blue-100 text-blue-600'
-                            }`}>
+                            <div className={`size-14 rounded-2xl flex items-center justify-center shadow-sm ${refundInfo.status === 'Approved' ? 'bg-emerald-100 text-emerald-600' :
+                                    refundInfo.status === 'Rejected' ? 'bg-rose-100 text-rose-600' :
+                                        'bg-blue-100 text-blue-600'
+                                }`}>
                                 <span className="material-symbols-outlined text-2xl">
                                     {refundInfo.status === 'Approved' ? 'check_circle' : refundInfo.status === 'Rejected' ? 'cancel' : 'info'}
                                 </span>
                             </div>
                             <div>
                                 <h4 className="font-black tracking-tight text-lg">Yêu cầu hoàn tiền: {
-                                    refundInfo.status === 'Approved' ? 'Đã chấp nhận' : 
-                                    refundInfo.status === 'Rejected' ? 'Đã từ chối' : 
-                                    'Đang xử lý'
+                                    refundInfo.status === 'Approved' ? 'Đã chấp nhận' :
+                                        refundInfo.status === 'Rejected' ? 'Đã từ chối' :
+                                            'Đang xử lý'
                                 }</h4>
                                 <p className="text-sm font-bold opacity-80 mt-0.5">Mã hoàn tiền: {refundInfo.refundId.substring(0, 8).toUpperCase()}</p>
                             </div>
@@ -485,8 +483,8 @@ const OrderDetailsPage: React.FC = () => {
                                             </p>
                                             <div className="flex flex-wrap gap-4">
                                                 {preparationImages.map((img: string, i: number) => (
-                                                    <div 
-                                                        key={i} 
+                                                    <div
+                                                        key={i}
                                                         className="size-20 rounded-2xl overflow-hidden border-2 border-slate-50 cursor-pointer hover:border-primary transition-all shadow-sm hover:shadow-md active:scale-95"
                                                         onClick={() => {
                                                             setProofModalImages(preparationImages);
@@ -508,8 +506,8 @@ const OrderDetailsPage: React.FC = () => {
                                             </p>
                                             <div className="flex flex-wrap gap-4">
                                                 {deliveryImages.map((img: string, i: number) => (
-                                                    <div 
-                                                        key={i} 
+                                                    <div
+                                                        key={i}
                                                         className="size-20 rounded-2xl overflow-hidden border-2 border-slate-50 cursor-pointer hover:border-primary transition-all shadow-sm hover:shadow-md active:scale-95"
                                                         onClick={() => {
                                                             setProofModalImages(deliveryImages);
@@ -685,6 +683,24 @@ const OrderDetailsPage: React.FC = () => {
                                     <p className="text-sm font-bold text-slate-700 leading-relaxed pt-1">{order.delivery?.deliveryAddress}</p>
                                 </div>
                             </div>
+                            {order.deliveredDeadline && (
+                                <div className="pt-6 border-t border-slate-50">
+                                    <p className="text-[10px] font-black uppercase text-black tracking-widest mb-4 italic">Hạn giao hàng dự kiến</p>
+                                    <div className="flex items-start gap-4">
+                                        <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-500 flex items-center justify-center flex-shrink-0">
+                                            <span className="material-symbols-outlined">event_available</span>
+                                        </div>
+                                        <div className="pt-1">
+                                            <p className="text-sm font-black text-slate-900 leading-tight">
+                                                {new Date(order.deliveredDeadline).toLocaleDateString('vi-VN')}
+                                            </p>
+                                            <p className="text-[10px] font-bold text-black uppercase tracking-widest mt-1">
+                                                {new Date(order.deliveredDeadline).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>

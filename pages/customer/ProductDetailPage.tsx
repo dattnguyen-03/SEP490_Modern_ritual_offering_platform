@@ -189,6 +189,27 @@ const ProductDetailPage: React.FC<{ onNavigate: (path: string) => void }> = ({ o
     }
   }, [product, fetchReviews]);
 
+  // Auto-cap Add-ons when quantity changes
+  useEffect(() => {
+    const updatedAddOns = { ...selectedAddOns };
+    let hasChanges = false;
+
+    Object.entries(updatedAddOns).forEach(([id, qty]) => {
+      const addOn = product?.availableAddOns?.find(a => a.addOnId === Number(id));
+      if (addOn && addOn.maxQtyPerOrder) {
+        const maxAllowed = addOn.maxQtyPerOrder * quantity;
+        if (qty > maxAllowed) {
+          updatedAddOns[Number(id)] = maxAllowed;
+          hasChanges = true;
+        }
+      }
+    });
+
+    if (hasChanges) {
+      setSelectedAddOns(updatedAddOns);
+    }
+  }, [quantity, product?.availableAddOns, selectedAddOns]);
+
   const handleVendorReply = async (reviewId: string) => {
     if (!vendorReplyText.trim()) {
       toast.error('Vui lòng nhập nội dung phản hồi.');
@@ -307,6 +328,18 @@ const ProductDetailPage: React.FC<{ onNavigate: (path: string) => void }> = ({ o
       return;
     }
 
+    // Validation for min/max quantity
+    const min = selectedVariant.minOrderQuantity ?? 1;
+    const max = selectedVariant.maxOrderQuantity ?? 99;
+    if (quantity < min) {
+      toast.error(`Số lượng tối thiểu cho gói này là ${min}`);
+      return;
+    }
+    if (quantity > max) {
+      toast.error(`Số lượng tối đa cho gói này là ${max}`);
+      return;
+    }
+
     setAddingToCart(true);
     try {
       const success = await cartService.addToCart({
@@ -344,6 +377,18 @@ const ProductDetailPage: React.FC<{ onNavigate: (path: string) => void }> = ({ o
     const selectedVariant = selectedVariantIndex !== null ? product?.variants?.[selectedVariantIndex] : null;
     if (!selectedVariant || !selectedVariant.variantId) {
       toast.error('Vui lòng chọn gói lễ');
+      return;
+    }
+
+    // Validation for min/max quantity
+    const min = selectedVariant.minOrderQuantity ?? 1;
+    const max = selectedVariant.maxOrderQuantity ?? 99;
+    if (quantity < min) {
+      toast.error(`Số lượng tối thiểu cho gói này là ${min}`);
+      return;
+    }
+    if (quantity > max) {
+      toast.error(`Số lượng tối đa cho gói này là ${max}`);
       return;
     }
 
@@ -533,6 +578,12 @@ const ProductDetailPage: React.FC<{ onNavigate: (path: string) => void }> = ({ o
                         // Reset selections when changing variants to avoid sending invalid IDs
                         setSelectedSwaps({});
                         setSelectedAddOns({});
+                        
+                        // Update quantity if current quantity is out of range for new variant
+                        const min = variant.minOrderQuantity ?? 1;
+                        const max = variant.maxOrderQuantity ?? 99;
+                        if (quantity < min) setQuantity(min);
+                        else if (quantity > max) setQuantity(max);
                       } else {
                         setSelectedVariantIndex(null);
                         setSelectedSwaps({});
@@ -579,7 +630,14 @@ const ProductDetailPage: React.FC<{ onNavigate: (path: string) => void }> = ({ o
               <div className="flex items-center gap-4">
                 <div className="flex items-center bg-gray-100 rounded-2xl p-1">
                   <button
-                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                    onClick={() => {
+                      const min = (selectedVariantIndex !== null ? product.variants?.[selectedVariantIndex]?.minOrderQuantity : 1) ?? 1;
+                      if (quantity > min) {
+                        setQuantity(quantity - 1);
+                      } else {
+                        toast.warning(`Số lượng tối thiểu là ${min}`);
+                      }
+                    }}
                     className="w-10 h-10 rounded-xl bg-white shadow-sm flex items-center justify-center text-primary font-bold hover:bg-primary hover:text-white transition-all active:scale-90"
                   >
                     −
@@ -592,7 +650,14 @@ const ProductDetailPage: React.FC<{ onNavigate: (path: string) => void }> = ({ o
                     className="w-16 bg-transparent text-center text-lg font-black text-slate-800 focus:outline-none border-none focus:ring-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                   />
                   <button
-                    onClick={() => setQuantity(quantity + 1)}
+                    onClick={() => {
+                      const max = (selectedVariantIndex !== null ? product.variants?.[selectedVariantIndex]?.maxOrderQuantity : 99) ?? 99;
+                      if (quantity < max) {
+                        setQuantity(quantity + 1);
+                      } else {
+                        toast.warning(`Số lượng tối đa là ${max}`);
+                      }
+                    }}
                     className="w-10 h-10 rounded-xl bg-white shadow-sm flex items-center justify-center text-primary font-bold hover:bg-primary hover:text-white transition-all active:scale-90"
                   >
                     +
@@ -600,6 +665,34 @@ const ProductDetailPage: React.FC<{ onNavigate: (path: string) => void }> = ({ o
                 </div>
                 <p className="text-[10px] font-bold text-black uppercase tracking-widest italic hidden sm:block">Giao tận nơi</p>
               </div>
+
+
+              {selectedVariantIndex !== null && product.variants?.[selectedVariantIndex] && (
+                <div className="flex flex-wrap gap-4 mt-4 p-3 bg-slate-50 rounded-xl border border-slate-100">
+                  {(product.variants[selectedVariantIndex].minOrderQuantity !== undefined || product.variants[selectedVariantIndex].maxOrderQuantity !== undefined) && (
+                    <div className="flex items-center gap-2">
+                      <svg className="w-3 h-3 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                      </svg>
+                      <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                        {product.variants[selectedVariantIndex].minOrderQuantity !== undefined && `Tối thiểu: ${product.variants[selectedVariantIndex].minOrderQuantity}`}
+                        {product.variants[selectedVariantIndex].minOrderQuantity !== undefined && product.variants[selectedVariantIndex].maxOrderQuantity !== undefined && ' • '}
+                        {product.variants[selectedVariantIndex].maxOrderQuantity !== undefined && `Tối đa: ${product.variants[selectedVariantIndex].maxOrderQuantity}`}
+                      </span>
+                    </div>
+                  )}
+                  {product.variants[selectedVariantIndex].productionWeight !== undefined && (
+                    <div className="flex items-center gap-2">
+                      <svg className="w-3 h-3 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                      </svg>
+                      <span className="text-[10px] font-bold text-amber-600 uppercase tracking-wider">
+                        Điểm năng lực: {product.variants[selectedVariantIndex].productionWeight}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Available Swaps Section */}
@@ -654,7 +747,14 @@ const ProductDetailPage: React.FC<{ onNavigate: (path: string) => void }> = ({ o
                       <div className="flex items-center justify-between gap-3">
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-black text-slate-800 truncate">{addOn.addOnName || addOn.itemName}</p>
-                          <p className="text-xs font-bold text-primary">{addOn.retailPrice.toLocaleString()}đ</p>
+                          <div className="flex items-center gap-2">
+                            <p className="text-xs font-bold text-primary">{addOn.retailPrice.toLocaleString()}đ</p>
+                            {addOn.maxQtyPerOrder && (
+                              <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter bg-slate-100 px-1.5 py-0.5 rounded">
+                                Tối đa {addOn.maxQtyPerOrder}/mâm
+                              </span>
+                            )}
+                          </div>
                         </div>
                         <div className="flex items-center bg-gray-100 rounded-xl p-0.5">
                           <button
@@ -663,14 +763,37 @@ const ProductDetailPage: React.FC<{ onNavigate: (path: string) => void }> = ({ o
                           >
                             −
                           </button>
-                          <span className="w-8 text-center text-xs font-black text-slate-800">{selectedAddOns[addOn.addOnId] || 0}</span>
+                          <input
+                            type="number"
+                            min="0"
+                            value={selectedAddOns[addOn.addOnId] || 0}
+                            onChange={(e) => {
+                              const val = parseInt(e.target.value) || 0;
+                              const limitPerItem = addOn.maxQtyPerOrder || 99;
+                              const maxAllowed = limitPerItem * quantity;
+                              
+                              if (val > maxAllowed) {
+                                toast.warning(`Số lượng tối đa cho món này là ${maxAllowed} (${limitPerItem}/mâm)`);
+                                setSelectedAddOns(prev => ({ ...prev, [addOn.addOnId]: maxAllowed }));
+                              } else {
+                                setSelectedAddOns(prev => ({ ...prev, [addOn.addOnId]: Math.max(0, val) }));
+                              }
+                            }}
+                            className="w-10 bg-transparent text-center text-xs font-black text-slate-800 focus:outline-none border-none focus:ring-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                          />
                           <button
-                            onClick={() => setSelectedAddOns(prev => {
-                              const currentQty = prev[addOn.addOnId] || 0;
-                              const maxAllowed = addOn.maxQuantity || (addOn as any).maxQtyPerOrder || 99;
-                              return { ...prev, [addOn.addOnId]: Math.min(maxAllowed, currentQty + 1) };
-                            })}
-                            className={`w-7 h-7 rounded-lg flex items-center justify-center font-bold transition-all ${(selectedAddOns[addOn.addOnId] || 0) < (addOn.maxQuantity || (addOn as any).maxQtyPerOrder || 99) ? 'bg-white text-primary shadow-sm active:scale-90' : 'text-slate-300 pointer-events-none'}`}
+                            onClick={() => {
+                              const currentQty = selectedAddOns[addOn.addOnId] || 0;
+                              const limitPerItem = addOn.maxQtyPerOrder || 99;
+                              const maxAllowed = limitPerItem * quantity;
+                              
+                              if (currentQty < maxAllowed) {
+                                setSelectedAddOns(prev => ({ ...prev, [addOn.addOnId]: currentQty + 1 }));
+                              } else {
+                                toast.warning(`Số lượng tối đa cho món này là ${maxAllowed} (${limitPerItem}/mâm)`);
+                              }
+                            }}
+                            className="w-7 h-7 rounded-lg flex items-center justify-center font-bold transition-all bg-white text-primary shadow-sm active:scale-90 hover:bg-primary hover:text-white"
                           >
                             +
                           </button>

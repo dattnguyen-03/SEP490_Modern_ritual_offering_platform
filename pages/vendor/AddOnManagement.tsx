@@ -20,6 +20,7 @@ const AddOnManagement: React.FC<AddOnManagementProps> = ({ onNavigate }) => {
     retailPrice: 0,
     itemType: 'Product',
     maxQuantity: 1,
+    maxQtyPerOrder: 1,
     displayOrder: 0,
     isActive: true,
   });
@@ -75,6 +76,7 @@ const AddOnManagement: React.FC<AddOnManagementProps> = ({ onNavigate }) => {
           retailPrice: source.retailPrice,
           itemType: source.itemType,
           maxQuantity: source.maxQuantity,
+          maxQtyPerOrder: (source as any).maxQtyPerOrder || 1,
           displayOrder: source.displayOrder,
           isActive: source.isActive,
         });
@@ -89,6 +91,7 @@ const AddOnManagement: React.FC<AddOnManagementProps> = ({ onNavigate }) => {
         retailPrice: 0,
         itemType: 'Product',
         maxQuantity: 1,
+        maxQtyPerOrder: 1,
         displayOrder: 0,
         isActive: true,
       });
@@ -225,7 +228,7 @@ const AddOnManagement: React.FC<AddOnManagementProps> = ({ onNavigate }) => {
                     <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Tên Món Thêm</th>
                     <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Loại</th>
                     <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Giá Bán</th>
-                    {/* <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">SL Tối Đa</th> */}
+                    <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Tối đa/mâm</th>
                     <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Trạng Thái</th>
                     <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Thao Tác</th>
                   </tr>
@@ -256,6 +259,9 @@ const AddOnManagement: React.FC<AddOnManagementProps> = ({ onNavigate }) => {
                       </td>
                       <td className="px-8 py-6 font-black text-slate-900">
                         {addOn.retailPrice.toLocaleString()}đ
+                      </td>
+                      <td className="px-8 py-6 font-bold text-slate-600">
+                        {(addOn as any).maxQtyPerOrder || 1}
                       </td>
 
                       <td className="px-8 py-6">
@@ -366,6 +372,19 @@ const AddOnManagement: React.FC<AddOnManagementProps> = ({ onNavigate }) => {
                     placeholder="0"
                   />
                 </div>
+              </div>
+
+              <div>
+                <label className="text-xs font-black text-gray-400 uppercase tracking-widest block mb-1.5">Số lượng tối đa trên mỗi mâm</label>
+                <input
+                  type="number"
+                  min="1"
+                  value={(formData as any).maxQtyPerOrder}
+                  onChange={(e) => setFormData({ ...formData, maxQtyPerOrder: Math.max(1, parseInt(e.target.value) || 1) })}
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-2xl text-sm text-gray-900 focus:border-primary focus:outline-none transition font-semibold"
+                  placeholder="Ví dụ: 1, 2, 5..."
+                />
+                <p className="text-[10px] text-slate-500 mt-1 italic">* Giới hạn số lượng món thêm này mà khách có thể chọn cho mỗi mâm cúng chính.</p>
               </div>
 
               <div className="flex items-center justify-between p-4 rounded-2xl border-2 border-gray-200 bg-white">

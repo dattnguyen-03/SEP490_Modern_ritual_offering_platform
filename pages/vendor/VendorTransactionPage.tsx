@@ -108,7 +108,10 @@ const getAmountColorByType = (type: string, amount: number): string => {
 };
 
 /** Dấu trước số tiền — luôn là + (amount từ BE đã là số dương) */
-const getAmountPrefixByType = (_type: string, _amount: number): string => '+';
+const getAmountPrefixByType = (type: string, amount: number): string => {
+  const color = getAmountColorByType(type, amount);
+  return color === 'text-rose-600' ? '-' : '+';
+};
 
 const getTransactionTypeLabel = (type: string, amount: number): string => {
   const normalized = String(type || '').trim().toLowerCase();

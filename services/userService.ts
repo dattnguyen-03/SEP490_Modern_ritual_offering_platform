@@ -23,6 +23,8 @@ export interface UserListItem {
   avatarUrl?: string | null;
   createdAt?: string;
   emailConfirmed?: boolean;
+  orderBlockedUntil?: string | null;
+  canceledOrdersCount?: number;
 }
 
 export const userService = {

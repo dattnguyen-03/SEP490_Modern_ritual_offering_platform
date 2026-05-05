@@ -246,10 +246,10 @@ const CheckoutPage: React.FC<{ onNavigate: (path: string) => void }> = ({ onNavi
     const oneMonthFromNow = new Date();
     oneMonthFromNow.setMonth(now.getMonth() + 1);
 
-    if (diffInHours < 60) {
-      toast.error('Thời gian đặt hàng phải cách thời điểm hiện tại ít nhất 60 giờ để chuẩn bị.');
-      return;
-    }
+    // if (diffInHours < 60) {
+    //   toast.error('Thời gian đặt hàng phải cách thời điểm hiện tại ít nhất 60 giờ để chuẩn bị.');
+    //   return;
+    // }
 
     if (selectedDateTime > oneMonthFromNow) {
       toast.error('Thời gian đặt hàng không được quá 1 tháng kể từ hiện tại.');

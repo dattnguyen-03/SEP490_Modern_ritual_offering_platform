@@ -413,7 +413,7 @@ const TransactionHistoryPage: React.FC<TransactionHistoryPageProps> = () => {
                       className={`text-base md:text-lg font-extrabold ${incoming ? 'text-emerald-600' : 'text-rose-600'
                         }`}
                     >
-                      {incoming ? '+' : '-'}{formatCurrency(tx.amount)}
+                      {incoming ? '+' : '-'}{formatCurrency(Math.abs(tx.amount))}
                     </p>
                     {/* {Number.isFinite(tx.balanceAfter ?? NaN) && (
                       <p className="mt-1 text-xs text-black">
@@ -467,7 +467,7 @@ const TransactionHistoryPage: React.FC<TransactionHistoryPageProps> = () => {
                 <div>
                   <p className="text-xs text-black uppercase tracking-widest mb-1">Số tiền</p>
                   <p className="text-base font-extrabold text-slate-900">
-                    {isIncomingTransaction(detailTx) ? '+' : '-'}{formatCurrency(detailTx.amount)}
+                    {isIncomingTransaction(detailTx) ? '+' : '-'}{formatCurrency(Math.abs(detailTx.amount))}
                   </p>
                 </div>
                 <div>
@@ -576,7 +576,7 @@ const TransactionHistoryPage: React.FC<TransactionHistoryPageProps> = () => {
                                   className={`font-extrabold text-[13px] ${incoming ? 'text-emerald-600' : 'text-rose-600'
                                     }`}
                                 >
-                                  {incoming ? '+' : '-'}{formatCurrency(rt.amount)}
+                                  {incoming ? '+' : '-'}{formatCurrency(Math.abs(rt.amount))}
                                 </p>
                               </div>
                             </button>

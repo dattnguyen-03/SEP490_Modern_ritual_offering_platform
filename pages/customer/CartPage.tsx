@@ -798,14 +798,22 @@ const CartPage: React.FC<{ onNavigate: (path: string) => void }> = ({ onNavigate
                         const current = selectedAddOns.find(a => a.addOnId === addon.addOnId);
                         const quantity = current?.quantity || 0;
 
+                        const limitPerItem = addon.maxQtyPerOrder || 99;
+                        const maxAllowed = limitPerItem * (editingItem?.quantity || 1);
+
                         const updateAddOn = (q: number) => {
                           if (q <= 0) {
                             setSelectedAddOns(prev => prev.filter(a => a.addOnId !== addon.addOnId));
                           } else {
+                            const valToSet = q > maxAllowed ? maxAllowed : q;
+                            if (q > maxAllowed) {
+                              toast.warning(`Số lượng tối đa cho món này là ${maxAllowed} (${limitPerItem}/mâm)`);
+                            }
+                            
                             setSelectedAddOns(prev => {
                               const existing = prev.find(a => a.addOnId === addon.addOnId);
-                              if (existing) return prev.map(a => a.addOnId === addon.addOnId ? { ...a, quantity: q } : a);
-                              return [...prev, { addOnId: addon.addOnId, quantity: q }];
+                              if (existing) return prev.map(a => a.addOnId === addon.addOnId ? { ...a, quantity: valToSet } : a);
+                              return [...prev, { addOnId: addon.addOnId, quantity: valToSet }];
                             });
                           }
                         };
@@ -814,7 +822,14 @@ const CartPage: React.FC<{ onNavigate: (path: string) => void }> = ({ onNavigate
                           <div key={addon.addOnId} className={`p-4 rounded-xl border-2 transition-all flex justify-between items-center ${quantity > 0 ? 'border-emerald-500 bg-emerald-50/20' : 'border-slate-50 bg-slate-50/50'}`}>
                             <div className="flex-1">
                               <p className="text-xs font-bold text-slate-700">{addon.addOnName || addon.itemName}</p>
-                              <p className="text-xs font-bold text-emerald-600 mt-1">{addon.retailPrice.toLocaleString()}đ</p>
+                              <div className="flex items-center gap-2 mt-1">
+                                <p className="text-xs font-bold text-emerald-600">{addon.retailPrice.toLocaleString()}đ</p>
+                                {addon.maxQtyPerOrder && (
+                                  <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter bg-slate-100 px-1.5 py-0.5 rounded">
+                                    Tối đa {addon.maxQtyPerOrder}/mâm
+                                  </span>
+                                )}
+                              </div>
                             </div>
                             <div className="flex items-center gap-3 bg-white p-1 rounded-lg border border-slate-100 shadow-sm">
                               <button
@@ -824,7 +839,16 @@ const CartPage: React.FC<{ onNavigate: (path: string) => void }> = ({ onNavigate
                               >
                                 −
                               </button>
-                              <span className="text-xs font-bold w-4 text-center">{quantity}</span>
+                              <input
+                                type="number"
+                                min="0"
+                                value={quantity}
+                                onChange={(e) => {
+                                  const val = parseInt(e.target.value) || 0;
+                                  updateAddOn(Math.max(0, val));
+                                }}
+                                className="w-8 bg-transparent text-center text-xs font-bold text-slate-700 focus:outline-none border-none focus:ring-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                              />
                               <button
                                 onClick={() => updateAddOn(quantity + 1)}
                                 className="size-6 flex items-center justify-center text-black hover:text-emerald-500"

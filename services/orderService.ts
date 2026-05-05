@@ -118,6 +118,7 @@ export interface Order {
     updatedAt: string | null;
     cancelReason: string | null;
     refundAmount: number;
+    deliveredDeadline?: string;
 }
 
 export interface VendorOrderItem {
@@ -159,6 +160,7 @@ export interface VendorOrder {
     createdAt: string;
     customerAvatar?: string;
     preparationProofImages?: string[];
+    deliveredDeadline?: string;
 }
 
 interface VendorOrdersApiItem {
@@ -210,6 +212,7 @@ interface VendorOrdersApiItem {
         isRequestRefund?: boolean;
     }>;
     preparationProofImages?: string[];
+    deliveredDeadline?: string;
 }
 
 interface OrderDetailsApiItem {
@@ -317,6 +320,7 @@ interface OrderDetailsApiItem {
     shippingDistanceKm?: number;
     vendorAvatarUrl?: string;
     shopAvatarUrl?: string;
+    deliveredDeadline?: string;
 }
 
 class OrderService {
@@ -721,6 +725,7 @@ class OrderService {
                     updatedAt: raw.updatedAt || null,
                     cancelReason: raw.cancelReason || null,
                     refundAmount: Number(raw.refundAmount) || 0,
+                    deliveredDeadline: raw.deliveredDeadline,
                 };
 
                 // Map images from packages for individual order detail
@@ -829,6 +834,7 @@ class OrderService {
                         customerAvatar: (raw.customer as any)?.avatarUrl || (raw as any).customerAvatar || '',
                         preparationProofImages: raw.preparationProofImages || [],
                         finalAmount: totalAmount,
+                        deliveredDeadline: raw.deliveredDeadline,
                     };
                 });
 

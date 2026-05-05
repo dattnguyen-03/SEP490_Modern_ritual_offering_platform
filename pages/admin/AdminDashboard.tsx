@@ -957,6 +957,23 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) => {
                 <p class="text-xs font-bold text-slate-400 uppercase">ID Hồ sơ</p>
                 <p class="text-sm font-medium text-primary">${user.profileId || 'N/A'}</p>
               </div>
+              <div class="col-span-2 border-t border-gold/10 pt-4 mt-2">
+                <p class="text-xs font-bold text-slate-400 uppercase mb-2">Hạn chế & Vi phạm</p>
+                <div class="grid grid-cols-2 gap-4">
+                  <div>
+                    <p class="text-[10px] font-bold text-slate-400 uppercase">Khóa đặt hàng đến</p>
+                    <p class="text-sm font-bold ${user.orderBlockedUntil && new Date(user.orderBlockedUntil) > new Date() ? 'text-red-600' : 'text-slate-700'}">
+                      ${user.orderBlockedUntil && new Date(user.orderBlockedUntil) > new Date() 
+                        ? formatDateTimeVN(user.orderBlockedUntil) 
+                        : 'Không bị khóa'}
+                    </p>
+                  </div>
+                  <div>
+                    <p class="text-[10px] font-bold text-slate-400 uppercase">Đơn hủy trong tháng</p>
+                    <p class="text-sm font-bold text-slate-700">${user.canceledOrdersCount ?? 0} đơn</p>
+                  </div>
+                </div>
+              </div>
             </div>
 
             <div class="flex flex-col gap-2 mt-6">
