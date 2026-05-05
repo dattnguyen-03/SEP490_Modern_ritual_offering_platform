@@ -25,6 +25,14 @@ const formatDateTimeVi = (dateStr: string) => {
   return `${time} ${day}`;
 };
 
+const formatDateTimeFull = (dateStr: string) => {
+  if (!dateStr) return '';
+  const date = new Date(dateStr);
+  const time = date.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  const day = date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  return `${time} ${day}`;
+};
+
 const getTransactionStatusLabel = (status: string) => {
   const normalized = String(status || '').trim().toLowerCase();
   if (normalized === 'success' || normalized === 'succeeded') return 'Thành công';
@@ -71,6 +79,27 @@ const getTransactionTypeLabel = (type: string, amount: number): string => {
   };
 
   return mapping[normalized] || type;
+};
+
+const formatDescriptionList = (desc: string) => {
+  if (!desc) return '';
+  try {
+    const parsed = JSON.parse(desc);
+    if (typeof parsed === 'object' && parsed !== null) {
+      const parts = [];
+      for (const [k, v] of Object.entries(parsed)) {
+        let val = String(v);
+        if (k === 'createdAt' || k === 'resolvedAt' || k.endsWith('At') || k.endsWith('Date')) {
+          val = formatDateTimeVi(val) || val;
+        }
+        parts.push(`${k}: ${val}`);
+      }
+      return parts.join(' | ');
+    }
+    return desc;
+  } catch {
+    return desc;
+  }
 };
 
 const TransactionManagement: React.FC<TransactionManagementProps> = ({ onNavigate, userRole }) => {
@@ -302,8 +331,8 @@ const TransactionManagement: React.FC<TransactionManagementProps> = ({ onNavigat
                             {getTransactionStatusLabel(tx.status)}
                           </span>
                         </div>
-                        <h4 className="text-lg font-black text-slate-900 group-hover:text-primary transition-colors leading-tight">
-                          {tx.description || 'Giao dịch không đính kèm mô tả'}
+                        <h4 className="text-lg font-black text-slate-900 group-hover:text-primary transition-colors leading-tight line-clamp-2">
+                          {formatDescriptionList(tx.description) || 'Giao dịch không đính kèm mô tả'}
                         </h4>
                         <p className="text-xs text-black mt-2 flex items-center gap-4">
                           <span>{formatDateTimeVi(tx.createdAt)}</span>
@@ -383,8 +412,8 @@ const TransactionManagement: React.FC<TransactionManagementProps> = ({ onNavigat
             </div>
 
             <div className="p-8 space-y-10">
-              <div className="grid grid-cols-2 gap-8">
-                <div className="col-span-2">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-8">
+                <div className="col-span-2 md:col-span-3">
                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Ví chủ thể</p>
                   <p className="font-mono text-xs font-bold text-primary p-3 bg-primary/5 rounded-xl border border-primary/10 truncate">
                     {detailTx.walletId}
@@ -404,17 +433,56 @@ const TransactionManagement: React.FC<TransactionManagementProps> = ({ onNavigat
                     {detailTx.amount >= 0 ? '+' : ''}{formatCurrency(detailTx.amount)}
                   </p>
                 </div>
-                {/* <div>
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Dư sau GD</p>
-                    <p className="text-2xl font-black text-slate-900 tabular-nums tracking-tighter">
-                      {detailTx.balanceAfter !== null ? formatCurrency(detailTx.balanceAfter as number) : '--'}
-                    </p>
-                  </div> */}
+                <div>
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Ngày tạo</p>
+                  <p className="text-base font-bold text-slate-700 mt-1">{formatDateTimeFull(detailTx.createdAt)}</p>
+                </div>
+                {(() => {
+                  const resolvedAt = detailTx.raw?.resolvedAt || detailTx.raw?.ResolvedAt || detailTx.raw?.processedAt || detailTx.raw?.ProcessedAt;
+                  if (!resolvedAt) return null;
+                  return (
+                    <div>
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Thời gian xử lý</p>
+                      <p className="text-base font-bold text-slate-700 mt-1">
+                        {formatDateTimeFull(String(resolvedAt))}
+                      </p>
+                    </div>
+                  );
+                })()}
               </div>
 
               <div className="bg-slate-50 rounded-3xl p-8 border border-slate-100">
                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Mô tả và Ghi chú</p>
-                <p className="text-sm text-slate-700 font-bold leading-relaxed italic">{detailTx.description || 'Giao dịch hệ thống không ghi chú.'}</p>
+                <div className="text-sm text-slate-700 font-bold leading-relaxed italic">
+                  {(() => {
+                    const desc = detailTx.description;
+                    if (!desc) return 'Giao dịch hệ thống không ghi chú.';
+                    try {
+                      const parsed = JSON.parse(desc);
+                      if (typeof parsed === 'object' && parsed !== null) {
+                        return (
+                          <div className="flex flex-col gap-2 not-italic">
+                            {Object.entries(parsed).map(([k, v]) => {
+                              let val = String(v);
+                              if (k === 'createdAt' || k === 'resolvedAt' || k.endsWith('At') || k.endsWith('Date')) {
+                                val = formatDateTimeVi(val) || val;
+                              }
+                              return (
+                                <div key={k} className="flex items-start gap-2">
+                                  <span className="text-slate-500 min-w-[120px]">{k}:</span>
+                                  <span className="text-slate-900 whitespace-pre-wrap">{val}</span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        );
+                      }
+                      return desc;
+                    } catch {
+                      return desc;
+                    }
+                  })()}
+                </div>
               </div>
 
               {relatedTxs.length > 0 && (
