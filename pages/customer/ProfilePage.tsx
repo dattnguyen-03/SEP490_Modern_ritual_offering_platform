@@ -619,7 +619,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigate }) => {
       try {
         setLoading(true);
         setError(null);
-        console.log('🔄 Loading profile...');
+        console.log(' Loading profile...');
 
         const [profileData, addressesData] = await Promise.all([
           getProfile(),
@@ -1942,7 +1942,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigate }) => {
 
     try {
       setChangingPassword(true);
-      console.log('🔄 Changing password...');
+      console.log(' Changing password...');
 
       const response = await changePassword({
         oldPassword: passwordForm.oldPassword,

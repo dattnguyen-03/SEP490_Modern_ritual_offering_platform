@@ -550,7 +550,7 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onNavigate }) => 
     setCurrentPage(1);
 
     try {
-      console.log('🔄 Loading packages for vendor...', { selectedStatus, vendorProfileId });
+      console.log('Loading packages for vendor...', { selectedStatus, vendorProfileId });
       const packages = await packageService.getPackagesByStatus('', 1, 100);
 
       const statusFiltered = selectedStatus
@@ -1496,8 +1496,8 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onNavigate }) => 
                     return (
                       <>
                         <span className={`px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest flex-shrink-0 ${isApproved ? 'bg-green-100 text-green-700 border border-green-200' :
-                            isRejected ? 'bg-red-100 text-red-700 border border-red-200' :
-                              'bg-yellow-100 text-yellow-700 border border-yellow-200'
+                          isRejected ? 'bg-red-100 text-red-700 border border-red-200' :
+                            'bg-yellow-100 text-yellow-700 border border-yellow-200'
                           }`}>
                           {isApproved ? 'Đã Duyệt' : isRejected ? 'Từ Chối' : 'Chờ Duyệt'}
                         </span>

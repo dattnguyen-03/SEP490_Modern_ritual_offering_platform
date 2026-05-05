@@ -353,8 +353,8 @@ const SystemSettings: React.FC<SystemSettingsProps> = ({ onNavigate, onLogout })
                     key={cat.id}
                     onClick={() => setActiveCategory(cat.id as any)}
                     className={`w-full px-6 py-4 text-left font-bold text-sm transition-all flex items-center gap-3 ${activeCategory === cat.id
-                        ? 'bg-slate-900 text-white shadow-md'
-                        : 'text-slate-700 hover:bg-slate-50'
+                      ? 'bg-slate-900 text-white shadow-md'
+                      : 'text-slate-700 hover:bg-slate-50'
                       }`}
                   >
                     <span className="text-lg">{cat.icon || '⚙️'}</span>
@@ -401,8 +401,8 @@ const SystemSettings: React.FC<SystemSettingsProps> = ({ onNavigate, onLogout })
                         <div
                           key={cat.categoryId}
                           className={`group rounded-2xl border-2 transition-all duration-200 p-5 ${cat.isActive
-                              ? 'border-slate-200 bg-gradient-to-br from-white to-slate-50/30 hover:border-slate-300 hover:shadow-md'
-                              : 'border-slate-100 bg-slate-50/50 opacity-60'
+                            ? 'border-slate-200 bg-gradient-to-br from-white to-slate-50/30 hover:border-slate-300 hover:shadow-md'
+                            : 'border-slate-100 bg-slate-50/50 opacity-60'
                             }`}
                         >
                           <div className="flex items-start justify-between gap-3 mb-3">
@@ -436,7 +436,7 @@ const SystemSettings: React.FC<SystemSettingsProps> = ({ onNavigate, onLogout })
                                 className="flex-1 px-3 py-2 text-rose-600 hover:bg-rose-50 rounded-lg transition text-sm font-bold"
                                 title="Tạm ngưng"
                               >
-                                🗑️ Tắt
+                                Tắt
                               </button>
                             ) : (
                               <button
@@ -444,7 +444,7 @@ const SystemSettings: React.FC<SystemSettingsProps> = ({ onNavigate, onLogout })
                                 className="flex-1 px-3 py-2 text-emerald-600 hover:bg-emerald-50 rounded-lg transition text-sm font-bold"
                                 title="Khôi phục"
                               >
-                                🔄 Bật
+                                Bật
                               </button>
                             )}
                           </div>

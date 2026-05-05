@@ -112,6 +112,12 @@ const formatYmdToVi = (ymd: string): string => {
   return `${day}/${month}/${year}`;
 };
 
+const toMdy = (ymd: string): string => {
+  if (!ymd || !ymd.includes('-')) return ymd;
+  const [y, m, d] = ymd.split('-');
+  return `${m}-${d}-${y}`;
+};
+
 const parseViDateToYmd = (value: string): string | null => {
   const normalized = value.trim();
   const match = normalized.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
@@ -197,6 +203,19 @@ const OrderManagement: React.FC<OrderManagementProps> = ({ onNavigate: _onNaviga
     items?: VendorOrderItem[];
   };
 
+  interface PreparationItem {
+    id: string;
+    name: string;
+    variant: string;
+    quantity: number;
+    orderId: string;
+    deliveryTime: string;
+    customerName: string;
+    addOns: { name: string; quantity: number }[];
+    swaps: string[];
+    isPrepared: boolean;
+  }
+
   // ── orders state ────────────────────────────────────────────────────────────
   const [orders, setOrders] = useState<VendorOrder[]>([]);
   const [enrichedData, setEnrichedData] = useState<Record<string, EnrichedOrderData>>({});
@@ -210,6 +229,11 @@ const OrderManagement: React.FC<OrderManagementProps> = ({ onNavigate: _onNaviga
   const [toDateText, setToDateText] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
 
+  // ── preparation state ───────────────────────────────────────────────────────
+  const [prepPlan, setPrepPlan] = useState<any>(null);
+  const [prepLoading, setPrepLoading] = useState(false);
+  const [prepDate, setPrepDate] = useState(toYmd(new Date()));
+
   // ── detail modal state ──────────────────────────────────────────────────────
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
@@ -221,11 +245,12 @@ const OrderManagement: React.FC<OrderManagementProps> = ({ onNavigate: _onNaviga
   const [deliveryProofImages, setDeliveryProofImages] = useState<File[]>([]);
 
   // ── tab state ───────────────────────────────────────────────────────────────
-  const [mainTab, setMainTab] = useState<'orders' | 'refunds' | 'reviews'>(() => {
+  const [mainTab, setMainTab] = useState<'orders' | 'refunds' | 'reviews' | 'preparation'>(() => {
     const params = new URLSearchParams(window.location.search);
     const tab = params.get('tab');
     if (tab === 'refund' || tab === 'refunds') return 'refunds';
     if (tab === 'review' || tab === 'reviews') return 'reviews';
+    if (tab === 'preparation') return 'preparation';
     return 'orders';
   });
   const [pendingRefunds, setPendingRefunds] = useState(0);
@@ -343,7 +368,25 @@ const OrderManagement: React.FC<OrderManagementProps> = ({ onNavigate: _onNaviga
 
   useEffect(() => {
     fetchOrders();
-  }, [mainTab]); // Changed from [fetchOrders] to [mainTab]
+  }, [mainTab]);
+
+  const fetchPrepPlan = useCallback(async () => {
+    if (mainTab !== 'preparation') return;
+    try {
+      setPrepLoading(true);
+      // Format prepDate (YYYY-MM-DD) to MM-DD-YYYY as requested
+      const plan = await orderService.getPreparationPlan(toMdy(prepDate));
+      setPrepPlan(plan);
+    } catch (err) {
+      console.error("Failed to fetch prep plan:", err);
+    } finally {
+      setPrepLoading(false);
+    }
+  }, [mainTab, prepDate]);
+
+  useEffect(() => {
+    fetchPrepPlan();
+  }, [fetchPrepPlan]);
 
   // Enrich visible orders when page or orders change
   useEffect(() => {
@@ -483,6 +526,44 @@ const OrderManagement: React.FC<OrderManagementProps> = ({ onNavigate: _onNaviga
     setCurrentPage(1);
   }, [filterStatus, fromDate, toDate, mainTab]);
 
+  // Consolidated preparation data
+  const preparationItems: PreparationItem[] = orders
+    .filter(o => ['Confirmed', 'Processing'].includes(normalizeStatus(o.orderStatus)))
+    .filter(o => {
+      // Default to showing today's preparation
+      const d = parseDate(o.createdAt);
+      const deliveryDate = parseDate(o.deliveryDate);
+      if (!deliveryDate) return false;
+      const ymd = toYmd(deliveryDate);
+
+      if (fromDate && ymd < fromDate) return false;
+      if (toDate && ymd > toDate) return false;
+
+      // If no filter, show everything confirmed/processing
+      return true;
+    })
+    .sort((a, b) => {
+      const dateA = `${a.deliveryDate}T${a.deliveryTime || '00:00'}`;
+      const dateB = `${b.deliveryDate}T${b.deliveryTime || '00:00'}`;
+      return dateA.localeCompare(dateB);
+    })
+    .flatMap(o => {
+      const enrichment = enrichedData[o.orderId] || {};
+      const items = (enrichment.items || o.items || []) as VendorOrderItem[];
+      return items.map(it => ({
+        id: `${o.orderId}-${it.itemId}`,
+        name: it.packageName,
+        variant: it.variantName,
+        quantity: it.quantity,
+        orderId: o.orderId,
+        deliveryTime: o.deliveryTime?.slice(0, 5) || 'N/A',
+        customerName: enrichment.customerName || o.customerName || 'Khách hàng',
+        addOns: (it.addOns || []).map(a => ({ name: a.addOnName || a.itemName, quantity: a.quantity })),
+        swaps: (it.swaps || []).map(s => s.replacementItemName),
+        isPrepared: false // In a real app, this would be persisted
+      }));
+    });
+
   useEffect(() => {
     setFromDateText(formatYmdToVi(fromDate));
   }, [fromDate]);
@@ -574,7 +655,7 @@ const OrderManagement: React.FC<OrderManagementProps> = ({ onNavigate: _onNaviga
         </div>
 
         <div className="flex gap-2 mb-6 bg-white p-1.5 rounded-2xl border border-gray-200 shadow-sm w-fit">
-          {(['orders', 'refunds', 'reviews'] as const).map(id => (
+          {(['orders', 'preparation', 'refunds', 'reviews'] as const).map(id => (
             <button
               key={id}
               onClick={() => setMainTab(id)}
@@ -588,7 +669,7 @@ const OrderManagement: React.FC<OrderManagementProps> = ({ onNavigate: _onNaviga
                   {pendingRefunds}
                 </span>
               )}
-              {id === 'orders' ? 'Đơn Hàng' : (id === 'refunds' ? 'Yêu cầu hoàn tiền' : 'Đánh giá')}
+              {id === 'orders' ? 'Đơn Hàng' : (id === 'preparation' ? 'Kế hoạch chuẩn bị' : (id === 'refunds' ? 'Yêu cầu hoàn tiền' : 'Đánh giá'))}
             </button>
           ))}
         </div>
@@ -929,6 +1010,155 @@ const OrderManagement: React.FC<OrderManagementProps> = ({ onNavigate: _onNaviga
               </div>
             )}
           </>
+        )}
+
+        {mainTab === 'preparation' && (
+          <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            {/* Prep Header & Filter */}
+            <div className="bg-white p-8 rounded-[2.5rem] border border-gray-200 shadow-sm">
+              <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
+                <div>
+                  <h3 className="text-2xl font-black text-slate-900 tracking-tight">Kế hoạch chuẩn bị</h3>
+                  <p className="text-sm text-slate-500 font-medium mt-1">
+                    Ngày đang xem: <span className="text-primary font-bold">{formatYmdToVi(prepDate)}</span>
+                  </p>
+                </div>
+                <div className="flex flex-wrap items-center gap-4">
+                  <div className="flex items-center gap-2 bg-gray-50 p-2 rounded-2xl border border-gray-100">
+                    <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2">Chọn ngày:</span>
+                    <input
+                      type="date"
+                      value={prepDate}
+                      onChange={(e) => setPrepDate(e.target.value)}
+                      className="bg-transparent border-none text-sm font-bold text-slate-900 focus:ring-0 cursor-pointer"
+                    />
+                  </div>
+                  <button
+                    onClick={() => window.print()}
+                    className="flex items-center gap-2 px-6 py-3 bg-slate-900 text-white rounded-2xl font-bold text-xs uppercase tracking-widest hover:bg-slate-800 transition shadow-xl shadow-slate-900/10 active:scale-95"
+                  >
+                    <span className="material-symbols-outlined text-sm">print</span>
+                    In kế hoạch
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {prepLoading ? (
+              <div className="py-20 text-center">
+                <div className="inline-block animate-spin rounded-full h-10 w-10 border-t-4 border-b-4 border-primary mb-4" />
+                <p className="text-slate-500 font-bold">Đang tải kế hoạch chuẩn bị...</p>
+              </div>
+            ) : !prepPlan || (prepPlan.totalAddOnsToPrepare.length === 0 && prepPlan.variantsToPrepare.length === 0) ? (
+              <div className="py-32 text-center bg-white rounded-[3rem] border border-dashed border-gray-200">
+                <div className="size-24 rounded-full bg-slate-50 flex items-center justify-center mx-auto mb-6">
+                  <span className="material-symbols-outlined text-slate-300 text-5xl">inventory_2</span>
+                </div>
+                <h4 className="text-xl font-bold text-slate-900 mb-2">Không có đơn hàng nào cần chuẩn bị</h4>
+                <p className="text-slate-500 max-w-sm mx-auto">Tất cả các đơn hàng cho ngày {formatYmdToVi(prepDate)} đã hoàn tất hoặc chưa được xác nhận.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 xl:grid-cols-12 gap-8">
+
+                {/* Consolidated Add-ons - Left Column */}
+                <div className="xl:col-span-4 space-y-6">
+                  <div className="bg-white rounded-[2.5rem] border border-gray-200 overflow-hidden shadow-sm sticky top-32">
+                    <div className="p-8 border-b border-gray-100 bg-emerald-50/30">
+                      <div className="flex items-center gap-3">
+                        <div className="size-10 rounded-xl bg-emerald-500 flex items-center justify-center text-white">
+                          <span className="material-symbols-outlined">shopping_basket</span>
+                        </div>
+                        <h4 className="text-lg font-black text-slate-900 uppercase tracking-tight">Tổng món kèm cần soạn</h4>
+                      </div>
+                    </div>
+                    <div className="p-8 space-y-4">
+                      {prepPlan.totalAddOnsToPrepare.map((ao: any, idx: number) => (
+                        <div key={idx} className="flex items-center justify-between p-4 bg-gray-50/50 rounded-2xl border border-gray-100 hover:bg-emerald-50/50 hover:border-emerald-100 transition-all group">
+                          <div className="flex items-center gap-3">
+                            <div className="size-2 rounded-full bg-emerald-400" />
+                            <span className="text-sm font-bold text-slate-700 group-hover:text-emerald-900 transition-colors">{ao.addOnName}</span>
+                          </div>
+                          <div className="px-3 py-1 bg-white border border-gray-200 rounded-lg text-sm font-black text-emerald-600">
+                            x{ao.totalQuantity}
+                          </div>
+                        </div>
+                      ))}
+                      {prepPlan.totalAddOnsToPrepare.length === 0 && (
+                        <p className="text-center text-sm text-slate-400 italic py-4">Không có món kèm nào</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Detailed Allocations - Right Column */}
+                <div className="xl:col-span-8 space-y-8">
+                  <div className="bg-white rounded-[2.5rem] border border-gray-200 overflow-hidden shadow-sm">
+                    <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+                      <h4 className="text-sm font-black text-slate-900 uppercase tracking-widest">Chi tiết gói lễ &amp; Phân bổ</h4>
+                      <div className="px-3 py-1 bg-primary/10 rounded-lg text-xs font-black text-primary">
+                        {prepPlan.totalPendingOrders} đơn hàng
+                      </div>
+                    </div>
+
+                    <div className="divide-y divide-gray-100">
+                      {prepPlan.variantsToPrepare.map((variant: any, vIdx: number) => (
+                        <div key={vIdx} className="p-5">
+                          {/* Package row */}
+                          <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center gap-2.5">
+                              <div className="w-1 h-9 rounded-full bg-primary flex-shrink-0" />
+                              <div>
+                                <h5 className="font-black text-slate-900 text-sm leading-tight">{variant.packageName}</h5>
+                                <p className="text-[11px] font-bold text-primary/80 mt-0.5 uppercase tracking-wide">{variant.variantName}</p>
+                              </div>
+                            </div>
+                            <div className="bg-slate-900 text-white px-3 py-1.5 rounded-xl text-xs font-black whitespace-nowrap">
+                              Tổng {variant.totalQuantityRequired} Món
+                            </div>
+                          </div>
+
+                          {/* Allocations */}
+                          <div className="space-y-2 ml-4 border-l-2 border-gray-100 pl-4">
+                            {variant.allocations.map((alloc: any, aIdx: number) => (
+                              <div key={aIdx} className="bg-gray-50 rounded-xl border border-gray-100 px-4 py-3">
+                                <div className="flex items-center justify-between mb-2">
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">#{alloc.orderId.slice(-6)}</span>
+                                    <span className="px-2 py-0.5 bg-primary/10 text-primary text-[10px] font-black rounded-md">{alloc.deliveryTime.slice(0, 5)}</span>
+                                  </div>
+                                  <span className="text-sm font-black text-slate-800">×{alloc.allocatedQuantity} Món</span>
+                                </div>
+
+                                {(alloc.swaps.length > 0 || alloc.addOns.length > 0 || alloc.decorationNote) && (
+                                  <div className="flex flex-wrap gap-1.5">
+                                    {alloc.swaps.map((s: string, sIdx: number) => (
+                                      <span key={sIdx} className="px-2 py-0.5 rounded-md bg-amber-50 border border-amber-200 text-amber-800 text-[10px] font-semibold">
+                                        {s.replace(/🔄\s*/g, '').replace(/^Đổi:\s*/i, '').trim()}
+                                      </span>
+                                    ))}
+                                    {alloc.addOns.map((a: string, aIdx2: number) => (
+                                      <span key={aIdx2} className="px-2 py-0.5 rounded-md bg-emerald-50 border border-emerald-200 text-emerald-800 text-[10px] font-semibold">
+                                        {a.replace(/^\+\s*/g, '').trim()}
+                                      </span>
+                                    ))}
+                                    {alloc.decorationNote && (
+                                      <span className="px-2 py-0.5 rounded-md bg-slate-100 border border-slate-200 text-slate-500 text-[10px] italic">
+                                        {alloc.decorationNote}
+                                      </span>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
         )}
 
 

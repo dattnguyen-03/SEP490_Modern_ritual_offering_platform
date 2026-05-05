@@ -163,6 +163,30 @@ export interface VendorOrder {
     deliveredDeadline?: string;
 }
 
+export interface PreparationPlan {
+    targetDate: string;
+    totalPendingOrders: number;
+    totalAddOnsToPrepare: Array<{
+        addOnName: string;
+        totalQuantity: number;
+    }>;
+    variantsToPrepare: Array<{
+        packageId: number;
+        variantId: number;
+        packageName: string;
+        variantName: string;
+        totalQuantityRequired: number;
+        allocations: Array<{
+            orderId: string;
+            deliveryTime: string;
+            allocatedQuantity: number;
+            decorationNote: string;
+            addOns: string[];
+            swaps: string[];
+        }>;
+    }>;
+}
+
 interface VendorOrdersApiItem {
     orderId?: string;
     orderStatus?: string;
@@ -1093,6 +1117,31 @@ class OrderService {
             return data.isSuccess || data.statusCode === 'OK';
         } catch (error) {
             console.error("Failed to cancel order:", error);
+            throw error;
+        }
+    }
+
+    // Get preparation plan for a specific date (vendor)
+    async getPreparationPlan(date: string): Promise<PreparationPlan | null> {
+        try {
+            const url = `${API_BASE_URL}/orders/vendor/daily-plan?date=${date}`;
+            const response = await fetchWithAuth(url, {
+                method: 'GET',
+                headers: this.getHeaders('GET'),
+            });
+
+            if (!response.ok) {
+                if (response.status === 404) return null;
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            if (data.isSuccess && data.result) {
+                return data.result as PreparationPlan;
+            }
+            return null;
+        } catch (error) {
+            console.error("Failed to get preparation plan:", error);
             throw error;
         }
     }
