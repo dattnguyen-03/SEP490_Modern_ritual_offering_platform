@@ -1126,7 +1126,7 @@ const OrderManagement: React.FC<OrderManagementProps> = ({ onNavigate: _onNaviga
                                     <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">#{alloc.orderId.slice(-6)}</span>
                                     <span className="px-2 py-0.5 bg-primary/10 text-primary text-[10px] font-black rounded-md">{alloc.deliveryTime.slice(0, 5)}</span>
                                   </div>
-                                  <span className="text-sm font-black text-slate-800">×{alloc.allocatedQuantity} Món</span>
+                                  <span className="text-sm font-black text-slate-800">×{alloc.allocatedQuantity} Món :</span>
                                 </div>
 
                                 {(alloc.swaps.length > 0 || alloc.addOns.length > 0 || alloc.decorationNote) && (
