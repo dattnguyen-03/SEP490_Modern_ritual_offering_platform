@@ -206,7 +206,7 @@ const VendorSettings: React.FC<VendorSettingsProps> = ({ onNavigate }) => {
           dateOfBirth: formattedDate,
           latitude: vendorData?.shopLatitude ?? data.latitude ?? 0,
           longitude: vendorData?.shopLongitude ?? data.longitude ?? 0,
-          dailyCapacity: vendorData?.dailyCapacity ?? 100,
+          dailyCapacity: vendorData?.dailyCapacityWeight ?? vendorData?.dailyCapacity ?? 100,
           businessType: vendorData?.businessType || 'Individual',
           avatarUrl: vendorData?.shopAvatarUrl || vendorData?.avatarUrl || '',
         }));
@@ -218,7 +218,7 @@ const VendorSettings: React.FC<VendorSettingsProps> = ({ onNavigate }) => {
           tax: vendorData?.taxCode || data.businessLicenseNo || '',
           latitude: vendorData?.shopLatitude ?? data.latitude ?? 0,
           longitude: vendorData?.shopLongitude ?? data.longitude ?? 0,
-          dailyCapacity: vendorData?.dailyCapacity ?? 100,
+          dailyCapacity: vendorData?.dailyCapacityWeight ?? vendorData?.dailyCapacity ?? 100,
           businessType: vendorData?.businessType || 'Individual',
           avatarUrl: vendorData?.shopAvatarUrl || vendorData?.avatarUrl || '',
         });
@@ -756,7 +756,7 @@ const VendorSettings: React.FC<VendorSettingsProps> = ({ onNavigate }) => {
         }
 
         if (shopInfo.dailyCapacity !== initialShopInfo.dailyCapacity) {
-          payload.dailyCapacity = Number(shopInfo.dailyCapacity);
+          payload.dailyCapacityWeight = Number(shopInfo.dailyCapacity);
         }
 
         if (shopInfo.businessType !== initialShopInfo.businessType) {
@@ -785,7 +785,7 @@ const VendorSettings: React.FC<VendorSettingsProps> = ({ onNavigate }) => {
             tax: updatedVendor.taxCode || shopInfo.tax,
             latitude: updatedVendor.shopLatitude ?? shopInfo.latitude,
             longitude: updatedVendor.shopLongitude ?? shopInfo.longitude,
-            dailyCapacity: updatedVendor.dailyCapacity ?? shopInfo.dailyCapacity,
+            dailyCapacity: updatedVendor.dailyCapacityWeight ?? updatedVendor.dailyCapacity ?? shopInfo.dailyCapacity,
             businessType: updatedVendor.businessType || shopInfo.businessType,
             avatarUrl: updatedVendor.shopAvatarUrl || updatedVendor.avatarUrl || shopInfo.avatarUrl,
           };
@@ -1362,13 +1362,34 @@ const VendorSettings: React.FC<VendorSettingsProps> = ({ onNavigate }) => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-2">Sức chứa hàng ngày (Daily Capacity)</label>
+                  <label className="block text-sm font-bold text-gray-700 mb-2">Điểm năng lực/ngày (DailyCapacityWeight)</label>
                   <input
                     type="number"
                     value={shopInfo.dailyCapacity}
                     onChange={(e) => setShopInfo({ ...shopInfo, dailyCapacity: Number(e.target.value) })}
                     disabled={!isEditing}
                     className="w-full px-4 py-3 border-2 border-gold/20 rounded-lg focus:border-primary focus:outline-none disabled:bg-gray-50 disabled:cursor-not-allowed"
+                  />
+                  <p className="mt-1 text-xs text-gray-500">Điểm năng lực/ngày để tính tổng các mâm cúng trong 1 ngày cụ thể.</p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-2">Số lần từ chối đơn hàng (tháng)</label>
+                  <input
+                    type="text"
+                    value={Number(vendorProfile?.rejectionCount ?? 0)}
+                    disabled
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg bg-gray-50 text-gray-700 cursor-not-allowed"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-2">Bị đình đến ngày</label>
+                  <input
+                    type="text"
+                    value={vendorProfile?.vendorSuspendedUntil ? new Date(vendorProfile.vendorSuspendedUntil).toLocaleDateString('vi-VN') : 'Không'}
+                    disabled
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg bg-gray-50 text-gray-700 cursor-not-allowed"
                   />
                 </div>
 
