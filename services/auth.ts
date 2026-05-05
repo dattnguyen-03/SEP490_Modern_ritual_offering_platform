@@ -609,6 +609,7 @@ export interface VendorCurrentProfile {
   verifiedBy: string | null;
   vendorStatus: string | null;
   dailyCapacity: number | null;
+  dailyCapacityWeight: number | null;
   ratingAvg: number;
   tierId: number | null;
   tierName: string | null;
@@ -625,6 +626,7 @@ export interface UpdateVendorProfileRequest {
   shopLatitude?: number;
   shopLongitude?: number;
   dailyCapacity?: number;
+  dailyCapacityWeight?: number;
   taxCode?: string;
   businessType?: 'Individual' | 'Company' | string;
   shopAvatarFile?: File | null;
@@ -806,7 +808,11 @@ export async function updateVendorProfile(profileData: UpdateVendorProfileReques
     if (profileData.shopAddressText !== undefined) formData.append('ShopAddressText', profileData.shopAddressText);
     if (profileData.shopLatitude !== undefined) formData.append('ShopLatitude', profileData.shopLatitude.toString());
     if (profileData.shopLongitude !== undefined) formData.append('ShopLongitude', profileData.shopLongitude.toString());
-    if (profileData.dailyCapacity !== undefined) formData.append('DailyCapacity', profileData.dailyCapacity.toString());
+    if (profileData.dailyCapacityWeight !== undefined) {
+      formData.append('DailyCapacityWeight', profileData.dailyCapacityWeight.toString());
+    } else if (profileData.dailyCapacity !== undefined) {
+      formData.append('DailyCapacityWeight', profileData.dailyCapacity.toString());
+    }
     if (profileData.taxCode !== undefined) formData.append('TaxCode', profileData.taxCode);
     if (profileData.businessType !== undefined) formData.append('BusinessType', profileData.businessType);
     if (profileData.shopAvatarFile) {
