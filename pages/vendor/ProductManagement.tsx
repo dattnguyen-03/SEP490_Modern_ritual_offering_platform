@@ -28,6 +28,7 @@ interface Product {
 }
 
 interface VariantSwap {
+  swapId?: number;
   originalItemName: string;
   originalItemAllocatedPrice: number;
   replacementItemName: string;
@@ -69,9 +70,13 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onNavigate }) => 
       variantName: string;
       description: string;
       price: number;
+      productionWeight?: number;
+      minOrderQuantity?: number;
+      maxOrderQuantity?: number;
       imageUrls: string[];
       primaryImageIndex?: number;
       swaps?: {
+        swapId?: number;
         originalItemName: string;
         originalItemAllocatedPrice: number;
         replacementItemName: string;
@@ -97,9 +102,13 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onNavigate }) => 
       variantName: string;
       description: string;
       price: number;
+      productionWeight?: number;
+      minOrderQuantity?: number;
+      maxOrderQuantity?: number;
       imageUrls: string[];
       primaryImageIndex?: number;
       swaps?: {
+        swapId?: number;
         originalItemName: string;
         originalItemAllocatedPrice: number;
         replacementItemName: string;
@@ -114,7 +123,7 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onNavigate }) => 
     packageImageUrls: [],
     primaryImageIndex: 0,
     addOnIds: [],
-    variants: [{ variantName: '', description: '', price: 0, imageUrls: [], primaryImageIndex: 0, swaps: [] }],
+    variants: [{ variantName: '', description: '', price: 0, productionWeight: 0, minOrderQuantity: 1, maxOrderQuantity: 99, imageUrls: [], primaryImageIndex: 0, swaps: [] }],
   });
 
   const [categories, setCategories] = useState<CeremonyCategory[]>([]);
@@ -208,11 +217,18 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onNavigate }) => 
     return Number(digits);
   };
 
+  const parseIntegerInput = (value: string): number => {
+    const digits = String(value || '').replace(/\D/g, '');
+    if (!digits) return 0;
+    return Number(digits);
+  };
+
   const formatCurrencyInput = (value: number): string => {
     return Number(value || 0).toLocaleString('vi-VN');
   };
 
   const createEmptySwap = (displayOrder: number): VariantSwap => ({
+    swapId: undefined,
     originalItemName: '',
     originalItemAllocatedPrice: 0,
     replacementItemName: '',
@@ -222,7 +238,8 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onNavigate }) => 
 
   const normalizeSwaps = (swaps: any): VariantSwap[] => {
     if (!Array.isArray(swaps)) return [];
-    return swaps.map((s: any, idx: number) => ({
+    return swaps.map((s: any, index: number) => ({
+      swapId: typeof s?.swapId === 'number' ? s.swapId : undefined,
       originalItemName: String(s?.originalItemName || ''),
       originalItemAllocatedPrice: Number(s?.originalItemAllocatedPrice || 0),
       replacementItemName: String(s?.replacementItemName || ''),
@@ -459,6 +476,9 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onNavigate }) => 
           variantName: v.variantName || '',
           description: v.description || '',
           price: Number(v.price) || 0,
+          productionWeight: Number((v as any).productionWeight) || 0,
+          minOrderQuantity: Number((v as any).minOrderQuantity) || 1,
+          maxOrderQuantity: Number((v as any).maxOrderQuantity) || 99,
           imageUrls: merged,
           primaryImageIndex: safePrimary,
           swaps: normalizeSwaps((v as any).availableSwaps ?? (v as any).swaps),
@@ -495,15 +515,22 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onNavigate }) => 
             variantName: v.variantName,
             description: v.description,
             price: v.price,
+            productionWeight: Number(v.productionWeight) || 0,
+            minOrderQuantity: Number(v.minOrderQuantity) || 1,
+            maxOrderQuantity: Number(v.maxOrderQuantity) || 99,
           } as {
             variantId?: string | number;
             variantName: string;
             description: string;
             price: number;
+            productionWeight?: number;
+            minOrderQuantity?: number;
+            maxOrderQuantity?: number;
             imageUrl?: string;
             variantImageUrls?: string[];
             primaryVariantImageIndex?: number;
             swaps?: {
+              swapId?: number;
               originalItemName: string;
               originalItemAllocatedPrice: number;
               replacementItemName: string;
@@ -519,6 +546,7 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onNavigate }) => 
           base.primaryVariantImageIndex = safePrimary;
           base.swaps = Array.isArray(v.swaps)
             ? v.swaps.map((s, idx) => ({
+              swapId: typeof (s as any)?.swapId === 'number' ? (s as any).swapId : undefined,
               originalItemName: String(s.originalItemName || ''),
               originalItemAllocatedPrice: Number(s.originalItemAllocatedPrice || 0),
               replacementItemName: String(s.replacementItemName || ''),
@@ -717,14 +745,21 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onNavigate }) => 
             variantName: v.variantName,
             description: v.description,
             price: v.price,
+            productionWeight: Number(v.productionWeight) || 0,
+            minOrderQuantity: Number(v.minOrderQuantity) || 1,
+            maxOrderQuantity: Number(v.maxOrderQuantity) || 99,
           } as {
             variantName: string;
             description: string;
             price: number;
+            productionWeight?: number;
+            minOrderQuantity?: number;
+            maxOrderQuantity?: number;
             imageUrl?: string;
             variantImageUrls?: string[];
             primaryVariantImageIndex?: number;
             swaps?: {
+              swapId?: number;
               originalItemName: string;
               originalItemAllocatedPrice: number;
               replacementItemName: string;
@@ -738,6 +773,7 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onNavigate }) => 
           base.primaryVariantImageIndex = cleaned.length > 0 ? 0 : 0;
           base.swaps = Array.isArray(v.swaps)
             ? v.swaps.map((s, idx) => ({
+              swapId: typeof (s as any)?.swapId === 'number' ? (s as any).swapId : undefined,
               originalItemName: String(s.originalItemName || ''),
               originalItemAllocatedPrice: Number(s.originalItemAllocatedPrice || 0),
               replacementItemName: String(s.replacementItemName || ''),
@@ -751,7 +787,7 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onNavigate }) => 
       });
       toast.success(action === 'Draft' ? 'Lưu nháp thành công!' : 'Gửi phê duyệt thành công!');
       setShowAddForm(false);
-      setCreateForm({ packageName: '', description: '', categoryId: 1, packageImageUrls: [], primaryImageIndex: 0, addOnIds: [], variants: [{ variantName: '', description: '', price: 0, imageUrls: [], swaps: [] }] });
+      setCreateForm({ packageName: '', description: '', categoryId: 1, packageImageUrls: [], primaryImageIndex: 0, addOnIds: [], variants: [{ variantName: '', description: '', price: 0, productionWeight: 0, minOrderQuantity: 1, maxOrderQuantity: 99, imageUrls: [], swaps: [] }] });
       loadPackages();
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Lỗi khi tạo sản phẩm';
@@ -988,7 +1024,10 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onNavigate }) => 
                   <div className="flex items-center justify-between mb-2">
                     <label className="text-xs font-black text-gray-400 uppercase tracking-widest">Biến thể gói <span className="text-red-500">*</span></label>
                     <button
-                      onClick={() => setCreateForm({ ...createForm, variants: [...createForm.variants, { variantName: '', description: '', price: 0, imageUrls: [], swaps: [] }] })}
+                      onClick={() => setCreateForm({
+                        ...createForm,
+                        variants: [...createForm.variants, { variantName: '', description: '', price: 0, productionWeight: 0, minOrderQuantity: 1, maxOrderQuantity: 99, imageUrls: [], swaps: [] }]
+                      })}
                       className="text-xs font-bold text-primary hover:text-primary/70 transition px-3 py-1 border border-primary/30 rounded-full bg-primary/5"
                     >
                       + Thêm biến thể
@@ -1026,6 +1065,53 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onNavigate }) => 
                               onChange={e => { const vars = [...createForm.variants]; vars[idx] = { ...vars[idx], price: parseCurrencyInput(e.target.value) }; setCreateForm({ ...createForm, variants: vars }); }}
                               className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:border-primary focus:outline-none"
                               placeholder="500000"
+                            />
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-3 gap-2 mb-2">
+                          <div>
+                            <label className="text-[10px] font-bold text-gray-400 block mb-1">Điểm năng lực</label>
+                            <input
+                              type="text"
+                              inputMode="numeric"
+                              value={String(v.productionWeight ?? 0)}
+                              onChange={e => {
+                                const vars = [...createForm.variants];
+                                vars[idx] = { ...vars[idx], productionWeight: parseIntegerInput(e.target.value) };
+                                setCreateForm({ ...createForm, variants: vars });
+                              }}
+                              className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:border-primary focus:outline-none"
+                              placeholder="0"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-[10px] font-bold text-gray-400 block mb-1">Tối thiểu</label>
+                            <input
+                              type="text"
+                              inputMode="numeric"
+                              value={String(v.minOrderQuantity ?? 1)}
+                              onChange={e => {
+                                const vars = [...createForm.variants];
+                                vars[idx] = { ...vars[idx], minOrderQuantity: Math.max(1, parseIntegerInput(e.target.value)) };
+                                setCreateForm({ ...createForm, variants: vars });
+                              }}
+                              className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:border-primary focus:outline-none"
+                              placeholder="1"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-[10px] font-bold text-gray-400 block mb-1">Tối đa</label>
+                            <input
+                              type="text"
+                              inputMode="numeric"
+                              value={String(v.maxOrderQuantity ?? 99)}
+                              onChange={e => {
+                                const vars = [...createForm.variants];
+                                vars[idx] = { ...vars[idx], maxOrderQuantity: Math.max(1, parseIntegerInput(e.target.value)) };
+                                setCreateForm({ ...createForm, variants: vars });
+                              }}
+                              className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:border-primary focus:outline-none"
+                              placeholder="99"
                             />
                           </div>
                         </div>
@@ -1700,7 +1786,7 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onNavigate }) => 
                           onClick={() => {
                             setEditForm(f => f ? {
                               ...f,
-                              variants: [...f.variants, { variantName: '', description: '', price: 0, imageUrls: [], primaryImageIndex: 0, swaps: [] }]
+                              variants: [...f.variants, { variantName: '', description: '', price: 0, productionWeight: 0, minOrderQuantity: 1, maxOrderQuantity: 99, imageUrls: [], primaryImageIndex: 0, swaps: [] }]
                             } : f);
                           }}
                           className="px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest bg-primary text-white hover:opacity-90 transition"
@@ -1822,6 +1908,63 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onNavigate }) => 
                                     className="w-full px-3 py-2 border-2 border-primary/30 rounded-xl text-sm text-gray-700 focus:border-primary focus:outline-none bg-white"
                                     placeholder="Mô tả gói..."
                                   />
+
+                                  <div className="mt-3 grid grid-cols-3 gap-2">
+                                    <div>
+                                      <label className="text-[10px] font-bold text-gray-400 block mb-1">Điểm năng lực</label>
+                                      <input
+                                        type="text"
+                                        inputMode="numeric"
+                                        value={String(v.productionWeight ?? 0)}
+                                        onChange={e => {
+                                          setEditForm(f => {
+                                            if (!f) return f;
+                                            const vars = [...f.variants];
+                                            vars[idx] = { ...vars[idx], productionWeight: parseIntegerInput(e.target.value) };
+                                            return { ...f, variants: vars };
+                                          });
+                                        }}
+                                        className="w-full px-3 py-2 border-2 border-primary/30 rounded-xl text-sm text-gray-700 focus:border-primary focus:outline-none bg-white"
+                                        placeholder="0"
+                                      />
+                                    </div>
+                                    <div>
+                                      <label className="text-[10px] font-bold text-gray-400 block mb-1">Tối thiểu</label>
+                                      <input
+                                        type="text"
+                                        inputMode="numeric"
+                                        value={String(v.minOrderQuantity ?? 1)}
+                                        onChange={e => {
+                                          setEditForm(f => {
+                                            if (!f) return f;
+                                            const vars = [...f.variants];
+                                            vars[idx] = { ...vars[idx], minOrderQuantity: Math.max(1, parseIntegerInput(e.target.value)) };
+                                            return { ...f, variants: vars };
+                                          });
+                                        }}
+                                        className="w-full px-3 py-2 border-2 border-primary/30 rounded-xl text-sm text-gray-700 focus:border-primary focus:outline-none bg-white"
+                                        placeholder="1"
+                                      />
+                                    </div>
+                                    <div>
+                                      <label className="text-[10px] font-bold text-gray-400 block mb-1">Tối đa</label>
+                                      <input
+                                        type="text"
+                                        inputMode="numeric"
+                                        value={String(v.maxOrderQuantity ?? 99)}
+                                        onChange={e => {
+                                          setEditForm(f => {
+                                            if (!f) return f;
+                                            const vars = [...f.variants];
+                                            vars[idx] = { ...vars[idx], maxOrderQuantity: Math.max(1, parseIntegerInput(e.target.value)) };
+                                            return { ...f, variants: vars };
+                                          });
+                                        }}
+                                        className="w-full px-3 py-2 border-2 border-primary/30 rounded-xl text-sm text-gray-700 focus:border-primary focus:outline-none bg-white"
+                                        placeholder="99"
+                                      />
+                                    </div>
+                                  </div>
 
                                   <div className="mt-4 rounded-xl border border-primary/20 bg-white/80 p-3">
                                     <div className="flex items-center justify-between mb-2">
@@ -2041,6 +2184,11 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onNavigate }) => 
                                 </>
                               ) : (
                                 <>
+                                  <div className="flex flex-wrap gap-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3">
+                                    <span className="px-2 py-1 rounded-full bg-slate-100"> Điểm năng lực: {Number((v as any).productionWeight ?? 0)}</span>
+                                    <span className="px-2 py-1 rounded-full bg-slate-100">Tối thiểu: {Number((v as any).minOrderQuantity ?? 1)}</span>
+                                    <span className="px-2 py-1 rounded-full bg-slate-100">Tối đa: {Number((v as any).maxOrderQuantity ?? 99)}</span>
+                                  </div>
                                   {desc && (
                                     <p className="text-sm text-slate-600 bg-white p-3.5 rounded-xl border border-gray-100 italic leading-relaxed shadow-sm">{desc}</p>
                                   )}

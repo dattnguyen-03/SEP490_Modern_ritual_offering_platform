@@ -1051,10 +1051,14 @@ class PackageService {
         variantName: string;
         description: string;
         price: number;
+        productionWeight?: number;
+        minOrderQuantity?: number;
+        maxOrderQuantity?: number;
         imageUrl?: string;
         variantImageUrls?: string[];
         primaryVariantImageIndex?: number;
         swaps?: {
+          swapId?: number;
           originalItemName: string;
           originalItemAllocatedPrice: number;
           replacementItemName: string;
@@ -1094,10 +1098,14 @@ class PackageService {
       variantName: string;
       description: string;
       price: number;
+      productionWeight?: number;
+      minOrderQuantity?: number;
+      maxOrderQuantity?: number;
       imageUrl?: string;
       variantImageUrls?: string[];
       primaryVariantImageIndex?: number;
       swaps?: {
+        swapId?: number;
         originalItemName: string;
         originalItemAllocatedPrice: number;
         replacementItemName: string;
