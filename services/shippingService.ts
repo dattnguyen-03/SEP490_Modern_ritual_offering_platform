@@ -8,6 +8,10 @@ export interface ShippingConfig {
   basePrice: number;
   pricePerKm: number;
   maxDistance: number;
+  earliestDeliveryTime: string;
+  latestDeliveryTime: string;
+  minPreparationHours: number;
+  maxAdvanceBookingDays: number;
   freeShipThreshold: number;
   isActive: boolean;
 }
@@ -17,6 +21,10 @@ export interface UpdateShippingConfigRequest {
   basePrice?: number;
   pricePerKm?: number;
   maxDistance?: number;
+  earliestDeliveryTime?: string;
+  latestDeliveryTime?: string;
+  minPreparationHours?: number;
+  maxAdvanceBookingDays?: number;
   freeShipThreshold?: number;
   isActive?: boolean;
 }

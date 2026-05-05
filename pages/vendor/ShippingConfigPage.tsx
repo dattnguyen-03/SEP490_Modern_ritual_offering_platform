@@ -19,6 +19,10 @@ const ShippingConfigPage: React.FC<ShippingConfigPageProps> = ({ onNavigate }) =
     basePrice: 2000,
     pricePerKm: 5000,
     maxDistance: 50,
+    earliestDeliveryTime: '08:00',
+    latestDeliveryTime: '20:00',
+    minPreparationHours: 2,
+    maxAdvanceBookingDays: 14,
     freeShipThreshold: 1000000,
     isActive: true,
   });
@@ -54,6 +58,10 @@ const ShippingConfigPage: React.FC<ShippingConfigPageProps> = ({ onNavigate }) =
       basePrice: 2000,
       pricePerKm: 5000,
       maxDistance: 50,
+      earliestDeliveryTime: '08:00',
+      latestDeliveryTime: '20:00',
+      minPreparationHours: 2,
+      maxAdvanceBookingDays: 14,
       freeShipThreshold: 1000000,
       isActive: true,
     });
@@ -67,6 +75,10 @@ const ShippingConfigPage: React.FC<ShippingConfigPageProps> = ({ onNavigate }) =
       basePrice: config.basePrice,
       pricePerKm: config.pricePerKm,
       maxDistance: config.maxDistance,
+      earliestDeliveryTime: config.earliestDeliveryTime,
+      latestDeliveryTime: config.latestDeliveryTime,
+      minPreparationHours: config.minPreparationHours,
+      maxAdvanceBookingDays: config.maxAdvanceBookingDays,
       freeShipThreshold: config.freeShipThreshold,
       isActive: config.isActive,
     });
@@ -75,6 +87,11 @@ const ShippingConfigPage: React.FC<ShippingConfigPageProps> = ({ onNavigate }) =
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (formData.earliestDeliveryTime && formData.latestDeliveryTime
+      && formData.earliestDeliveryTime >= formData.latestDeliveryTime) {
+      toast.error('Giờ giao sớm nhất phải nhỏ hơn giờ giao muộn nhất.');
+      return;
+    }
     setIsSaving(true);
     try {
       const success = await shippingService.updateShippingConfig(formData);
@@ -153,44 +170,50 @@ const ShippingConfigPage: React.FC<ShippingConfigPageProps> = ({ onNavigate }) =
         {/* List Table */}
         {!showForm && (
           <div className="bg-white rounded-[3rem] border border-slate-100 shadow-2xl shadow-slate-200/40 p-2 overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
+            <div>
+              <table className="w-full text-left border-collapse table-fixed">
                 <thead>
                   <tr className="bg-slate-50/50">
-                    <th className="px-10 py-8 text-[11px] font-black uppercase text-slate-400 tracking-[0.25em]">Sơ lược</th>
-                    <th className="px-10 py-8 text-[11px] font-black uppercase text-slate-400 tracking-[0.25em]">Khoảng cách cơ sở</th>
-                    <th className="px-10 py-8 text-[11px] font-black uppercase text-slate-400 tracking-[0.25em]">Phí cố định</th>
-                    <th className="px-10 py-8 text-[11px] font-black uppercase text-slate-400 tracking-[0.25em]">Đơn giá/km thêm</th>
-                    <th className="px-10 py-8 text-[11px] font-black uppercase text-slate-400 tracking-[0.25em]">Ngưỡng Free Ship</th>
-                    <th className="px-10 py-8 text-[11px] font-black uppercase text-slate-400 tracking-[0.25em]">Trạng thái</th>
-                    <th className="px-10 py-8 text-[11px] font-black uppercase text-slate-400 tracking-[0.25em] text-center">Thao tác</th>
+                    <th className="px-6 py-6 text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] w-[28%]">Sơ lược</th>
+                    <th className="px-4 py-6 text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] w-[12%]">Khoảng cách cơ sở</th>
+                    <th className="px-4 py-6 text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] w-[12%]">Phí cố định</th>
+                    <th className="px-4 py-6 text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] w-[12%]">Đơn giá/km thêm</th>
+                    <th className="px-4 py-6 text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] w-[14%]">Ngưỡng Free Ship</th>
+                    <th className="px-4 py-6 text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] w-[12%]">Trạng thái</th>
+                    <th className="px-4 py-6 text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] text-center w-[10%]">Thao tác</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-50">
                   {configs.length > 0 ? (
                     configs.map((config, idx) => (
                       <tr key={idx} className="hover:bg-slate-50/80 transition-all group">
-                        <td className="px-10 py-10">
+                        <td className="px-6 py-8 align-top">
                           <div className="flex items-center gap-4">
                             <div className="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center font-black text-slate-400 text-xs shadow-inner group-hover:bg-primary/10 group-hover:text-primary transition-colors">
                               {idx + 1}
                             </div>
                             <div className="flex flex-col">
                               <span className="font-bold text-slate-900 text-base">Mặc định</span>
+                              <span className="text-[11px] text-slate-500 font-semibold">
+                                Giờ giao: {config.earliestDeliveryTime || 'N/A'} - {config.latestDeliveryTime || 'N/A'}
+                              </span>
+                              <span className="text-[11px] text-slate-400">
+                                Chuẩn bị tối thiểu: {config.minPreparationHours ?? 0}h · Đặt trước tối đa: {config.maxAdvanceBookingDays ?? 0} ngày
+                              </span>
                             </div>
                           </div>
                         </td>
-                        <td className="px-10 py-10 font-black text-slate-600 tabular-nums text-base">{config.baseDistance} km</td>
-                        <td className="px-10 py-10">
+                        <td className="px-4 py-8 font-black text-slate-600 tabular-nums text-sm">{config.baseDistance} km</td>
+                        <td className="px-4 py-8">
                           <span className="font-black text-slate-900 text-base tabular-nums tracking-tight">
                             {formatCurrency(config.basePrice)}
                           </span>
                         </td>
-                        <td className="px-10 py-10 font-bold text-slate-600 tabular-nums text-base">+{formatCurrency(config.pricePerKm)}/km</td>
-                        <td className="px-10 py-10">
-                          <span className="font-bold text-emerald-600 text-base tabular-nums">≥ {formatCurrency(config.freeShipThreshold)}</span>
+                        <td className="px-4 py-8 font-bold text-slate-600 tabular-nums text-sm">+{formatCurrency(config.pricePerKm)}/km</td>
+                        <td className="px-4 py-8">
+                          <span className="font-bold text-emerald-600 text-sm tabular-nums">≥ {formatCurrency(config.freeShipThreshold)}</span>
                         </td>
-                        <td className="px-10 py-10">
+                        <td className="px-4 py-8">
                           <div className="flex items-center">
                             <span className={`inline-block px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-colors ${config.isActive
                               ? 'bg-emerald-50 text-emerald-600'
@@ -200,7 +223,7 @@ const ShippingConfigPage: React.FC<ShippingConfigPageProps> = ({ onNavigate }) =
                             </span>
                           </div>
                         </td>
-                        <td className="px-10 py-10 text-center">
+                        <td className="px-4 py-8 text-center">
                           <button
                             onClick={() => handleOpenEdit(config)}
                             className="p-3 text-slate-300 hover:text-primary hover:bg-primary/5 rounded-2xl transition-all hover:rotate-12"
@@ -305,6 +328,66 @@ const ShippingConfigPage: React.FC<ShippingConfigPageProps> = ({ onNavigate }) =
                       className="w-full bg-slate-50 border-2 border-transparent rounded-[1.25rem] px-6 py-5 outline-none focus:border-primary/30 focus:bg-white transition-all font-bold text-slate-800 text-lg group-hover:bg-white border-slate-100"
                     />
                     <div className="absolute right-6 top-1/2 -translate-y-1/2 text-slate-200 font-black text-xs uppercase group-focus-within:text-primary transition-colors">max</div>
+                  </div>
+                </div>
+
+                {/* Earliest Delivery Time */}
+                <div className="space-y-3">
+                  <label className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] ml-1">Giờ giao sớm nhất</label>
+                  <div className="relative group">
+                    <input
+                      type="time"
+                      required
+                      value={formData.earliestDeliveryTime || ''}
+                      onChange={(e) => setFormData({ ...formData, earliestDeliveryTime: e.target.value })}
+                      className="w-full bg-slate-50 border-2 border-transparent rounded-[1.25rem] px-6 py-5 outline-none focus:border-primary/30 focus:bg-white transition-all font-bold text-slate-800 text-lg group-hover:bg-white border-slate-100"
+                    />
+                  </div>
+                </div>
+
+                {/* Latest Delivery Time */}
+                <div className="space-y-3">
+                  <label className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] ml-1">Giờ giao muộn nhất</label>
+                  <div className="relative group">
+                    <input
+                      type="time"
+                      required
+                      value={formData.latestDeliveryTime || ''}
+                      onChange={(e) => setFormData({ ...formData, latestDeliveryTime: e.target.value })}
+                      className="w-full bg-slate-50 border-2 border-transparent rounded-[1.25rem] px-6 py-5 outline-none focus:border-primary/30 focus:bg-white transition-all font-bold text-slate-800 text-lg group-hover:bg-white border-slate-100"
+                    />
+                  </div>
+                </div>
+
+                {/* Min Preparation Hours */}
+                <div className="space-y-3">
+                  <label className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] ml-1">Giờ chuẩn bị tối thiểu</label>
+                  <div className="relative group">
+                    <input
+                      type="number"
+                      min={0}
+                      required
+                      value={formData.minPreparationHours ?? 0}
+                      onChange={(e) => setFormData({ ...formData, minPreparationHours: Number(e.target.value) })}
+                      className="w-full bg-slate-50 border-2 border-transparent rounded-[1.25rem] px-6 py-5 outline-none focus:border-primary/30 focus:bg-white transition-all font-bold text-slate-800 text-lg group-hover:bg-white border-slate-100"
+                    />
+                    <div className="absolute right-6 top-1/2 -translate-y-1/2 text-slate-200 font-black text-xs uppercase group-focus-within:text-primary transition-colors">giờ</div>
+                  </div>
+                </div>
+
+                {/* Max Advance Booking Days */}
+                <div className="space-y-3">
+                  <label className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] ml-1">Số ngày đặt trước tối đa</label>
+                  <div className="relative group">
+                    <input
+                      type="number"
+                      min={0}
+                      required
+                      value={formData.maxAdvanceBookingDays ?? 0}
+                      onChange={(e) => setFormData({ ...formData, maxAdvanceBookingDays: Number(e.target.value) })}
+                      className="w-full bg-slate-50 border-2 border-transparent rounded-[1.25rem] px-6 py-5 outline-none focus:border-primary/30 focus:bg-white transition-all font-bold text-slate-800 text-lg group-hover:bg-white border-slate-100"
+                    />
+                    <div className="absolute right-6 top-1/2 -translate-y-1/2 text-slate-200 font-black text-xs uppercase group-focus-within:text-primary transition-colors">ngày</div>
                   </div>
                 </div>
 
