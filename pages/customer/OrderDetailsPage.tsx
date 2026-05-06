@@ -73,12 +73,16 @@ const OrderDetailsPage: React.FC = () => {
         }).catch(() => { });
     }, [id, navigate]);
 
+    const isCancelledRefund = (data: any) =>
+        !data || data.status === 'Cancelled' || Boolean(localStorage.getItem(`refundCancelled:${data.refundId}`));
+
     const loadRefundInfo = async (orderId: string) => {
         try {
             const urlRefundId = searchParams.get('refundId');
             if (urlRefundId) {
                 const data = await refundService.getRefundById(urlRefundId);
                 if (data) {
+                    if (isCancelledRefund(data)) { setRefundInfo(null); return; }
                     setRefundInfo(data);
                     setRefundDismissed(Boolean(localStorage.getItem(`refundEscalateDismissed:${data.refundId}`)));
                     return;
@@ -87,8 +91,10 @@ const OrderDetailsPage: React.FC = () => {
 
             const refundId = localStorage.getItem(`refundId:${orderId}`);
             if (refundId) {
+                if (localStorage.getItem(`refundCancelled:${refundId}`)) { setRefundInfo(null); return; }
                 const data = await refundService.getRefundById(refundId);
                 if (data) {
+                    if (isCancelledRefund(data)) { setRefundInfo(null); return; }
                     setRefundInfo(data);
                     setRefundDismissed(Boolean(localStorage.getItem(`refundEscalateDismissed:${data.refundId}`)));
                     return;
@@ -97,10 +103,11 @@ const OrderDetailsPage: React.FC = () => {
 
             const fallback = await refundService.getRefundByOrderId(orderId);
             if (fallback?.refundId) {
+                if (isCancelledRefund(fallback)) { setRefundInfo(null); return; }
                 localStorage.setItem(`refundId:${orderId}`, fallback.refundId);
                 setRefundDismissed(Boolean(localStorage.getItem(`refundEscalateDismissed:${fallback.refundId}`)));
             }
-            setRefundInfo(fallback);
+            setRefundInfo(fallback && !isCancelledRefund(fallback) ? fallback : null);
         } catch {
             setRefundInfo(null);
         }
@@ -155,8 +162,7 @@ const OrderDetailsPage: React.FC = () => {
             const ok = await refundService.escalateRefund(refundInfo.refundId, true);
             if (ok) {
                 toast.success('Đã gửi khiếu nại lên quản trị. Vui lòng chờ phản hồi.');
-                localStorage.setItem(`refundEscalateDismissed:${refundInfo.refundId}`, '1');
-                setRefundDismissed(true);
+                await loadRefundInfo(order!.orderId);
             } else {
                 toast.error('Không thể gửi khiếu nại. Vui lòng thử lại.');
             }
@@ -167,10 +173,36 @@ const OrderDetailsPage: React.FC = () => {
         }
     };
 
-    const handleDismissRefundNotice = () => {
+    const handleCancelRefund = async () => {
         if (!refundInfo) return;
-        localStorage.setItem(`refundEscalateDismissed:${refundInfo.refundId}`, '1');
-        setRefundDismissed(true);
+
+        const result = await toast.confirm({
+            title: 'Hủy yêu cầu hoàn tiền',
+            text: 'Bạn có chắc muốn hủy yêu cầu hoàn tiền này? Vendor sẽ được thanh toán bình thường.',
+            confirmButtonText: 'Hủy yêu cầu',
+            cancelButtonText: 'Giữ lại',
+            icon: 'warning',
+        });
+        if (!result.isConfirmed) return;
+
+        setEscalating(true);
+        try {
+            const ok = await refundService.escalateRefund(refundInfo.refundId, false);
+            if (ok) {
+                toast.success('Đã hủy yêu cầu hoàn tiền.');
+                // Mark as cancelled so banner stays hidden even if backend still returns the record
+                localStorage.setItem(`refundCancelled:${refundInfo.refundId}`, '1');
+                localStorage.removeItem(`refundId:${order!.orderId}`);
+                setRefundInfo(null);
+                setRefundDismissed(true);
+            } else {
+                toast.error('Không thể hủy yêu cầu. Vui lòng thử lại.');
+            }
+        } catch (error: any) {
+            toast.error(error.message || 'Không thể hủy yêu cầu.');
+        } finally {
+            setEscalating(false);
+        }
     };
 
     const handleCancelOrder = async () => {
@@ -401,11 +433,11 @@ const OrderDetailsPage: React.FC = () => {
                         <div className="flex items-center gap-3">
                             {refundInfo.status === 'Rejected' && (
                                 <button onClick={handleEscalateRefund} disabled={escalating} className="px-6 py-3 bg-rose-600 text-white rounded-2xl font-black text-sm hover:bg-rose-700 transition-all shadow-lg shadow-rose-200">
-                                    {escalating ? 'Đang gửi...' : 'Khiếu nại lên Quản trị'}
+                                    {escalating ? 'Đang gửi...' : 'Khiếu nại'}
                                 </button>
                             )}
-                            <button onClick={handleDismissRefundNotice} className="px-4 py-3 bg-white/50 hover:bg-white rounded-2xl font-black text-sm transition-all border border-transparent hover:border-current/10">
-                                Đóng
+                            <button onClick={handleCancelRefund} disabled={escalating} className="px-4 py-3 bg-white/50 hover:bg-white rounded-2xl font-black text-sm transition-all border border-transparent hover:border-current/10">
+                                Hủy yêu cầu
                             </button>
                         </div>
                     </div>

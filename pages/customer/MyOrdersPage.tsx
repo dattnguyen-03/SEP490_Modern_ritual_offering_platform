@@ -294,8 +294,13 @@ const MyOrdersPage: React.FC = () => {
                                             </div>
                                             <div className="hidden md:block w-px h-8 bg-gray-200 dark:bg-white/10"></div>
                                             <div className="flex items-center gap-2">
-                                                <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${refund.status === 'Approved' ? 'bg-green-100 dark:bg-green-500/10 text-green-700 dark:text-green-400' : refund.status === 'Rejected' ? 'bg-red-100 dark:bg-red-500/10 text-red-700 dark:text-red-400' : 'bg-yellow-100 dark:bg-yellow-500/10 text-yellow-700 dark:text-yellow-400'}`}>
-                                                    {refund.status === 'Approved' ? 'Đã hoàn tiền' : refund.status === 'Rejected' ? 'Đã từ chối' : 'Đang xử lý'}
+                                                <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${
+                                                    refund.status === 'Approved'  ? 'bg-green-100 dark:bg-green-500/10 text-green-700 dark:text-green-400' :
+                                                    refund.status === 'Rejected'  ? 'bg-red-100 dark:bg-red-500/10 text-red-700 dark:text-red-400' :
+                                                    refund.status === 'Cancelled' ? 'bg-gray-100 dark:bg-gray-500/10 text-gray-600 dark:text-gray-400' :
+                                                    'bg-yellow-100 dark:bg-yellow-500/10 text-yellow-700 dark:text-yellow-400'
+                                                }`}>
+                                                    {refund.status === 'Approved' ? 'Đã hoàn tiền' : refund.status === 'Rejected' ? 'Đã từ chối' : refund.status === 'Cancelled' ? 'Đã hủy' : 'Đang xử lý'}
                                                 </span>
                                             </div>
                                         </div>

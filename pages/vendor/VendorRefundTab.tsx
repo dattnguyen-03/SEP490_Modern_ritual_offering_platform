@@ -35,9 +35,10 @@ const getRemainingAutoAccept = (createdAt: string | unknown) => {
 
 
 const STATUS_CFG: Record<string, { badge: string; label: string; icon: string }> = {
-  Pending: { badge: 'bg-yellow-100 text-yellow-700 border-yellow-200', label: 'Chờ xử lý', icon: '' },
-  Approved: { badge: 'bg-green-100  text-green-700  border-green-200', label: 'Đã duyệt', icon: '' },
-  Rejected: { badge: 'bg-red-100    text-red-700    border-red-200', label: 'Từ chối', icon: '' },
+  Pending:   { badge: 'bg-yellow-100 text-yellow-700 border-yellow-200', label: 'Chờ xử lý', icon: '' },
+  Approved:  { badge: 'bg-green-100  text-green-700  border-green-200',  label: 'Đã duyệt',  icon: '' },
+  Rejected:  { badge: 'bg-red-100    text-red-700    border-red-200',    label: 'Từ chối',   icon: '' },
+  Cancelled: { badge: 'bg-gray-100   text-gray-600   border-gray-300',   label: 'Đã hủy',   icon: '' },
 };
 
 const getStatusCfg = (s: string) =>

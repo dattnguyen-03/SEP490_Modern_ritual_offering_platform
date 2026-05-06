@@ -49,7 +49,7 @@ export interface RefundRecord {
     vendorDeliveryImages?: string[];
     reason: string;
     proofImages: string[];
-    status: 'Pending' | 'Approved' | 'Rejected';
+    status: 'Pending' | 'Approved' | 'Rejected' | 'Cancelled';
     refundAmount: number;
     orderFinalAmount: number;
     createdAt: string;
@@ -60,7 +60,7 @@ export interface RefundRecord {
 }
 
 class RefundService {
-    private normalizeRefundStatus(rawStatus: unknown): 'Pending' | 'Approved' | 'Rejected' {
+    private normalizeRefundStatus(rawStatus: unknown): 'Pending' | 'Approved' | 'Rejected' | 'Cancelled' {
         const status = String(rawStatus || '').trim().toLowerCase().replace(/[_\s-]/g, '');
 
         if (!status) return 'Pending';
@@ -93,6 +93,15 @@ class RefundService {
             'vendorrejected'
         ].includes(status)) {
             return 'Rejected';
+        }
+
+        if ([
+            'cancelled',
+            'canceled',
+            'withdrawn',
+            'revoked'
+        ].includes(status)) {
+            return 'Cancelled';
         }
 
         return 'Pending';
