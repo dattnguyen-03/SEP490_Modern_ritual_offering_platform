@@ -87,6 +87,18 @@ const formatDateTimeVi = (value: unknown): string => {
   return Number.isNaN(d.getTime()) ? 'N/A' : d.toLocaleString('vi-VN');
 };
 
+const formatDateOnlyVi = (value: unknown): string => {
+  if (!value) return 'N/A';
+  const d = new Date(String(value));
+  return Number.isNaN(d.getTime()) ? 'N/A' : d.toLocaleDateString('vi-VN');
+};
+
+const formatTimeOnlyVi = (value: unknown): string => {
+  if (!value) return 'N/A';
+  const d = new Date(String(value));
+  return Number.isNaN(d.getTime()) ? 'N/A' : d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+};
+
 const hasMeaningfulText = (v: unknown): boolean => {
   if (typeof v !== 'string') return false;
   const n = v.trim().toLowerCase();
@@ -323,11 +335,12 @@ const OrderManagement: React.FC<OrderManagementProps> = ({ onNavigate: _onNaviga
   const [deliveryProofImages, setDeliveryProofImages] = useState<File[]>([]);
 
   // ── tab state ───────────────────────────────────────────────────────────────
-  const [mainTab, setMainTab] = useState<'orders' | 'refunds' | 'reviews'>(() => {
+  const [mainTab, setMainTab] = useState<'orders' | 'refunds' | 'reviews' | 'preparation'>(() => {
     const params = new URLSearchParams(window.location.search);
     const tab = params.get('tab');
     if (tab === 'refund' || tab === 'refunds') return 'refunds';
     if (tab === 'review' || tab === 'reviews') return 'reviews';
+    if (tab === 'preparation') return 'preparation';
     return 'orders';
   });
   const [pendingRefunds, setPendingRefunds] = useState(0);
@@ -773,8 +786,8 @@ const OrderManagement: React.FC<OrderManagementProps> = ({ onNavigate: _onNaviga
         orderId: o.orderId,
         deliveryTime: o.deliveryTime?.slice(0, 5) || 'N/A',
         customerName: enrichment.customerName || o.customerName || 'Khách hàng',
-        addOns: (it.addOns || []).map(a => ({ name: a.addOnName || a.itemName, quantity: a.quantity })),
-        swaps: (it.swaps || []).map(s => s.replacementItemName),
+          addOns: (it.addOns || []).map(a => ({ name: a.addOnName || a.itemName || 'Món kèm', quantity: a.quantity })),
+          swaps: (it.swaps || []).map(s => s.replacementItemName || s.replacementDescription || s.originalItemName || 'Thay thế'),
         isPrepared: false // In a real app, this would be persisted
       }));
     });
@@ -1359,7 +1372,7 @@ const OrderManagement: React.FC<OrderManagementProps> = ({ onNavigate: _onNaviga
                     <div className="bg-white rounded-[2.5rem] border border-gray-200 overflow-hidden shadow-sm sticky top-6">
                       <div className="p-6 border-b border-gray-100 bg-emerald-50/30">
                         <div className="flex items-center gap-3">
-                          <div className="size-10 rounded-xl bg-emerald-500 flex items-center justify-center text-white">
+                          <div className="w-10 h-10 rounded-2xl bg-white flex items-center justify-center shadow-sm shadow-emerald-100 text-emerald-600 border border-emerald-100">
                             <span className="material-symbols-outlined">shopping_basket</span>
                           </div>
                           <h4 className="text-sm font-black text-slate-900 uppercase tracking-tight">Tổng món kèm cần soạn</h4>
@@ -1531,17 +1544,34 @@ const OrderManagement: React.FC<OrderManagementProps> = ({ onNavigate: _onNaviga
               {/* Left column: items + delivery */}
               <div className="lg:col-span-12 space-y-4">
 
-                {selectedDailyPlanItem && (
+                {selectedOrder.delivery && (
                   <div className="bg-white rounded-[1.25rem] border border-gray-200 p-4 md:p-5 shadow-sm">
                     <h3 className="text-sm font-bold uppercase tracking-widest text-gray-400 mb-3">Lịch giao theo ngày</h3>
-                    <div className="flex flex-wrap items-center justify-between gap-4">
-                      <div>
-                        <p className="text-xs text-slate-500">Ngày: <span className="font-bold text-slate-900">{formatYmdToVi(selectedCalendarDate)}</span></p>
-                        <p className="text-xs text-slate-500">Giờ: <span className="font-bold text-slate-900">{selectedDailyPlanItem.deliveryTime || selectedOrder.delivery?.deliveryTime?.slice(0, 5) || 'N/A'}</span></p>
+                    <div className="flex flex-wrap items-start justify-between gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-2">
+                        <p className="text-xs text-slate-500">
+                          Ngày: <span className="font-bold text-slate-900">{formatDateVi(selectedOrder.delivery.deliveryDate)}</span>
+                        </p>
+                        <p className="text-xs text-slate-500">
+                          Giờ: <span className="font-bold text-slate-900">{selectedOrder.delivery.deliveryTime?.slice(0, 5) || 'N/A'}</span>
+                        </p>
+                        <p className="text-xs text-slate-500">
+                          Hạn xác nhận: <span className="font-bold text-slate-900">{formatDateTimeVi(selectedOrder.confirmDeadline || selectedOrder.createdAt)}</span>
+                        </p>
+                        <p className="text-xs text-slate-500">
+                          Hạn giao: <span className="font-bold text-slate-900">{formatDateTimeVi(selectedOrder.deliveredDeadline)}</span>
+                        </p>
                       </div>
-                      <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${getStatusBadge(selectedDailyPlanItem.status || selectedOrder.orderStatus).badge}`}>
-                        {getStatusBadge(selectedDailyPlanItem.status || selectedOrder.orderStatus).label}
-                      </span>
+                      <div className="flex flex-col items-end gap-2">
+                        <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${getStatusBadge(selectedOrder.orderStatus).badge}`}>
+                          {getStatusBadge(selectedOrder.orderStatus).label}
+                        </span>
+                        {selectedOrder.slaStatus && (
+                          <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${selectedOrder.slaStatus === 'OnTime' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
+                            SLA: {selectedOrder.slaStatus}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
                 )}
@@ -1587,7 +1617,7 @@ const OrderManagement: React.FC<OrderManagementProps> = ({ onNavigate: _onNaviga
                                       <p className="text-amber-800 leading-tight truncate">
                                         {swap.replacementDescription || `${swap.originalItemName} → ${swap.replacementItemName}`}
                                       </p>
-                                      {swap.surcharge > 0 && <span className="font-black text-amber-600 flex-shrink-0">+{formatVnd(swap.surcharge)}</span>}
+                                      {(swap.surcharge ?? 0) > 0 && <span className="font-black text-amber-600 flex-shrink-0">+{formatVnd(swap.surcharge ?? 0)}</span>}
                                     </div>
                                   </div>
                                 </div>
@@ -1605,7 +1635,7 @@ const OrderManagement: React.FC<OrderManagementProps> = ({ onNavigate: _onNaviga
                                     <p className="font-bold text-emerald-900 leading-none mb-1">Vật phẩm thêm</p>
                                     <div className="flex justify-between items-center">
                                       <p className="text-emerald-800">{addOn.addOnName || addOn.itemName} <span className="font-black text-[10px] ml-1">×{addOn.quantity}</span></p>
-                                      {addOn.lineTotal > 0 && <span className="font-black text-emerald-600">+{formatVnd(addOn.lineTotal)}</span>}
+                                      {(addOn.lineTotal ?? 0) > 0 && <span className="font-black text-emerald-600">+{formatVnd(addOn.lineTotal ?? 0)}</span>}
                                     </div>
                                   </div>
                                 </div>
@@ -1644,6 +1674,7 @@ const OrderManagement: React.FC<OrderManagementProps> = ({ onNavigate: _onNaviga
                   currentStatus={selectedOrder.orderStatus}
                   trackingLists={selectedOrder.trackingLists || []}
                 />
+
               </div>
 
               {/* Balanced row: delivery (left) + summary/customer (right) */}
@@ -1657,7 +1688,6 @@ const OrderManagement: React.FC<OrderManagementProps> = ({ onNavigate: _onNaviga
                         {[
                           { label: 'Ngày giao', value: formatDateVi(selectedOrder.delivery.deliveryDate) },
                           { label: 'Giờ giao', value: selectedOrder.delivery.deliveryTime?.slice(0, 5) || 'N/A' },
-                          { label: 'Hạn giao hàng', value: formatDateTimeVi(selectedOrder.deliveredDeadline) },
                           { label: 'Phí giao', value: formatVnd(selectedOrder.pricing?.shippingFee) },
                           { label: 'Khoảng cách', value: `${selectedOrder.delivery.shippingDistanceKm} km` },
                         ].map(row => (

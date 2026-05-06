@@ -119,7 +119,9 @@ export interface Order {
     updatedAt: string | null;
     cancelReason: string | null;
     refundAmount: number;
+    confirmDeadline?: string | null;
     deliveredDeadline?: string;
+    slaStatus?: string | null;
 }
 
 export interface VendorOrderItem {
@@ -355,6 +357,8 @@ interface OrderDetailsApiItem {
     updatedAt?: string | null;
     cancelReason?: string | null;
     refundAmount?: number;
+    confirmDeadline?: string | null;
+    slaStatus?: string | null;
     // Flat fields commonly seen in API responses
     customerProfileId?: string;
     customerId?: string;
@@ -937,7 +941,7 @@ class OrderService {
                     totalProductionWeight: Number(day.totalProductionWeight) || 0,
                     dailyCapacityWeight: Number(day.dailyCapacityWeight) || 0,
                 }))
-                .filter(item => item.date);
+                .filter((item: { date: string }) => item.date);
         } catch (error) {
             console.error('Failed to fetch Vendor Order Calendar:', error);
             throw error;
@@ -1067,6 +1071,9 @@ class OrderService {
                     updatedAt: raw.updatedAt || null,
                     cancelReason: raw.cancelReason || null,
                     refundAmount: Number(raw.refundAmount) || 0,
+                    confirmDeadline: raw.confirmDeadline || (raw.delivery as any)?.confirmDeadline || null,
+                    deliveredDeadline: raw.deliveredDeadline || (raw.delivery as any)?.deliveredDeadline || null,
+                    slaStatus: raw.slaStatus || (raw.delivery as any)?.slaStatus || null,
                 };
 
                 return order;
