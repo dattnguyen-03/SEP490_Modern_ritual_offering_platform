@@ -89,6 +89,38 @@ class ShippingService {
       return false;
     }
   }
+
+  /**
+   * Lấy cấu hình phí vận chuyển của vendor
+   */
+  async getVendorShippingConfig(vendorId: string): Promise<ShippingConfig | null> {
+    try {
+      const token = localStorage.getItem('smart-child-token');
+      const response = await fetch(`${API_BASE_URL}/shipping-config/vendor?vendorId=${encodeURIComponent(vendorId)}`, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data: ApiResponse<ShippingConfig> = await response.json();
+      
+      if (data.isSuccess && data.result) {
+        return data.result;
+      } else {
+        console.error('❌ API Error:', data.errorMessages);
+        return null;
+      }
+    } catch (error) {
+      console.error('❌ Failed to fetch vendor shipping config:', error);
+      return null;
+    }
+  }
 }
 
 export const shippingService = new ShippingService();

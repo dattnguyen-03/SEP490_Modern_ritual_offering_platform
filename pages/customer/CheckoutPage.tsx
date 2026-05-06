@@ -5,6 +5,7 @@ import { cartService } from '../../services/cartService';
 import { getCurrentUser, getProfile } from '../../services/auth';
 import { addressService, CustomerAddress } from '../../services/addressService';
 import { walletService } from '../../services/walletService';
+import { shippingService, ShippingConfig } from '../../services/shippingService';
 import toast from '../../services/toast';
 import LoadingScreen from '../../components/LoadingScreen';
 
@@ -22,6 +23,10 @@ const CheckoutPage: React.FC<{ onNavigate: (path: string) => void }> = ({ onNavi
 
   const [deliveryDate, setDeliveryDate] = useState('');
   const [deliveryTimeSlot, setDeliveryTimeSlot] = useState('');
+  const [showTimePicker, setShowTimePicker] = useState(false);
+  const [timePickerHour, setTimePickerHour] = useState('09');
+  const [timePickerMinute, setTimePickerMinute] = useState('00');
+  const [timePickerPeriod, setTimePickerPeriod] = useState<'AM' | 'PM'>('AM');
   const [paymentMethod, setPaymentMethod] = useState('PayOS');
   const [decorationNotes, setDecorationNotes] = useState<{ [key: number]: string }>({});
   const [phoneNumber, setPhoneNumber] = useState('');
@@ -30,14 +35,146 @@ const CheckoutPage: React.FC<{ onNavigate: (path: string) => void }> = ({ onNavi
   const [showAddressSelector, setShowAddressSelector] = useState(false);
   const [selectingAddress, setSelectingAddress] = useState(false);
   const [showHoldFeeInfo, setShowHoldFeeInfo] = useState(false);
+  const [shippingConfigs, setShippingConfigs] = useState<Map<string, ShippingConfig>>(new Map());
 
-  const timeSlots = [
-    { value: '07:00:00', label: '7:00 - 9:00 (Tý-Sửu)' },
-    { value: '09:00:00', label: '9:00 - 11:00 (Dần-Mão)' },
-    { value: '13:00:00', label: '13:00 - 15:00 (Tỵ-Ngọ)' },
-    { value: '15:00:00', label: '15:00 - 17:00 (Mùi-Thân)' },
-    { value: '17:00:00', label: '17:00 - 19:00 (Dậu-Tuất)' }
-  ];
+  const formatLocalDate = (date: Date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  const parseLocalDate = (value: string) => {
+    const [year, month, day] = value.split('-').map(Number);
+    if (!year || !month || !day) return null;
+
+    return new Date(year, month - 1, day);
+  };
+
+  const timeToMinutes = (time: string) => {
+    const [hours, minutes] = time.split(':').map(Number);
+    return (hours * 60) + minutes;
+  };
+
+  const minutesToTimeString = (minutes: number) => {
+    const hours = Math.floor(minutes / 60);
+    const remainingMinutes = minutes % 60;
+    return `${String(hours).padStart(2, '0')}:${String(remainingMinutes).padStart(2, '0')}:00`;
+  };
+
+  const getClockTimeLabel = (time: string) => {
+    if (!time) return '-- Chọn giờ giao hàng --';
+
+    const [hoursPart, minutesPart] = time.split(':');
+    const hours = Number(hoursPart);
+    const minutes = minutesPart || '00';
+    const period = hours >= 12 ? 'PM' : 'AM';
+    const displayHours = hours % 12 === 0 ? 12 : hours % 12;
+
+    return `${String(displayHours).padStart(2, '0')}:${minutes} ${period}`;
+  };
+
+  const allowedTimeRange = () => {
+    let earliestTime = '07:00:00';
+    let latestTime = '19:00:00';
+
+    for (const config of shippingConfigs.values()) {
+      if (config.earliestDeliveryTime) {
+        earliestTime = config.earliestDeliveryTime > earliestTime ? config.earliestDeliveryTime : earliestTime;
+      }
+      if (config.latestDeliveryTime) {
+        latestTime = config.latestDeliveryTime < latestTime ? config.latestDeliveryTime : latestTime;
+      }
+    }
+
+    return {
+      earliestMinutes: timeToMinutes(earliestTime),
+      latestMinutes: timeToMinutes(latestTime),
+    };
+  };
+
+  const isTimeAllowed = (timeValue: string) => {
+    const minutes = timeToMinutes(timeValue);
+    const { earliestMinutes, latestMinutes } = allowedTimeRange();
+    return minutes >= earliestMinutes && minutes <= latestMinutes;
+  };
+
+  const initializeTimePicker = () => {
+    if (deliveryTimeSlot) {
+      const [hoursPart, minutesPart] = deliveryTimeSlot.split(':');
+      const hours = Number(hoursPart);
+      const displayHours = hours % 12 === 0 ? 12 : hours % 12;
+      setTimePickerHour(String(displayHours).padStart(2, '0'));
+      setTimePickerMinute((minutesPart || '00').padStart(2, '0'));
+      setTimePickerPeriod(hours >= 12 ? 'PM' : 'AM');
+      return;
+    }
+
+    const { earliestMinutes } = allowedTimeRange();
+    const fallbackMinutes = Math.max(earliestMinutes, 9 * 60);
+    const fallbackTime = minutesToTimeString(fallbackMinutes);
+    const [hoursPart, minutesPart] = fallbackTime.split(':');
+    const hours = Number(hoursPart);
+    const displayHours = hours % 12 === 0 ? 12 : hours % 12;
+    setTimePickerHour(String(displayHours).padStart(2, '0'));
+    setTimePickerMinute((minutesPart || '00').padStart(2, '0'));
+    setTimePickerPeriod(hours >= 12 ? 'PM' : 'AM');
+  };
+
+  const openTimePicker = () => {
+    initializeTimePicker();
+    setShowTimePicker(true);
+  };
+
+  const confirmTimePicker = () => {
+    const hourNumber = Number(timePickerHour);
+    const minuteNumber = Number(timePickerMinute);
+    const normalizedHour = timePickerPeriod === 'PM'
+      ? (hourNumber === 12 ? 12 : hourNumber + 12)
+      : (hourNumber === 12 ? 0 : hourNumber);
+
+    const selectedTime = `${String(normalizedHour).padStart(2, '0')}:${String(minuteNumber).padStart(2, '0')}:00`;
+
+    if (!isTimeAllowed(selectedTime)) {
+      toast.error('Giờ này nằm ngoài khung giao hàng của vendor');
+      return;
+    }
+
+    setDeliveryTimeSlot(selectedTime);
+    setShowTimePicker(false);
+  };
+
+  // Calculate min and max dates based on vendor shipping configs
+  const getMinMaxDates = () => {
+    const now = new Date();
+    
+    // Get max preparation hours and max advance booking days from all vendors
+    let maxMinPreparationHours = 0;
+    let minMaxAdvanceBookingDays = 30; // default to 30 days
+    
+    for (const config of shippingConfigs.values()) {
+      if (config.minPreparationHours && config.minPreparationHours > maxMinPreparationHours) {
+        maxMinPreparationHours = config.minPreparationHours;
+      }
+      if (config.maxAdvanceBookingDays && config.maxAdvanceBookingDays > 0) {
+        minMaxAdvanceBookingDays = Math.min(minMaxAdvanceBookingDays, config.maxAdvanceBookingDays);
+      }
+    }
+
+    // Allow selecting today; preparation rules are enforced on submit time
+    const minDate = new Date(now);
+    minDate.setHours(0, 0, 0, 0);
+    
+    // Max date is now + minMaxAdvanceBookingDays
+    const maxDate = new Date(now.getTime() + minMaxAdvanceBookingDays * 24 * 60 * 60 * 1000);
+
+    return {
+      minDate: formatLocalDate(minDate),
+      maxDate: formatLocalDate(maxDate),
+      maxMinPreparationHours,
+      minMaxAdvanceBookingDays
+    };
+  };
 
   useEffect(() => {
     const user = getCurrentUser();
@@ -127,6 +264,22 @@ const CheckoutPage: React.FC<{ onNavigate: (path: string) => void }> = ({ onNavi
             items: enrichedItems,
             vendors: enrichedVendors,
           });
+
+          // Fetch shipping configs for all vendors
+          const vendorsToFetch = enrichedVendors.map((v: any) => v.vendorId);
+          const configMap = new Map<string, ShippingConfig>();
+          
+          for (const vendorId of vendorsToFetch) {
+            if (vendorId) {
+              const config = await shippingService.getVendorShippingConfig(vendorId);
+              if (config) {
+                configMap.set(vendorId, config);
+              }
+            }
+          }
+          
+          setShippingConfigs(configMap);
+
           try {
             const profile = await getProfile();
             if (profile?.phoneNumber) {
@@ -236,23 +389,44 @@ const CheckoutPage: React.FC<{ onNavigate: (path: string) => void }> = ({ onNavi
       return;
     }
 
-    // Validate 60h and 1 month limit
+    // Validate min preparation hours and max advance booking days
     const now = new Date();
     const [hours, minutes] = deliveryTimeSlot.split(':').map(Number);
-    const selectedDateTime = new Date(deliveryDate);
+    const selectedDateTime = parseLocalDate(deliveryDate);
+    if (!selectedDateTime) {
+      toast.error('Ngày giao hàng không hợp lệ');
+      return;
+    }
     selectedDateTime.setHours(hours, minutes, 0, 0);
 
     const diffInHours = (selectedDateTime.getTime() - now.getTime()) / (1000 * 60 * 60);
-    const oneMonthFromNow = new Date();
-    oneMonthFromNow.setMonth(now.getMonth() + 1);
 
-    // if (diffInHours < 60) {
-    //   toast.error('Thời gian đặt hàng phải cách thời điểm hiện tại ít nhất 60 giờ để chuẩn bị.');
-    //   return;
-    // }
+    if (!isTimeAllowed(deliveryTimeSlot)) {
+      toast.error('Vui lòng chọn giờ giao hàng hợp lệ');
+      return;
+    }
+    
+    // Get min preparation hours from configs
+    let maxMinPreparationHours = 0;
+    let minMaxAdvanceBookingDays = 30;
+    
+    for (const config of shippingConfigs.values()) {
+      if (config.minPreparationHours && config.minPreparationHours > maxMinPreparationHours) {
+        maxMinPreparationHours = config.minPreparationHours;
+      }
+      if (config.maxAdvanceBookingDays && config.maxAdvanceBookingDays > 0) {
+        minMaxAdvanceBookingDays = Math.min(minMaxAdvanceBookingDays, config.maxAdvanceBookingDays);
+      }
+    }
 
-    if (selectedDateTime > oneMonthFromNow) {
-      toast.error('Thời gian đặt hàng không được quá 1 tháng kể từ hiện tại.');
+    if (diffInHours < maxMinPreparationHours) {
+      toast.error(`Thời gian đặt hàng phải cách thời điểm hiện tại ít nhất ${maxMinPreparationHours} giờ để chuẩn bị.`);
+      return;
+    }
+
+    const maxDate = new Date(now.getTime() + minMaxAdvanceBookingDays * 24 * 60 * 60 * 1000);
+    if (selectedDateTime > maxDate) {
+      toast.error(`Thời gian đặt hàng không được quá ${minMaxAdvanceBookingDays} ngày kể từ hiện tại.`);
       return;
     }
 
@@ -522,24 +696,153 @@ const CheckoutPage: React.FC<{ onNavigate: (path: string) => void }> = ({ onNavi
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             <div className="space-y-2">
-              <label className="text-xs font-bold uppercase text-black">Ngày giao hàng</label>
+                <label className="text-xs font-bold uppercase text-black">Ngày giao hàng</label>
               <input
-                type="date"
-                value={deliveryDate}
-                onChange={(e) => setDeliveryDate(e.target.value)}
-                min={new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString().split('T')[0]}
-                max={new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]}
-                className="w-full bg-ritual-bg border border-gold/10 rounded-2xl p-4 focus:ring-primary focus:border-primary"
-              />
+                  type="date"
+                  lang="vi-VN"
+                  value={deliveryDate}
+                  onChange={(e) => setDeliveryDate(e.target.value)}
+                  min={getMinMaxDates().minDate}
+                  max={getMinMaxDates().maxDate}
+                  className="w-full bg-ritual-bg border border-gold/10 rounded-2xl p-4 focus:ring-primary focus:border-primary"
+                />
             </div>
             <div className="space-y-2">
               <label className="text-xs font-bold uppercase text-black">Giờ giao hàng</label>
-              <input
-                type="time"
-                value={deliveryTimeSlot}
-                onChange={(e) => setDeliveryTimeSlot(e.target.value)}
-                className="w-full bg-ritual-bg border border-gold/10 rounded-2xl p-4 focus:ring-primary focus:border-primary"
-              />
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={openTimePicker}
+                  className="w-full bg-gradient-to-r from-white to-ritual-bg border border-gold/10 rounded-2xl px-4 py-4 focus:ring-primary focus:border-primary flex items-center justify-between gap-3 text-left transition-all hover:border-primary/40 shadow-sm"
+                >
+                  <span className={`font-semibold tracking-wide ${deliveryTimeSlot ? 'text-slate-900' : 'text-slate-400'}`}>
+                    {getClockTimeLabel(deliveryTimeSlot)}
+                  </span>
+                  <div className="flex items-center gap-2 text-slate-400">
+                    <span className="text-[10px] font-bold uppercase tracking-[0.2em] hidden sm:block">Chọn giờ</span>
+                    <span className="material-symbols-outlined">schedule</span>
+                  </div>
+                </button>
+
+                {showTimePicker && (
+                  <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/40 backdrop-blur-sm px-4">
+                    <div className="w-full max-w-3xl overflow-hidden rounded-[2rem] bg-white shadow-2xl shadow-slate-900/20 border border-slate-100">
+                      <div className="grid grid-cols-1 md:grid-cols-[240px_1fr]">
+                        <div className="bg-teal-500 text-white p-6 md:p-8 flex flex-col justify-between min-h-[280px]">
+                          <div>
+                            <p className="text-[11px] uppercase tracking-[0.35em] text-white/80 font-bold">Giờ giao hàng</p>
+                            <h3 className="mt-3 text-5xl font-light leading-none tracking-tight">
+                              {String(timePickerHour).padStart(2, '0')}:{timePickerMinute}
+                            </h3>
+                            <p className="mt-3 text-white/85 text-sm font-medium">{timePickerPeriod}</p>
+                          </div>
+                          <p className="text-xs text-white/75 leading-relaxed">
+                            Chọn giờ theo từng ô để chỉnh nhanh như form đồng hồ.
+                          </p>
+                        </div>
+
+                        <div className="p-5 md:p-6">
+                          <div className="flex items-start justify-between gap-4 mb-5">
+                            <div>
+                              <p className="text-xs font-bold uppercase tracking-[0.28em] text-black">Chọn thời gian</p>
+                              <p className="text-sm text-slate-500 mt-1">Chọn giờ, phút và sáng / chiều</p>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => setShowTimePicker(false)}
+                              className="text-slate-400 hover:text-slate-700 transition-colors"
+                              aria-label="Đóng"
+                            >
+                              <span className="material-symbols-outlined">close</span>
+                            </button>
+                          </div>
+
+                          <div className="grid grid-cols-3 gap-3">
+                            <div>
+                              <p className="text-[11px] font-bold uppercase text-slate-500 mb-2">Giờ</p>
+                              <div className="max-h-56 overflow-y-auto rounded-2xl border border-slate-200 p-2 custom-scrollbar bg-slate-50">
+                                {Array.from({ length: 12 }, (_, index) => String(index + 1).padStart(2, '0')).map((hour) => (
+                                  <button
+                                    key={hour}
+                                    type="button"
+                                    onClick={() => setTimePickerHour(hour)}
+                                    className={`mb-1 w-full rounded-xl px-3 py-2 text-sm font-bold transition-all ${timePickerHour === hour
+                                      ? 'bg-primary text-white shadow-lg shadow-primary/20'
+                                      : 'text-slate-700 hover:bg-white hover:text-primary'
+                                      }`}
+                                  >
+                                    {hour}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+
+                            <div>
+                              <p className="text-[11px] font-bold uppercase text-slate-500 mb-2">Phút</p>
+                              <div className="max-h-56 overflow-y-auto rounded-2xl border border-slate-200 p-2 custom-scrollbar bg-slate-50">
+                                {Array.from({ length: 12 }, (_, index) => String(index * 5).padStart(2, '0')).map((minute) => (
+                                  <button
+                                    key={minute}
+                                    type="button"
+                                    onClick={() => setTimePickerMinute(minute)}
+                                    className={`mb-1 w-full rounded-xl px-3 py-2 text-sm font-bold transition-all ${timePickerMinute === minute
+                                      ? 'bg-primary text-white shadow-lg shadow-primary/20'
+                                      : 'text-slate-700 hover:bg-white hover:text-primary'
+                                      }`}
+                                  >
+                                    {minute}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+
+                            <div>
+                              <p className="text-[11px] font-bold uppercase text-slate-500 mb-2">Buổi</p>
+                              <div className="grid gap-2">
+                                {(['AM', 'PM'] as const).map((period) => (
+                                  <button
+                                    key={period}
+                                    type="button"
+                                    onClick={() => setTimePickerPeriod(period)}
+                                    className={`rounded-2xl px-4 py-6 text-sm font-black tracking-[0.2em] transition-all border ${timePickerPeriod === period
+                                      ? 'bg-slate-900 text-white border-slate-900 shadow-lg'
+                                      : 'bg-slate-50 text-slate-600 border-slate-200 hover:border-primary hover:text-primary'
+                                      }`}
+                                  >
+                                    {period}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="mt-5 flex items-center justify-between gap-3">
+                            <p className="text-[11px] text-slate-500 leading-relaxed">
+                              Thời gian sẽ được kiểm tra lại theo chuẩn bị của vendor khi bạn xác nhận thanh toán.
+                            </p>
+                            <div className="flex items-center gap-2 shrink-0">
+                              <button
+                                type="button"
+                                onClick={() => setShowTimePicker(false)}
+                                className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-bold text-slate-600 hover:bg-slate-50"
+                              >
+                                Hủy
+                              </button>
+                              <button
+                                type="button"
+                                onClick={confirmTimePicker}
+                                className="rounded-xl bg-primary px-4 py-2 text-sm font-bold text-white shadow-lg shadow-primary/20 hover:translate-y-[-1px]"
+                              >
+                                Xác nhận
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
           {/* <div className="p-4 bg-gray-50 rounded-xl border border-gray-200 text-sm text-black">
@@ -658,7 +961,7 @@ const CheckoutPage: React.FC<{ onNavigate: (path: string) => void }> = ({ onNavi
                         <div key={idx} className="flex items-center justify-between text-[9px] text-emerald-600 font-bold">
                           <div className="flex items-center gap-1.5 flex-1 min-w-0">
                             <span className="material-symbols-outlined text-[12px]">check_circle</span>
-                            <span className="truncate">{addOn.addOnName || addOn.itemName} <span className="text-black">x{addOn.quantity}</span></span>
+                            <span className="truncate">{addOn.itemName} <span className="text-black">x{addOn.quantity}</span></span>
                           </div>
                           <span className="ml-2 whitespace-nowrap">
                             +{(addOn.lineTotal || (addOn.retailPrice * addOn.quantity)).toLocaleString()}đ
