@@ -23,6 +23,7 @@ const OrderDetailsPage: React.FC = () => {
     const [refundInfo, setRefundInfo] = useState<RefundRecord | null>(null);
     const [escalating, setEscalating] = useState(false);
     const [refundDismissed, setRefundDismissed] = useState(false);
+    const [refundWasCancelled, setRefundWasCancelled] = useState(false);
     const [isProofModalOpen, setIsProofModalOpen] = useState(false);
     const [proofModalImages, setProofModalImages] = useState<string[]>([]);
     const [proofModalTitle, setProofModalTitle] = useState('Ảnh giao hàng');
@@ -193,8 +194,10 @@ const OrderDetailsPage: React.FC = () => {
                 // Mark as cancelled so banner stays hidden even if backend still returns the record
                 localStorage.setItem(`refundCancelled:${refundInfo.refundId}`, '1');
                 localStorage.removeItem(`refundId:${order!.orderId}`);
+                setRefundWasCancelled(true);
                 setRefundInfo(null);
                 setRefundDismissed(true);
+                await fetchOrder();
             } else {
                 toast.error('Không thể hủy yêu cầu. Vui lòng thử lại.');
             }
@@ -461,7 +464,7 @@ const OrderDetailsPage: React.FC = () => {
                                 )}
                                 {order.orderStatus.toUpperCase() === 'DELIVERED' && (
                                     <div className="flex gap-3">
-                                        {order.orderStatus.toUpperCase() === 'DELIVERED' && !refundInfo && (
+                                        {order.orderStatus.toUpperCase() === 'DELIVERED' && !refundInfo && !refundWasCancelled && (
                                             <button onClick={() => setIsRefundModalOpen(true)} className="px-6 py-3 bg-white text-rose-600 border border-rose-100 rounded-2xl font-black text-sm hover:bg-rose-50 transition-all shadow-sm">
                                                 Yêu cầu hoàn tiền
                                             </button>
