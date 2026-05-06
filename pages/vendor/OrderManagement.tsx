@@ -99,6 +99,14 @@ const formatTimeOnlyVi = (value: unknown): string => {
   return Number.isNaN(d.getTime()) ? 'N/A' : d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
 };
 
+const formatSlaStatusVi = (value: unknown): string => {
+  const status = String(value || '').trim().toLowerCase();
+  if (status === 'ontime') return 'Đúng hạn';
+  if (status === 'late') return 'Trễ hạn';
+  if (status === 'early') return 'Sớm hạn';
+  return 'Đúng hạn';
+};
+
 const hasMeaningfulText = (v: unknown): boolean => {
   if (typeof v !== 'string') return false;
   const n = v.trim().toLowerCase();
@@ -1567,8 +1575,8 @@ const OrderManagement: React.FC<OrderManagementProps> = ({ onNavigate: _onNaviga
                           {getStatusBadge(selectedOrder.orderStatus).label}
                         </span>
                         {selectedOrder.slaStatus && (
-                          <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${selectedOrder.slaStatus === 'OnTime' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
-                            SLA: {selectedOrder.slaStatus}
+                          <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${String(selectedOrder.slaStatus).toLowerCase() === 'ontime' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
+                            SLA: {formatSlaStatusVi(selectedOrder.slaStatus)}
                           </span>
                         )}
                       </div>
@@ -1885,14 +1893,6 @@ const OrderManagement: React.FC<OrderManagementProps> = ({ onNavigate: _onNaviga
                       <div className="flex justify-between gap-3 px-4 py-2.5 bg-white">
                         <span className="text-gray-500">Thực nhận</span>
                         <span className="font-semibold text-green-600">{formatVnd(selectedOrder.vendorPricingDetails?.vendorNetAmount)}</span>
-                      </div>
-                      <div className="flex justify-between gap-3 px-4 py-2.5 bg-white">
-                        <span className="text-gray-500">Mã giao dịch</span>
-                        <span className="font-semibold text-gray-800 text-right">
-                          {hasMeaningfulText(selectedOrder.vendorPricingDetails?.transactionId)
-                            ? selectedOrder.vendorPricingDetails?.transactionId
-                            : (hasMeaningfulText(selectedOrder.payment?.transactionId) ? selectedOrder.payment?.transactionId : 'N/A')}
-                        </span>
                       </div>
                     </div>
                   </div>
