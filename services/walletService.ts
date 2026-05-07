@@ -119,8 +119,11 @@ export interface WalletTransaction {
   balanceAfter?: number | null;
   walletId?: string;
   walletType?: string;
+  walletName?: string;
   relatedTransactionId?: string | null;
   relatedTransactions?: WalletTransaction[];
+  orderId?: string;
+  transactionGroupId?: string;
   raw?: Record<string, unknown>;
 }
 
@@ -227,43 +230,83 @@ function normalizeWithdrawalItem(item: unknown, index: number): WithdrawalListIt
 function normalizeTransactionItem(item: unknown, index: number): WalletTransaction {
   const source = item && typeof item === 'object' ? (item as Record<string, unknown>) : {};
 
+  // Try to find the transaction object, but keep source as fallback for fields
   const tx = (source.transaction || source.Transaction || source) as Record<string, unknown>;
 
-  const id = String(readField(tx, ['transactionId', 'TransactionId', 'id', 'Id'], `TX-${index + 1}`));
-  const type = String(readField(tx, ['type', 'Type', 'transactionType', 'TransactionType'], ''));
-  const status = String(readField(tx, ['status', 'Status'], ''));
+  const id = String(
+    readField(tx, ['transactionId', 'TransactionId', 'id', 'Id'], '') ||
+      readField(source, ['transactionId', 'TransactionId', 'id', 'Id'], `TX-${index + 1}`)
+  );
 
-  const amountRaw = readField(tx, ['amount', 'Amount', 'value', 'Value'], 0);
+  const type = String(
+    readField(tx, ['type', 'Type', 'transactionType', 'TransactionType'], '') ||
+      readField(source, ['type', 'Type', 'transactionType', 'TransactionType'], '')
+  );
+
+  const status = String(
+    readField(tx, ['status', 'Status', 'transactionStatus', 'TransactionStatus'], '') ||
+      readField(source, ['status', 'Status', 'transactionStatus', 'TransactionStatus'], '')
+  );
+
+  const amountRaw =
+    readField(tx, ['amount', 'Amount', 'value', 'Value', 'totalAmount', 'TotalAmount', 'finalAmount', 'FinalAmount', 'total', 'Total', 'money', 'Money', 'netAmount', 'NetAmount', 'transactionAmount', 'TransactionAmount'], null) ??
+    readField(source, ['amount', 'Amount', 'value', 'Value', 'totalAmount', 'TotalAmount', 'finalAmount', 'FinalAmount', 'total', 'Total', 'money', 'Money', 'netAmount', 'NetAmount', 'transactionAmount', 'TransactionAmount'], 0);
+
   const amount = typeof amountRaw === 'number' ? amountRaw : Number(amountRaw) || 0;
 
-  const description = String(readField(tx, ['description', 'Description', 'note', 'Note'], ''));
+  const description = String(
+    readField(
+      tx,
+      ['description', 'Description', 'note', 'Note', 'content', 'Content', 'message', 'Message', 'remark', 'Remark', 'title', 'Title', 'comment', 'Comment'],
+      ''
+    ) ||
+      readField(
+        source,
+        ['description', 'Description', 'note', 'Note', 'content', 'Content', 'message', 'Message', 'remark', 'Remark', 'title', 'Title', 'comment', 'Comment'],
+        ''
+      )
+  );
+
   const createdAt = String(
     readField(
       tx,
       ['createdAt', 'CreatedAt', 'createdDate', 'CreatedDate', 'timestamp', 'Timestamp'],
       ''
-    )
+    ) ||
+      readField(
+        source,
+        ['createdAt', 'CreatedAt', 'createdDate', 'CreatedDate', 'timestamp', 'Timestamp'],
+        ''
+      )
   );
 
-  const balanceBeforeRaw = readField(tx, ['balanceBefore', 'BalanceBefore'], null as unknown as number | null);
-  const balanceAfterRaw = readField(tx, ['balanceAfter', 'BalanceAfter'], null as unknown as number | null);
+  const balanceBeforeRaw =
+    readField(tx, ['balanceBefore', 'BalanceBefore'], null as unknown as number | null) ??
+    readField(source, ['balanceBefore', 'BalanceBefore'], null as unknown as number | null);
+
+  const balanceAfterRaw =
+    readField(tx, ['balanceAfter', 'BalanceAfter'], null as unknown as number | null) ??
+    readField(source, ['balanceAfter', 'BalanceAfter'], null as unknown as number | null);
 
   const balanceBefore =
-    typeof balanceBeforeRaw === 'number'
-      ? balanceBeforeRaw
-      : balanceBeforeRaw != null
-        ? Number(balanceBeforeRaw) || null
-        : null;
-
+    balanceBeforeRaw != null ? Number(balanceBeforeRaw) : null;
   const balanceAfter =
-    typeof balanceAfterRaw === 'number'
-      ? balanceAfterRaw
-      : balanceAfterRaw != null
-        ? Number(balanceAfterRaw) || null
-        : null;
+    balanceAfterRaw != null ? Number(balanceAfterRaw) : null;
 
-  const walletId = String(readField(tx, ['walletId', 'WalletId'], '') || readField(source, ['walletId', 'WalletId'], ''));
-  const walletType = String(readField(tx, ['walletType', 'WalletType'], '') || readField(source, ['walletType', 'WalletType'], ''));
+  const walletId = String(
+    readField(tx, ['walletId', 'WalletId'], '') ||
+      readField(source, ['walletId', 'WalletId'], '')
+  );
+
+  const walletType = String(
+    readField(tx, ['walletType', 'WalletType'], '') ||
+      readField(source, ['walletType', 'WalletType'], '')
+  );
+
+  const walletName = String(
+    readField(tx, ['walletName', 'WalletName'], '') ||
+      readField(source, ['walletName', 'WalletName'], '')
+  );
 
   return {
     id,
@@ -276,10 +319,19 @@ function normalizeTransactionItem(item: unknown, index: number): WalletTransacti
     balanceAfter,
     walletId: walletId || undefined,
     walletType: walletType || undefined,
-    relatedTransactionId: String(readField(tx, ['relatedTransactionId', 'RelatedTransactionId'], '') || ''),
-    relatedTransactions: Array.isArray(tx.relatedTransactions || tx.RelatedTransactions)
-      ? ((tx.relatedTransactions || tx.RelatedTransactions) as any[]).map((rt: any, i: number) => normalizeTransactionItem(rt, i))
+    walletName: walletName || undefined,
+    relatedTransactionId: String(
+      readField(tx, ['relatedTransactionId', 'RelatedTransactionId'], '') ||
+        readField(source, ['relatedTransactionId', 'RelatedTransactionId'], '') ||
+        ''
+    ),
+    relatedTransactions: Array.isArray(tx.relatedTransactions || tx.RelatedTransactions || source.relatedTransactions || source.RelatedTransactions)
+      ? ((tx.relatedTransactions || tx.RelatedTransactions || source.relatedTransactions || source.RelatedTransactions) as any[]).map(
+          (rt: any, i: number) => normalizeTransactionItem(rt, i)
+        )
       : undefined,
+    orderId: String(readField(tx, ['orderId', 'OrderId'], '') || readField(source, ['orderId', 'OrderId'], '')),
+    transactionGroupId: String(readField(tx, ['transactionGroupId', 'TransactionGroupId'], '') || readField(source, ['transactionGroupId', 'TransactionGroupId'], '')),
     raw: source,
   };
 }
@@ -804,14 +856,20 @@ export async function getAllTransactions(filter: AllTransactionFilter = {}): Pro
     throw new Error('Bạn chưa đăng nhập.');
   }
 
+  const user = getCurrentUser();
+  const currentRole = user?.role?.toLowerCase();
+  
   const params = new URLSearchParams();
-
-  const currentRole = String(getCurrentUser()?.role || '').trim().toLowerCase();
+  
   const activeRole = currentRole === 'staff' ? 'Staff' : currentRole === 'vendor' ? 'Vendor' : currentRole === 'customer' ? 'Customer' : 'Admin';
   params.append('ActiveRole', activeRole);
 
   if (filter.walletId && filter.walletId.trim()) {
-    params.append('walletId', filter.walletId.trim());
+    params.append('WalletId', filter.walletId.trim());
+  }
+  
+  if (filter.walletType && filter.walletType.trim()) {
+    params.append('WalletType', filter.walletType.trim());
   }
 
   if (filter.type && filter.type.trim()) {
@@ -868,8 +926,34 @@ export async function getAllTransactions(filter: AllTransactionFilter = {}): Pro
     throw new Error(message);
   }
 
-  const items = unwrapResultArray(payload);
-  return items.map((item, index) => normalizeTransactionItem(item, index));
+  const rawItems = unwrapResultArray(payload);
+  const flattened: any[] = [];
+
+  rawItems.forEach((item: any) => {
+    // If the item itself has a 'transactions' array (Backend Grouping), flatten it
+    if (Array.isArray(item.transactions) && item.transactions.length > 0) {
+      item.transactions.forEach((subTx: any) => {
+        flattened.push({
+          ...subTx,
+          // Propagate group-level info to sub-transactions
+          orderId: subTx.orderId || item.orderId,
+          transactionGroupId: subTx.transactionGroupId || item.transactionGroupId,
+          createdAt: subTx.createdAt || groupCreatedAt(item),
+          // Keep a reference to the group if needed
+          _group: item
+        });
+      });
+    } else {
+      flattened.push(item);
+    }
+  });
+
+  return flattened.map((item, index) => normalizeTransactionItem(item, index));
+}
+
+// Helper for group createdAt
+function groupCreatedAt(item: any): string {
+  return item.createdAt || item.createdDate || item.timestamp || '';
 }
 
 export const walletService = {
