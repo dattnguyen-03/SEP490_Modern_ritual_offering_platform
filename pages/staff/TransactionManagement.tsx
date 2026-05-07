@@ -170,6 +170,10 @@ const TransactionManagement: React.FC<TransactionManagementProps> = ({ onNavigat
     );
   }, [groupedTransactions, searchQuery]);
   const ITEMS_PER_PAGE = 10;
+  const totalPages = Math.ceil(filteredGroups.length / ITEMS_PER_PAGE);
+  const pagedGroups = useMemo(() => {
+    return filteredGroups.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+  }, [filteredGroups, currentPage]);
 
   const fetchData = useCallback(async () => {
     try {
@@ -338,7 +342,7 @@ const TransactionManagement: React.FC<TransactionManagementProps> = ({ onNavigat
             <p className="text-sm font-bold text-slate-400 italic">Không có dữ liệu phù hợp</p>
           </div>
         ) : (
-          filteredGroups.map((group) => (
+          pagedGroups.map((group) => (
             <div key={group.id} className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
               {/* Simple Group Header */}
               <div className="px-5 py-3.5 bg-slate-50 border-b border-slate-200 flex flex-wrap items-center justify-between gap-3">
@@ -425,15 +429,56 @@ const TransactionManagement: React.FC<TransactionManagementProps> = ({ onNavigat
         )}
       </div>
 
-      {/* Simple Pagination */}
-      {!loading && filteredGroups.length > 0 && (
-        <div className="flex justify-center py-8">
-          <button 
-            onClick={() => setCurrentPage(p => p + 1)}
-            className="px-8 py-2.5 rounded-lg border-2 border-slate-200 text-slate-600 font-bold text-xs uppercase hover:border-primary hover:text-primary transition-all"
-          >
-            Tải thêm giao dịch
-          </button>
+      {/* Standard Pagination */}
+      {!loading && totalPages > 1 && (
+        <div className="flex items-center justify-between py-6 border-t border-slate-100 mt-6">
+          <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">
+            Trang <span className="text-slate-900">{currentPage}</span> / {totalPages}
+          </p>
+          <div className="flex items-center gap-1.5">
+            <button
+              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+              className="w-9 h-9 rounded-lg border border-slate-200 flex items-center justify-center text-slate-400 hover:border-primary hover:text-primary disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+            >
+              <span className="material-symbols-outlined text-xl">chevron_left</span>
+            </button>
+            
+            {/* Simple page numbers for quick jump */}
+            <div className="flex items-center gap-1">
+              {[...Array(totalPages)].map((_, i) => {
+                const p = i + 1;
+                // Only show current, first, last and surrounding pages
+                if (p === 1 || p === totalPages || Math.abs(p - currentPage) <= 1) {
+                  return (
+                    <button
+                      key={p}
+                      onClick={() => setCurrentPage(p)}
+                      className={`w-9 h-9 rounded-lg text-xs font-bold transition-all ${
+                        currentPage === p 
+                        ? 'bg-slate-900 text-white' 
+                        : 'text-slate-500 hover:bg-slate-100'
+                      }`}
+                    >
+                      {p}
+                    </button>
+                  );
+                }
+                if (p === currentPage - 2 || p === currentPage + 2) {
+                  return <span key={p} className="text-slate-300">...</span>;
+                }
+                return null;
+              })}
+            </div>
+
+            <button
+              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+              className="w-9 h-9 rounded-lg border border-slate-200 flex items-center justify-center text-slate-400 hover:border-primary hover:text-primary disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+            >
+              <span className="material-symbols-outlined text-xl">chevron_right</span>
+            </button>
+          </div>
         </div>
       )}
     </div>
