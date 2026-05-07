@@ -174,7 +174,7 @@ const AppContent: React.FC<{
       { label: 'Xác minh vendor', icon: 'verified_user', path: '/staff-vendors' },
 
       { label: 'Sản phẩm', icon: 'inventory_2', path: '/staff-product' },
-      { label: 'Khiếu nại', icon: 'warning', path: '/staff-refunds' },
+      // { label: 'Khiếu nại', icon: 'warning', path: '/staff-refunds' },
       // { label: 'Giao dịch', icon: 'payments', path: '/staff-transactions' },
       // { label: 'Thống kê', icon: 'analytics', path: '/staff-statistics' },
       { label: 'Banner', icon: 'ad', path: '/staff-banners' },
