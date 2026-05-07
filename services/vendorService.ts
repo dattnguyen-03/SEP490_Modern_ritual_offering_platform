@@ -277,6 +277,48 @@ class VendorService {
   }
 
   /**
+   * Tạm dừng nhận đơn cho 1 hoặc nhiều ngày.
+   * POST /api/vendor/day-offs
+   */
+  async setDayOff(dates: string[], note?: string): Promise<ApiResponse<any>> {
+    try {
+      const response = await fetchWithAuth(`${API_BASE_URL}/vendor/day-offs`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify({ dates, note: note || '' }),
+      });
+      const data: ApiResponse<any> = await response.json();
+      return data;
+    } catch (error) {
+      console.error('❌ Failed to set day off:', error);
+      return { isSuccess: false, statusCode: '500', errorMessages: ['Lỗi kết nối hệ thống'], result: null };
+    }
+  }
+
+  /**
+   * Mở lại ngày đã đóng (Xóa ngày nghỉ).
+   * DELETE /api/vendor/day-offs/{date}
+   */
+  async removeDayOff(date: string): Promise<ApiResponse<any>> {
+    try {
+      const response = await fetchWithAuth(`${API_BASE_URL}/vendor/day-offs/${date}`, {
+        method: 'DELETE',
+        headers: {
+          'Accept': 'application/json',
+        },
+      });
+      const data: ApiResponse<any> = await response.json();
+      return data;
+    } catch (error) {
+      console.error('❌ Failed to remove day off:', error);
+      return { isSuccess: false, statusCode: '500', errorMessages: ['Lỗi kết nối hệ thống'], result: null };
+    }
+  }
+
+  /**
    * Yêu cầu đóng cửa hàng.
    * POST /api/vendor/closure/request
    */

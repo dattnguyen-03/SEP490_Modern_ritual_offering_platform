@@ -180,6 +180,8 @@ export interface VendorOrderCalendarItem {
     capacityStatus?: string | null;
     totalProductionWeight?: number;
     dailyCapacityWeight?: number;
+    isClosed?: boolean;
+    closeReason?: string | null;
 }
 
 export interface PreparationPlan {
@@ -940,6 +942,8 @@ class OrderService {
                     capacityStatus: day.capacityStatus ?? null,
                     totalProductionWeight: Number(day.totalProductionWeight) || 0,
                     dailyCapacityWeight: Number(day.dailyCapacityWeight) || 0,
+                    isClosed: !!day.isClosed,
+                    closeReason: day.closeReason ?? null,
                 }))
                 .filter((item: { date: string }) => item.date);
         } catch (error) {

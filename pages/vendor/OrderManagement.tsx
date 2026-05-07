@@ -2,6 +2,8 @@ import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { useSearchParams } from 'react-router-dom';
 import { orderService, VendorOrder, Order, VendorOrderItem, VendorOrderCalendarItem, PreparationPlan } from '../../services/orderService';
 import { getProfile } from '../../services/auth';
+import { vendorService } from '../../services/vendorService';
+import { showSuccess, showError, showConfirm, showPrompt } from '../../services/toast';
 import VendorRefundTab from './VendorRefundTab';
 import VendorReviewTab from './VendorReviewTab';
 import OrderStatusTimeline from '../../components/OrderStatusTimeline';
@@ -206,6 +208,7 @@ const getCapacityLabel = (value?: string | null) => {
   const key = String(value || '').trim().toLowerCase();
   if (key === 'warning') return 'Gần đầy';
   if (key === 'full') return 'Đã đầy';
+  if (key === 'closed') return 'Đã đóng';
   if (key === 'ok') return 'Ổn định';
   return 'N/A';
 };
@@ -341,6 +344,10 @@ const OrderManagement: React.FC<OrderManagementProps> = ({ onNavigate: _onNaviga
   const [statusReason, setStatusReason] = useState('');
   const [statusSuccess, setStatusSuccess] = useState<string | null>(null);
   const [deliveryProofImages, setDeliveryProofImages] = useState<File[]>([]);
+  const [pausingOrders, setPausingOrders] = useState(false);
+  const [showPauseModal, setShowPauseModal] = useState(false);
+  const [pauseDates, setPauseDates] = useState<string[]>([]);
+  const [pauseNote, setPauseNote] = useState('');
 
   // ── tab state ───────────────────────────────────────────────────────────────
   const [mainTab, setMainTab] = useState<'orders' | 'refunds' | 'reviews' | 'preparation'>(() => {
@@ -701,6 +708,93 @@ const OrderManagement: React.FC<OrderManagementProps> = ({ onNavigate: _onNaviga
     setDeliveryProofImages([]);
   };
 
+  const handlePauseOrders = () => {
+    setPauseDates([toYmd(new Date())]); // Default to today
+    setPauseNote('');
+    setShowPauseModal(true);
+  };
+
+  const submitPauseOrders = async () => {
+    if (pauseDates.length === 0) {
+      showError('Vui lòng chọn ít nhất một ngày.');
+      return;
+    }
+
+    setPausingOrders(true);
+    try {
+      const response = await vendorService.setDayOff(pauseDates, pauseNote);
+      if (response.isSuccess) {
+        showSuccess('Đã tạm dừng nhận đơn thành công!');
+        setShowPauseModal(false);
+        fetchCalendarOrders();
+      } else {
+        showError(response.errorMessages?.[0] || 'Không thể tạm dừng nhận đơn. Vui lòng thử lại.');
+      }
+    } catch (error) {
+      console.error('Pause orders error:', error);
+      showError('Lỗi kết nối hệ thống.');
+    } finally {
+      setPausingOrders(false);
+    }
+  };
+
+  const handlePauseSelectedDay = async () => {
+    const result = await showPrompt({
+      title: 'Tạm dừng nhận đơn',
+      text: `Nhập lý do tạm dừng cho ngày ${formatYmdToVi(selectedCalendarDate)}:`,
+      inputPlaceholder: 'Ví dụ: Nghỉ lễ, việc riêng...',
+      confirmButtonText: 'Xác nhận tạm dừng',
+    });
+
+    if (!result.isConfirmed) return;
+    
+    const reason = result.value || 'Tạm dừng thủ công';
+
+    setPausingOrders(true);
+    try {
+      const response = await vendorService.setDayOff([selectedCalendarDate], reason);
+      if (response.isSuccess) {
+        showSuccess('Đã tạm dừng nhận đơn thành công!');
+        fetchCalendarOrders();
+      } else {
+        showError(response.errorMessages?.[0] || 'Thao tác thất bại.');
+      }
+    } catch (error) {
+      console.error('Pause day error:', error);
+      showError('Lỗi kết nối hệ thống.');
+    } finally {
+      setPausingOrders(false);
+    }
+  };
+
+  const handleRemoveDayOff = async () => {
+    const confirmed = await showConfirm({
+      title: 'Mở lại nhận đơn',
+      text: `Bạn có chắc chắn muốn mở lại nhận đơn cho ngày ${formatYmdToVi(selectedCalendarDate)}?`,
+      icon: 'question'
+    });
+
+    if (!confirmed.isConfirmed) {
+      return;
+    }
+
+    setPausingOrders(true);
+    try {
+      const response = await vendorService.removeDayOff(selectedCalendarDate);
+      if (response.isSuccess) {
+        showSuccess('Đã mở lại nhận đơn thành công!');
+        fetchCalendarOrders();
+      } else {
+        showError(response.errorMessages?.[0] || 'Không thể mở lại nhận đơn. Vui lòng thử lại.');
+      }
+    } catch (error) {
+      console.error('Remove day off error:', error);
+      showError('Lỗi kết nối hệ thống.');
+    } finally {
+      setPausingOrders(false);
+    }
+  };
+
   // ── derived ─────────────────────────────────────────────────────────────────
   const filteredOrders = orders
     .filter(o => filterStatus === 'all' || normalizeStatus(o.orderStatus) === filterStatus)
@@ -794,8 +888,8 @@ const OrderManagement: React.FC<OrderManagementProps> = ({ onNavigate: _onNaviga
         orderId: o.orderId,
         deliveryTime: o.deliveryTime?.slice(0, 5) || 'N/A',
         customerName: enrichment.customerName || o.customerName || 'Khách hàng',
-          addOns: (it.addOns || []).map(a => ({ name: a.addOnName || a.itemName || 'Món kèm', quantity: a.quantity })),
-          swaps: (it.swaps || []).map(s => s.replacementItemName || s.replacementDescription || s.originalItemName || 'Thay thế'),
+        addOns: (it.addOns || []).map(a => ({ name: a.addOnName || a.itemName || 'Món kèm', quantity: a.quantity })),
+        swaps: (it.swaps || []).map(s => s.replacementItemName || s.replacementDescription || s.originalItemName || 'Thay thế'),
         isPrepared: false // In a real app, this would be persisted
       }));
     });
@@ -878,6 +972,20 @@ const OrderManagement: React.FC<OrderManagementProps> = ({ onNavigate: _onNaviga
               <p className="text-black font-bold text-sm">Theo dõi và xử lý các đơn hàng của bạn.</p>
             </div>
           </div>
+
+          <button
+            onClick={handlePauseOrders}
+            disabled={pausingOrders}
+            className={`flex items-center gap-2 px-6 py-3 rounded-2xl font-bold text-sm transition-all shadow-sm border ${pausingOrders
+                ? 'bg-gray-100 text-gray-400 cursor-not-allowed border-gray-200'
+                : 'bg-white text-red-600 border-red-100 hover:bg-red-50 hover:border-red-200'
+              }`}
+          >
+            <span className="material-symbols-outlined text-xl">
+              {pausingOrders ? 'hourglass_empty' : 'pause_circle'}
+            </span>
+            {pausingOrders ? 'Đang xử lý...' : 'Tạm dừng nhận đơn'}
+          </button>
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
@@ -977,18 +1085,56 @@ const OrderManagement: React.FC<OrderManagementProps> = ({ onNavigate: _onNaviga
                               key={ymd}
                               type="button"
                               onClick={() => setSelectedCalendarDate(ymd)}
-                              className={`group h-24 rounded-2xl border text-left p-2.5 transition-all ${isSelected
-                                ? 'border-primary bg-primary/10 shadow-[0_10px_28px_-16px_rgba(59,130,246,0.6)] ring-2 ring-primary/20'
-                                : 'border-gray-200 bg-white hover:bg-slate-50 hover:border-slate-300 hover:shadow-sm'
+                              className={`group h-28 rounded-2xl border text-left p-2.5 transition-all relative overflow-hidden ${isSelected
+                                  ? daySummary?.isClosed
+                                    ? 'border-red-500 bg-red-100/50 shadow-md ring-2 ring-red-500/20'
+                                    : 'border-primary bg-primary/5 shadow-md ring-2 ring-primary/10'
+                                  : daySummary?.isClosed
+                                    ? 'border-red-300 bg-red-50 shadow-sm'
+                                    : daySummary?.capacityStatus?.toLowerCase() === 'warning'
+                                      ? 'border-amber-400 bg-amber-50/30'
+                                      : 'border-gray-100 bg-white hover:bg-slate-50 hover:border-slate-300'
                                 }`}
                             >
-                              <div className="flex items-center justify-between">
-                                <span className={`text-sm font-black ${isToday ? 'text-primary' : 'text-slate-800'}`}>{day}</span>
-                                {totalOrders > 0 && (
-                                  <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-primary/10 text-primary">
-                                    {totalOrders} đơn
-                                  </span>
-                                )}
+                              <div className="flex flex-col h-full">
+                                <div className="flex items-center justify-between mb-1">
+                                  <span className={`text-xs font-black ${isToday ? 'text-primary' : daySummary?.isClosed ? 'text-red-700' : 'text-slate-500'}`}>{day}</span>
+                                  {daySummary?.isClosed && (
+                                    <span className="material-symbols-outlined text-sm text-red-500 opacity-60">lock</span>
+                                  )}
+                                </div>
+
+                                <div className="flex-1 space-y-1">
+                                  {totalOrders > 0 && (
+                                    <div className="flex flex-col">
+                                      <span className="text-[10px] font-black bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded-md w-fit">
+                                        {totalOrders} đơn hàng
+                                      </span>
+                                      <span className="text-[9px] font-bold text-slate-900 mt-1 leading-none truncate">
+                                        {daySummary?.totalRevenue && daySummary.totalRevenue >= 1000000 
+                                          ? `${(daySummary.totalRevenue / 1000000).toFixed(1).replace('.0', '')}Mđ` 
+                                          : formatVnd(daySummary?.totalRevenue || 0)}
+                                      </span>
+                                    </div>
+                                  )}
+
+                                  {daySummary?.isClosed ? (
+                                    <div className="mt-auto">
+                                      {/* <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-md shadow-sm ${
+                                        daySummary.closeReason === 'Manual' ? 'bg-red-600 text-white' : 'bg-slate-200 text-slate-700'
+                                      }`}>
+                                        TẠM ĐÓNG
+                                      </span> */}
+                                      <p className="text-[9px] text-slate-400 italic mt-0.5 leading-tight truncate">
+                                        {daySummary.closeReason === 'Manual' ? '"Nghỉ có việc riêng"' : '"Tự động đóng: đạt giới hạn"'}
+                                      </p>
+                                    </div>
+                                  ) : daySummary?.capacityStatus?.toLowerCase() === 'warning' ? (
+                                    <div className="mt-auto">
+                                      <span className="text-[10px] font-black text-amber-700">SẮP ĐẦY</span>
+                                    </div>
+                                  ) : null}
+                                </div>
                               </div>
                             </button>
                           );
@@ -1006,6 +1152,25 @@ const OrderManagement: React.FC<OrderManagementProps> = ({ onNavigate: _onNaviga
                     <p className="text-xs text-slate-500 font-semibold">{dailyPlanItems.length} đơn hàng</p>
                   </div>
                   <div className="flex items-center gap-2">
+                    {selectedDaySummary?.isClosed ? (
+                      <button
+                        type="button"
+                        onClick={handleRemoveDayOff}
+                        disabled={pausingOrders}
+                        className="px-4 py-2 rounded-xl bg-emerald-50 text-emerald-600 hover:bg-emerald-100 text-xs font-black uppercase tracking-widest transition border border-emerald-100"
+                      >
+                        {pausingOrders ? '...' : 'Mở nhận đơn'}
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={handlePauseSelectedDay}
+                        disabled={pausingOrders}
+                        className="px-4 py-2 rounded-xl bg-red-50 text-red-600 hover:bg-red-100 text-xs font-black uppercase tracking-widest transition border border-red-100"
+                      >
+                        {pausingOrders ? '...' : 'Tạm đóng ngày này'}
+                      </button>
+                    )}
                     <button
                       type="button"
                       onClick={() => setShowDailyPrepPlan(true)}
@@ -1900,6 +2065,93 @@ const OrderManagement: React.FC<OrderManagementProps> = ({ onNavigate: _onNaviga
               </div>
 
 
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Pause Orders Modal */}
+      {showPauseModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-lg overflow-hidden border border-gray-100 animate-in fade-in zoom-in duration-300">
+            <div className="px-8 pt-8 pb-6 border-b border-gray-100 relative">
+              <h3 className="text-2xl font-black text-slate-900 tracking-tight">Tạm dừng nhận đơn</h3>
+              <p className="text-slate-500 font-bold text-sm mt-1">Chọn ngày và để lại lý do tạm dừng.</p>
+              <button
+                onClick={() => setShowPauseModal(false)}
+                className="absolute top-8 right-8 text-slate-400 hover:text-black transition"
+              >
+                <span className="material-symbols-outlined">close</span>
+              </button>
+            </div>
+
+            <div className="p-8 space-y-6">
+              {/* Date selection - simple implementation for now, can be improved */}
+              <div>
+                <label className="block text-xs font-black text-black uppercase tracking-widest mb-3">Ngày tạm dừng</label>
+                <div className="flex flex-wrap gap-2">
+                  {pauseDates.map((d, i) => (
+                    <div key={i} className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm font-bold text-slate-700">
+                      {formatYmdToVi(d)}
+                      <button
+                        onClick={() => setPauseDates(prev => prev.filter((_, idx) => idx !== i))}
+                        className="text-slate-400 hover:text-red-500 transition"
+                      >
+                        <span className="material-symbols-outlined text-base">close</span>
+                      </button>
+                    </div>
+                  ))}
+                  <div className="relative">
+                    <button
+                      onClick={() => fromDateInputRef.current?.showPicker?.()}
+                      className="flex items-center justify-center size-9 rounded-xl border border-dashed border-slate-300 text-slate-400 hover:border-primary hover:text-primary transition"
+                    >
+                      <span className="material-symbols-outlined">add</span>
+                    </button>
+                    <input
+                      type="date"
+                      ref={fromDateInputRef}
+                      className="absolute inset-0 opacity-0 cursor-pointer w-0 h-0"
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        if (val && !pauseDates.includes(val)) {
+                          setPauseDates(prev => [...prev, val].sort());
+                        }
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-black text-black uppercase tracking-widest mb-3">Lý do (Ghi chú)</label>
+                <textarea
+                  value={pauseNote}
+                  onChange={(e) => setPauseNote(e.target.value)}
+                  placeholder="Ví dụ: Nghỉ lễ, Bảo trì cửa hàng..."
+                  className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-4 text-sm font-bold text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all resize-none h-32"
+                />
+              </div>
+            </div>
+
+            <div className="px-8 pb-8 pt-2 flex gap-3">
+              <button
+                onClick={() => setShowPauseModal(false)}
+                className="flex-1 px-6 py-4 rounded-2xl border border-slate-200 text-slate-600 font-bold text-sm hover:bg-slate-50 transition"
+              >
+                Hủy bỏ
+              </button>
+              <button
+                onClick={submitPauseOrders}
+                disabled={pausingOrders || pauseDates.length === 0}
+                className="flex-[1.5] px-6 py-4 rounded-2xl bg-red-600 text-white font-bold text-sm hover:bg-red-700 shadow-lg shadow-red-200 disabled:opacity-50 disabled:shadow-none transition-all flex items-center justify-center gap-2"
+              >
+                {pausingOrders ? (
+                  <>
+                    <div className="size-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    Đang xử lý...
+                  </>
+                ) : 'Xác nhận tạm dừng'}
+              </button>
             </div>
           </div>
         </div>
