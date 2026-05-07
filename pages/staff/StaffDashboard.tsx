@@ -178,7 +178,7 @@ const StaffDashboard: React.FC<StaffDashboardProps> = ({ onNavigate }) => {
     // { label: 'Người dùng', icon: 'group', path: '/staff-customers' },
     { label: 'Sản phẩm', icon: 'inventory_2', path: '/staff-product' },
     // { label: 'Khiếu nại', icon: 'warning', path: '/staff-refunds' },
-    { label: 'Thống kê', icon: 'analytics', path: '/staff-statistics' },
+    // { label: 'Thống kê', icon: 'analytics', path: '/staff-statistics' },
     { label: 'Banner', icon: 'ad', path: '/staff-banners' },
     { label: 'Cẩm nang', icon: 'book_4', path: '/staff-guidelines' },
     { label: 'Cấu hình hệ thống', icon: 'settings', path: '/staff-settings' },
