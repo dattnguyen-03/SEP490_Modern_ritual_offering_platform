@@ -1204,140 +1204,159 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) => {
   };
 
   const handleViewRefundDetail = (refund: any) => {
+    const formatCurrency = (val: number) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val);
+    
     let itemsHtml = '';
     if (refund.items && refund.items.length > 0) {
       itemsHtml = `
-        <div class="mt-4 border-t border-gold/10 pt-4 text-left">
-          <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Sản phẩm yêu cầu hoàn tiền</p>
-          <div class="space-y-3">
-            ${refund.items.map((item: any) => `
-              <div class="bg-slate-50 p-3 rounded-xl border border-gold/10 flex justify-between items-center text-sm">
-                <div class="flex-1 pr-4">
-                  <p class="font-bold text-slate-700 line-clamp-1" title="${item.packageName}">${item.packageName}</p>
-                  ${item.variantName ? `<p class="text-xs text-slate-500">${item.variantName}</p>` : ''}
-                  <p class="text-xs text-slate-500 mt-1">Số lượng: ${item.quantity}</p>
-                </div>
-                <p class="font-bold text-primary whitespace-nowrap">${new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(item.refundAmount)}</p>
+        <div class="mt-6 space-y-3">
+          ${refund.items.map((item: any) => `
+            <div class="bg-white p-4 rounded-2xl border border-slate-100 flex gap-4 items-center shadow-sm">
+              <div class="w-16 h-16 rounded-xl overflow-hidden border border-slate-100 flex-shrink-0">
+                <img src="${item.imageUrl || 'https://via.placeholder.com/64'}" class="w-full h-full object-cover" />
               </div>
-            `).join('')}
-          </div>
+              <div class="flex-1 min-w-0">
+                <p class="font-bold text-slate-800 truncate text-base">${item.packageName}</p>
+                <p class="text-xs text-slate-400 font-medium">Phân loại: ${item.variantName || 'Mặc định'}</p>
+                <p class="text-lg font-black text-primary mt-0.5">${formatCurrency(item.refundAmount)}</p>
+              </div>
+            </div>
+          `).join('')}
         </div>
       `;
     }
 
-    let imagesHtml = '';
-    if (refund.proofImages && refund.proofImages.length > 0) {
-      imagesHtml += `
-        <details class="group mt-4 border-t border-gold/10 pt-4" open>
-          <summary class="flex items-center justify-between cursor-pointer list-none">
-            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Hình ảnh minh chứng (Khách hàng)</p>
-            <span class="material-symbols-outlined text-slate-300 group-open:rotate-180 transition-transform">expand_more</span>
-          </summary>
-          <div class="flex flex-wrap gap-2 mt-3">
-            ${refund.proofImages.map((url: string) => `
-              <a href="${url}" target="_blank" rel="noopener noreferrer" class="block w-20 h-20 rounded-lg overflow-hidden border border-gold/10 hover:border-primary transition-all shadow-sm">
-                <img src="${url}" class="w-full h-full object-cover hover:scale-110 transition-transform duration-300" />
-              </a>
-            `).join('')}
-          </div>
-        </details>
-      `;
-    }
-
-    if (refund.vendorPreparationImages && refund.vendorPreparationImages.length > 0) {
-      imagesHtml += `
-        <details class="group mt-4 border-t border-gold/10 pt-4">
-          <summary class="flex items-center justify-between cursor-pointer list-none">
-            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Hình ảnh chuẩn bị (Vendor)</p>
-            <span class="material-symbols-outlined text-slate-300 group-open:rotate-180 transition-transform">expand_more</span>
-          </summary>
-          <div class="flex flex-wrap gap-2 mt-3">
-            ${refund.vendorPreparationImages.map((url: string) => `
-              <a href="${url}" target="_blank" rel="noopener noreferrer" class="block w-20 h-20 rounded-lg overflow-hidden border border-gold/10 hover:border-primary transition-all shadow-sm">
-                <img src="${url}" class="w-full h-full object-cover hover:scale-110 transition-transform duration-300" />
-              </a>
-            `).join('')}
-          </div>
-        </details>
-      `;
-    }
-
-    if (refund.vendorDeliveryImages && refund.vendorDeliveryImages.length > 0) {
-      imagesHtml += `
-        <details class="group mt-4 border-t border-gold/10 pt-4">
-          <summary class="flex items-center justify-between cursor-pointer list-none">
-            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Hình ảnh giao hàng (Vendor)</p>
-            <span class="material-symbols-outlined text-slate-300 group-open:rotate-180 transition-transform">expand_more</span>
-          </summary>
-          <div class="flex flex-wrap gap-2 mt-3">
-            ${refund.vendorDeliveryImages.map((url: string) => `
-              <a href="${url}" target="_blank" rel="noopener noreferrer" class="block w-20 h-20 rounded-lg overflow-hidden border border-gold/10 hover:border-primary transition-all shadow-sm">
-                <img src="${url}" class="w-full h-full object-cover hover:scale-110 transition-transform duration-300" />
-              </a>
-            `).join('')}
-          </div>
-        </details>
-      `;
-    }
+    const renderImageGroup = (images: string[], label: string) => {
+      if (!images || images.length === 0) return `<div class="w-16 h-16 rounded-xl bg-slate-100/50 border border-dashed border-slate-200 flex items-center justify-center text-[10px] text-slate-400 font-bold">${label}</div>`;
+      return images.map(url => `
+        <div class="relative group/img">
+          <a href="${url}" target="_blank" rel="noopener noreferrer" class="block w-16 h-16 rounded-xl overflow-hidden border border-slate-200 shadow-sm hover:border-primary transition-all">
+            <img src="${url}" class="w-full h-full object-cover" />
+          </a>
+          <span class="absolute -bottom-1 left-1/2 -translate-x-1/2 bg-white/90 px-1.5 py-0.5 rounded text-[8px] font-black text-slate-500 shadow-sm border border-slate-100 whitespace-nowrap">${label}</span>
+        </div>
+      `).join('');
+    };
 
     Swal.fire({
-      title: 'Chi tiết yêu cầu',
-      width: 600,
+      title: '',
+      width: 1000,
+      showCloseButton: true,
+      showConfirmButton: true,
+      showCancelButton: true,
+      confirmButtonText: 'Chấp nhận hoàn tiền',
+      cancelButtonText: 'Từ chối',
+      reverseButtons: true,
       customClass: {
-        confirmButton: 'rounded-2xl font-black px-8 py-4 text-white bg-gradient-to-r from-primary to-primary/80 shadow-lg tracking-wide hover:shadow-primary/30 transition-all active:scale-95',
-        popup: 'rounded-[3rem] border-none shadow-2xl overflow-hidden',
+        container: 'refund-modal-container',
+        popup: 'rounded-[2rem] border-none shadow-2xl p-0 overflow-hidden',
+        confirmButton: 'rounded-2xl font-black px-8 py-4 text-white bg-blue-600 shadow-lg shadow-blue-200 hover:bg-blue-700 transition-all active:scale-95 text-sm ml-3 order-2',
+        cancelButton: 'rounded-2xl font-bold px-8 py-4 text-slate-600 bg-slate-100 hover:bg-slate-200 transition-all active:scale-95 text-sm order-1',
+        actions: 'flex justify-end items-center gap-3 p-8 bg-slate-50/50 border-t border-slate-100 w-full',
+        htmlContainer: 'p-0 m-0',
       },
       html: `
-        <div class="text-left space-y-4 p-4 text-sm mt-2">
-          <div class="grid grid-cols-2 gap-6 bg-slate-50 p-6 rounded-2xl border border-slate-100">
-            <div>
-              <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Mã hệ thống</p>
-              <p class="font-mono text-xs font-bold text-primary truncate" title="${refund.refundId}">${refund.refundId}</p>
+        <div class="text-left font-sans">
+          <!-- Header Section -->
+          <div class="p-8 border-b border-slate-100">
+            <div class="flex items-center gap-3 mb-1">
+              <h2 class="text-2xl font-black text-slate-800">Chi tiết khiếu nại hoàn tiền</h2>
+              <span class="px-3 py-1 rounded-full bg-orange-50 text-orange-600 text-[10px] font-black uppercase tracking-widest border border-orange-100">
+                ${refund.status === 'Escalated' ? 'Escalated' : refund.status === 'Pending' ? 'Chờ xử lý' : 'Đã xử lý'}
+              </span>
             </div>
-            <div>
-              <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Mã Đơn Hàng</p>
-              <p class="font-mono text-xs font-bold text-slate-700 truncate">#${refund.orderCode || refund.orderId.slice(0, 8)}</p>
-            </div>
-            <div>
-              <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Khách hàng</p>
-              <p class="font-bold text-slate-700">${refund.customerName}</p>
-            </div>
-            <div>
-              <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Số điện thoại</p>
-              <p class="font-bold text-slate-700">${refund.customerPhone || 'Chưa có số điện thoại'}</p>
-            </div>
-            <div>
-              <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Số tiền chờ hoàn</p>
-              <p class="font-black text-xl text-rose-600 tracking-tighter">${new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(refund.refundAmount)}</p>
-            </div>
-             <div>
-              <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Trạng thái</p>
-              <p class="font-bold text-slate-700">${refund.status === 'Pending' ? 'Chờ xử lý' : refund.status === 'Approved' ? 'Đã duyệt' : 'Từ chối'}</p>
-            </div>
+            <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">ID: ${refund.refundId}</p>
           </div>
-          
-          <div class="mt-6 pt-4 border-t border-gold/10">
-            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Lý do từ khách hàng</p>
-            <div class="p-4 bg-rose-50 text-rose-800 rounded-xl text-sm font-medium border border-rose-100">
-              "${refund.reason || 'Không có mô tả chi tiết'}"
+
+          <div class="p-8 space-y-8 bg-white">
+            <!-- Info Grid -->
+            <div class="grid grid-cols-2 gap-6">
+              <!-- Customer Box -->
+              <div class="bg-slate-50/50 p-6 rounded-[2rem] border border-slate-100 flex gap-4 items-start">
+                <div class="w-12 h-12 rounded-2xl bg-blue-100 flex items-center justify-center text-blue-600 flex-shrink-0">
+                  <span class="material-symbols-outlined text-2xl">person</span>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <p class="text-[10px] font-black text-blue-500 uppercase tracking-widest mb-1">Khách hàng</p>
+                  <p class="font-bold text-slate-800 text-lg leading-tight truncate">${refund.customerName}</p>
+                  <p class="text-sm font-medium text-slate-500 mt-1">${refund.customerPhone || 'Không có SĐT'}</p>
+                </div>
+              </div>
+
+              <!-- Shop Box -->
+              <div class="bg-purple-50/30 p-6 rounded-[2rem] border border-purple-100/50 flex gap-4 items-start">
+                <div class="w-12 h-12 rounded-2xl bg-purple-100 flex items-center justify-center text-purple-600 flex-shrink-0">
+                  <span class="material-symbols-outlined text-2xl">storefront</span>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <p class="text-[10px] font-black text-purple-500 uppercase tracking-widest mb-1">Cửa hàng</p>
+                  <p class="font-bold text-slate-800 text-lg leading-tight truncate">${refund.shopName}</p>
+                  <p class="text-sm font-medium text-slate-500 mt-1">ID: ${refund.vendorId?.slice(0, 15)}...</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Products Section -->
+            <div class="space-y-4">
+              <div class="flex items-center gap-2">
+                <span class="material-symbols-outlined text-slate-400 text-xl">shopping_bag</span>
+                <h3 class="text-xs font-black text-slate-400 uppercase tracking-[0.2em]">Sản phẩm yêu cầu hoàn tiền</h3>
+              </div>
+              ${itemsHtml}
+            </div>
+
+            <!-- Evidence Grid -->
+            <div class="grid grid-cols-2 gap-6">
+              <!-- Customer Evidence -->
+              <div class="bg-rose-50/30 p-6 rounded-[2.5rem] border border-rose-100/50 space-y-4">
+                <div class="flex items-center gap-2">
+                  <span class="material-symbols-outlined text-rose-400 text-xl">error</span>
+                  <h3 class="text-xs font-black text-rose-500 uppercase tracking-widest">Lý do khách hàng</h3>
+                </div>
+                <div class="p-4 bg-white/60 rounded-2xl border border-rose-100/50 shadow-sm italic text-slate-700 text-sm leading-relaxed">
+                  "${refund.reason || 'Không có mô tả chi tiết'}"
+                </div>
+                <div class="flex flex-wrap gap-3">
+                  ${renderImageGroup(refund.proofImages, 'Ảnh hư')}
+                </div>
+              </div>
+
+              <!-- Shop Response -->
+              <div class="bg-emerald-50/30 p-6 rounded-[2.5rem] border border-emerald-100/50 space-y-4">
+                <div class="flex items-center gap-2">
+                  <span class="material-symbols-outlined text-emerald-400 text-xl">check_circle</span>
+                  <h3 class="text-xs font-black text-emerald-600 uppercase tracking-widest">Phản hồi từ Shop</h3>
+                </div>
+                <div class="p-4 bg-white/60 rounded-2xl border border-emerald-100/50 shadow-sm italic text-slate-700 text-sm leading-relaxed">
+                  "${refund.vendorResponse || 'Shop chưa có phản hồi chi tiết'}"
+                </div>
+                <div class="flex flex-wrap gap-3">
+                  ${renderImageGroup(refund.vendorPreparationImages, 'Ảnh chuẩn bị')}
+                  ${renderImageGroup(refund.vendorDeliveryImages, 'Ảnh giao')}
+                </div>
+              </div>
             </div>
           </div>
 
-          ${refund.vendorResponse ? `
-            <div class="mt-4 pt-4 border-t border-gold/10">
-              <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Phản hồi từ Vendor</p>
-              <div class="p-4 bg-blue-50 text-blue-800 rounded-xl text-sm font-medium border border-blue-100">
-                "${refund.vendorResponse}"
-              </div>
-            </div>
-          ` : ''}
-          
-          ${itemsHtml}
-          ${imagesHtml}
+          <!-- Total Info Row (Inside Modal Body) -->
+          <div class="px-8 py-4 border-t border-slate-100 bg-slate-50/30 flex items-center justify-between">
+             <div class="flex items-center gap-2">
+                <span class="text-sm font-bold text-slate-500">Tổng tiền hoàn trả:</span>
+                <span class="text-xl font-black text-primary">${formatCurrency(refund.refundAmount)}</span>
+             </div>
+          </div>
         </div>
       `,
-      confirmButtonText: 'Đóng',
-      buttonsStyling: false,
+      preConfirm: () => {
+        // This is used for the "Chấp nhận" button
+        return 'approve';
+      }
+    }).then((result) => {
+      if (result.isConfirmed) {
+        handleApproveRefund(refund.refundId);
+      } else if (result.dismiss === Swal.DismissReason.cancel) {
+        handleRejectRefund(refund.refundId);
+      }
     });
   };
 

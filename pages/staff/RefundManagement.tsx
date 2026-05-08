@@ -87,6 +87,34 @@ const RefundManagement: React.FC<Props> = ({ onNavigate }) => {
     totalAmount: refunds.filter(r => r.status === 'Approved').reduce((s, r) => s + r.refundAmount, 0),
   };
 
+  const handleApproveRefund = async (id: string) => {
+    try {
+      setProcessing(true);
+      await refundService.approveRefund(id, 'Approved by staff');
+      setSuccessMsg('Đã chấp nhận hoàn tiền');
+      await fetchRefunds();
+      setSelected(null);
+    } catch (e: any) {
+      setActionError(e.message);
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  const handleRejectRefund = async (id: string) => {
+    try {
+      setProcessing(true);
+      await refundService.rejectRefund(id, 'Rejected by staff');
+      setSuccessMsg('Đã từ chối hoàn tiền');
+      await fetchRefunds();
+      setSelected(null);
+    } catch (e: any) {
+      setActionError(e.message);
+    } finally {
+      setProcessing(false);
+    }
+  };
+
   const handleSendReview = async () => {
     if (!selected) return;
     if (!actionNote.trim()) {
@@ -287,208 +315,155 @@ const RefundManagement: React.FC<Props> = ({ onNavigate }) => {
             className="bg-gray-50 w-full max-w-3xl my-8 rounded-[2rem] shadow-2xl overflow-hidden"
             onClick={e => e.stopPropagation()}
           >
-            {/* Modal Header */}
+            {/* Modal header */}
             <div className="bg-white px-8 py-6 flex items-center gap-4 border-b border-gray-100">
-              <button
-                onClick={() => setSelected(null)}
-                className="px-5 py-2.5 bg-white rounded-xl flex items-center justify-center shadow-sm border border-gray-200 hover:bg-gray-50 transition flex-shrink-0 font-bold text-xs uppercase tracking-widest text-gray-600"
-              >
-                Đóng
-              </button>
               <div className="flex-1">
-                <h2 className="text-2xl font-black text-gray-900">Chi tiết yêu cầu hoàn tiền</h2>
-                <p className="text-sm text-gray-500 mt-0.5">
-                  Đơn hàng #{selected.orderCode || selected.orderId.substring(0, 8).toUpperCase()}
-                  &nbsp;·&nbsp;Khách: {selected.customerName}
+                <div className="flex items-center gap-3">
+                   <h2 className="text-xl font-black text-gray-900">Chi tiết khiếu nại hoàn tiền</h2>
+                   <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${
+                     selected.status === 'Approved' ? 'bg-green-50 text-green-600 border-green-100' : 
+                     selected.status === 'Rejected' ? 'bg-red-50 text-red-600 border-red-100' :
+                     'bg-orange-50 text-orange-600 border-orange-100'
+                   }`}>
+                    {selected.status === 'Pending' ? 'ESCALATED' : getStatusCfg(selected.status).label}
+                  </span>
+                </div>
+                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">
+                  ID: {selected.refundId}
                 </p>
               </div>
-              <span className={`px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-wide border whitespace-nowrap ${getStatusCfg(selected.status).badge}`}>
-                {getStatusCfg(selected.status).icon} {getStatusCfg(selected.status).label}
-              </span>
+              <button
+                onClick={() => setSelected(null)}
+                className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm border border-gray-200 hover:bg-gray-50 transition flex-shrink-0"
+              >
+                <span className="material-symbols-outlined text-gray-400">close</span>
+              </button>
             </div>
-
-            <div className="p-6 grid grid-cols-1 md:grid-cols-3 gap-5">
-
-              {/* Left column */}
-              <div className="md:col-span-2 space-y-5">
-
-                {/* Customer info */}
-                <div className="bg-white p-6 rounded-[1.5rem] border border-gray-200 shadow-sm">
-                  <h3 className="text-sm font-bold uppercase tracking-widest text-gray-400 mb-4">Thông tin khách hàng</h3>
-                  <p className="font-bold text-xl text-primary">{selected.customerName}</p>
-                  <div className="flex flex-wrap gap-4 mt-2 text-sm text-gray-500">
-                    {selected.customerPhone && <span>📞 {selected.customerPhone}</span>}
-                    {selected.customerEmail && <span>✉️ {selected.customerEmail}</span>}
+            <div className="bg-white">
+              {/* Header Info Grid */}
+              <div className="p-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Customer Box */}
+                <div className="bg-slate-50/50 p-6 rounded-[2rem] border border-slate-100 flex gap-4 items-start">
+                  <div className="w-12 h-12 rounded-2xl bg-blue-100 flex items-center justify-center text-blue-600 flex-shrink-0">
+                    <span className="material-symbols-outlined text-2xl">person</span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[10px] font-black text-blue-500 uppercase tracking-widest mb-1">Khách hàng</p>
+                    <p className="font-bold text-slate-800 text-lg leading-tight truncate">{selected.customerName}</p>
+                    <p className="text-sm font-medium text-slate-500 mt-1">{selected.customerPhone || 'Không có SĐT'}</p>
                   </div>
                 </div>
 
-                {/* Reason */}
-                <div className="bg-white p-6 rounded-[1.5rem] border border-gray-200 shadow-sm">
-                  <h3 className="text-sm font-bold uppercase tracking-widest text-gray-400 mb-3">Lý do yêu cầu hoàn tiền</h3>
-                  <p className="text-gray-700 leading-relaxed">{selected.reason}</p>
-                </div>
-
-                {/* Vendor Response */}
-                {selected.vendorResponse && (
-                  <div className="bg-white p-6 rounded-[1.5rem] border border-gray-200 shadow-sm">
-                    <h3 className="text-sm font-bold uppercase tracking-widest text-gray-400 mb-3">Phản hồi từ Vendor</h3>
-                    <p className="text-blue-700 leading-relaxed italic">"{selected.vendorResponse}"</p>
+                {/* Shop Box */}
+                <div className="bg-purple-50/30 p-6 rounded-[2rem] border border-purple-100/50 flex gap-4 items-start">
+                  <div className="w-12 h-12 rounded-2xl bg-purple-100 flex items-center justify-center text-purple-600 flex-shrink-0">
+                    <span className="material-symbols-outlined text-2xl">storefront</span>
                   </div>
-                )}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[10px] font-black text-purple-500 uppercase tracking-widest mb-1">Cửa hàng</p>
+                    <p className="font-bold text-slate-800 text-lg leading-tight truncate">{selected.shopName}</p>
+                    <p className="text-sm font-medium text-slate-500 mt-1 truncate">ID: {selected.vendorId}</p>
+                  </div>
+                </div>
+              </div>
 
-                {/* Proof Images */}
-                {selected.proofImages.length > 0 && (
-                  <details className="group bg-white p-6 rounded-[1.5rem] border border-gray-200 shadow-sm" open>
-                    <summary className="flex items-center justify-between cursor-pointer list-none">
-                      <h3 className="text-sm font-bold uppercase tracking-widest text-gray-400">Hình ảnh bằng chứng (Khách hàng)</h3>
-                      <span className="material-symbols-outlined text-slate-300 group-open:rotate-180 transition-transform">expand_more</span>
-                    </summary>
-                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 mt-4">
-                      {selected.proofImages.map((url, idx) => (
-                        <button
-                          key={idx}
-                          onClick={() => setImageModal(url)}
-                          className="aspect-square rounded-2xl overflow-hidden border border-gray-200 hover:ring-2 hover:ring-primary transition group"
-                        >
-                          <img src={url} alt={`Proof ${idx + 1}`} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
-                        </button>
-                      ))}
-                    </div>
-                    <p className="text-xs text-gray-400 mt-3">Nhấn ảnh để xem phóng to</p>
-                  </details>
-                )}
-
-                {/* Vendor Preparation Images */}
-                {selected.vendorPreparationImages && selected.vendorPreparationImages.length > 0 && (
-                  <details className="group bg-white p-6 rounded-[1.5rem] border border-gray-200 shadow-sm">
-                    <summary className="flex items-center justify-between cursor-pointer list-none">
-                      <h3 className="text-sm font-bold uppercase tracking-widest text-gray-400">Hình ảnh chuẩn bị (Vendor)</h3>
-                      <span className="material-symbols-outlined text-slate-300 group-open:rotate-180 transition-transform">expand_more</span>
-                    </summary>
-                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 mt-4">
-                      {selected.vendorPreparationImages.map((url, idx) => (
-                        <button
-                          key={idx}
-                          onClick={() => setImageModal(url)}
-                          className="aspect-square rounded-2xl overflow-hidden border border-gray-200 hover:ring-2 hover:ring-primary transition group"
-                        >
-                          <img src={url} alt={`Prep ${idx + 1}`} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
-                        </button>
-                      ))}
-                    </div>
-                    <p className="text-xs text-gray-400 mt-3">Nhấn ảnh để xem phóng to</p>
-                  </details>
-                )}
-
-                {/* Vendor Delivery Images */}
-                {selected.vendorDeliveryImages && selected.vendorDeliveryImages.length > 0 && (
-                  <details className="group bg-white p-6 rounded-[1.5rem] border border-gray-200 shadow-sm">
-                    <summary className="flex items-center justify-between cursor-pointer list-none">
-                      <h3 className="text-sm font-bold uppercase tracking-widest text-gray-400">Hình ảnh giao hàng (Vendor)</h3>
-                      <span className="material-symbols-outlined text-slate-300 group-open:rotate-180 transition-transform">expand_more</span>
-                    </summary>
-                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 mt-4">
-                      {selected.vendorDeliveryImages.map((url, idx) => (
-                        <button
-                          key={idx}
-                          onClick={() => setImageModal(url)}
-                          className="aspect-square rounded-2xl overflow-hidden border border-gray-200 hover:ring-2 hover:ring-primary transition group"
-                        >
-                          <img src={url} alt={`Delivery ${idx + 1}`} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
-                        </button>
-                      ))}
-                    </div>
-                    <p className="text-xs text-gray-400 mt-3">Nhấn ảnh để xem phóng to</p>
-                  </details>
-                )}
-
-                {/* Items */}
-                {selected.items.length > 0 && (
-                  <div className="bg-white p-6 rounded-[1.5rem] border border-gray-200 shadow-sm">
-                    <h3 className="text-sm font-bold uppercase tracking-widest text-gray-400 mb-4 pb-3 border-b border-gray-100">
-                      Sản phẩm yêu cầu hoàn ({selected.items.length})
-                    </h3>
-                    <div className="space-y-4">
-                      {selected.items.map((item, idx) => (
-                        <div key={idx} className="flex items-center justify-between gap-3">
-                          <div className="flex-1 min-w-0">
-                            <p className="font-bold text-gray-800 text-sm truncate">{item.packageName}</p>
-                            <p className="text-xs text-gray-500 mt-0.5">{item.variantName} × {item.quantity}</p>
+              <div className="px-8 pb-8 space-y-8">
+                {/* Products Section */}
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2">
+                    <span className="material-symbols-outlined text-slate-400 text-xl">shopping_bag</span>
+                    <h3 className="text-xs font-black text-slate-400 uppercase tracking-[0.2em]">Sản phẩm yêu cầu hoàn tiền</h3>
+                  </div>
+                  <div className="space-y-3">
+                    {selected.items.map((item, i) => (
+                      <div key={i} className="bg-white p-4 rounded-2xl border border-slate-100 flex gap-4 items-center shadow-sm">
+                        <div className="w-16 h-16 rounded-xl overflow-hidden border border-slate-100 flex-shrink-0">
+                          <div className="w-full h-full bg-slate-50 flex items-center justify-center text-slate-300">
+                             <span className="material-symbols-outlined">image</span>
                           </div>
-                          {item.refundAmount > 0 && (
-                            <p className="font-bold text-primary text-sm flex-shrink-0">{formatVnd(item.refundAmount)}</p>
-                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-bold text-slate-800 truncate text-base">{item.packageName}</p>
+                          <p className="text-xs text-slate-400 font-medium">Phân loại: {item.variantName || 'Mặc định'}</p>
+                          <p className="text-lg font-black text-primary mt-0.5">{formatVnd(item.refundAmount)}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Evidence Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Customer Evidence */}
+                  <div className="bg-rose-50/30 p-6 rounded-[2.5rem] border border-rose-100/50 space-y-4">
+                    <div className="flex items-center gap-2">
+                      <span className="material-symbols-outlined text-rose-400 text-xl">error</span>
+                      <h3 className="text-xs font-black text-rose-500 uppercase tracking-widest">Lý do khách hàng</h3>
+                    </div>
+                    <div className="p-4 bg-white/60 rounded-2xl border border-rose-100/50 shadow-sm italic text-slate-700 text-sm leading-relaxed">
+                      "{selected.reason || 'Không có mô tả chi tiết'}"
+                    </div>
+                    <div className="flex flex-wrap gap-3">
+                      {selected.proofImages.map((url, idx) => (
+                        <div key={idx} className="relative group/img">
+                          <button onClick={() => setImageModal(url)} className="block w-16 h-16 rounded-xl overflow-hidden border border-slate-200 shadow-sm hover:border-primary transition-all">
+                            <img src={url} className="w-full h-full object-cover" />
+                          </button>
+                          <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 bg-white/90 px-1.5 py-0.5 rounded text-[8px] font-black text-slate-500 shadow-sm border border-slate-100 whitespace-nowrap">Ảnh hư</span>
                         </div>
                       ))}
                     </div>
                   </div>
-                )}
 
-                {/* Admin note (if already processed) */}
-                {selected.adminNote && (
-                  <div className={`p-5 rounded-[1.5rem] border ${selected.status === 'Approved' ? 'bg-green-50 border-green-100' : 'bg-red-50 border-red-100'}`}>
-                    <h4 className={`text-xs font-bold uppercase tracking-widest mb-2 ${selected.status === 'Approved' ? 'text-green-500' : 'text-red-400'}`}>
-                      Ghi chú của bộ phận xử lý
-                    </h4>
-                    <p className="text-sm text-gray-700">{selected.adminNote}</p>
-                    {selected.processedAt && (
-                      <p className="text-xs text-gray-400 mt-2">Xử lý lúc: {formatDateVi(selected.processedAt)}</p>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              {/* Right sidebar */}
-              <div className="space-y-5">
-
-                {/* Summary */}
-                <div className="bg-white p-6 rounded-[1.5rem] border border-gray-200 shadow-sm">
-                  <h3 className="text-sm font-bold uppercase tracking-widest text-gray-400 mb-4 pb-3 border-b border-gray-100">Tóm tắt</h3>
-                  <div className="space-y-3 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-gray-500">Ngày gửi</span>
-                      <span className="font-medium text-right">{formatDateVi(selected.createdAt)}</span>
+                  {/* Shop Response */}
+                  <div className="bg-emerald-50/30 p-6 rounded-[2.5rem] border border-emerald-100/50 space-y-4">
+                    <div className="flex items-center gap-2">
+                      <span className="material-symbols-outlined text-emerald-400 text-xl">check_circle</span>
+                      <h3 className="text-xs font-black text-emerald-600 uppercase tracking-widest">Phản hồi từ Shop</h3>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-500">Số sản phẩm</span>
-                      <span className="font-medium">{selected.items.length || 'N/A'}</span>
+                    <div className="p-4 bg-white/60 rounded-2xl border border-emerald-100/50 shadow-sm italic text-slate-700 text-sm leading-relaxed">
+                      "{selected.vendorResponse || 'Shop chưa có phản hồi chi tiết'}"
                     </div>
-                    {selected.refundAmount > 0 && (
-                      <div className="flex justify-between pt-3 border-t border-dashed border-gray-200">
-                        <span className="font-bold text-gray-700">Tổng hoàn tiền</span>
-                        <span className="text-xl font-black text-primary">{formatVnd(selected.refundAmount)}</span>
-                      </div>
-                    )}
+                    <div className="flex flex-wrap gap-3">
+                      {selected.vendorPreparationImages?.map((url, idx) => (
+                        <div key={idx} className="relative group/img">
+                          <button onClick={() => setImageModal(url)} className="block w-16 h-16 rounded-xl overflow-hidden border border-slate-200 shadow-sm hover:border-primary transition-all">
+                            <img src={url} className="w-full h-full object-cover" />
+                          </button>
+                          <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 bg-white/90 px-1.5 py-0.5 rounded text-[8px] font-black text-slate-500 shadow-sm border border-slate-100 whitespace-nowrap">Ảnh chuẩn bị</span>
+                        </div>
+                      ))}
+                      {selected.vendorDeliveryImages?.map((url, idx) => (
+                        <div key={idx} className="relative group/img">
+                          <button onClick={() => setImageModal(url)} className="block w-16 h-16 rounded-xl overflow-hidden border border-slate-200 shadow-sm hover:border-primary transition-all">
+                            <img src={url} className="w-full h-full object-cover" />
+                          </button>
+                          <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 bg-white/90 px-1.5 py-0.5 rounded text-[8px] font-black text-slate-500 shadow-sm border border-slate-100 whitespace-nowrap">Ảnh giao</span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
 
-                {/* Action panel – only for Pending */}
+                {/* Action panel */}
                 {selected.status === 'Pending' && (
-                  <div className="bg-white p-6 rounded-[1.5rem] border border-gray-200 shadow-sm">
-                    <h3 className="text-sm font-bold uppercase tracking-widest text-gray-400 mb-4">Ghi chú cho admin</h3>
-                    <div className="space-y-3">
-                      <textarea
-                        value={actionNote}
-                        onChange={e => { setActionNote(e.target.value); setActionError(null); }}
-                        placeholder="Nhập ghi chú đánh giá của staff..."
-                        rows={4}
-                        className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary resize-none"
-                      />
-                      {actionError && <p className="text-xs text-red-500 font-medium">{actionError}</p>}
-                      <button
-                        onClick={handleSendReview}
-                        disabled={processing}
-                        className="w-full py-2.5 text-white rounded-xl text-sm font-bold transition disabled:opacity-50 bg-primary hover:bg-primary/90"
-                      >
-                        {processing ? 'Đang gửi...' : 'Gửi cho admin'}
-                      </button>
+                  <div className="bg-slate-50 p-8 border-t border-slate-100 flex items-center justify-between -mx-8 -mb-8 mt-8">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-bold text-slate-500">Tổng tiền hoàn trả:</span>
+                      <span className="text-2xl font-black text-primary">{formatVnd(selected.refundAmount)}</span>
                     </div>
-
-                    {successMsg && (
-                      <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-xl text-sm text-green-700 font-medium">
-                        {successMsg}
-                      </div>
-                    )}
+                    <div className="flex gap-3">
+                      <button
+                        onClick={() => handleRejectRefund(selected.refundId)}
+                        disabled={processing}
+                        className="px-8 py-3 bg-slate-100 text-slate-600 font-bold rounded-2xl hover:bg-slate-200 transition active:scale-95 text-sm"
+                      > Từ chối</button>
+                      <button
+                        onClick={() => handleApproveRefund(selected.refundId)}
+                        disabled={processing}
+                        className="px-8 py-3 bg-blue-600 text-white font-bold rounded-2xl hover:bg-blue-700 transition shadow-lg shadow-blue-200 active:scale-95 text-sm"
+                      > Chấp nhận hoàn tiền</button>
+                    </div>
                   </div>
                 )}
               </div>
@@ -507,9 +482,7 @@ const RefundManagement: React.FC<Props> = ({ onNavigate }) => {
             className="absolute top-6 right-6 w-10 h-10 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center text-white transition"
             onClick={() => setImageModal(null)}
           >
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-            </svg>
+            <span className="material-symbols-outlined">close</span>
           </button>
           <img
             src={imageModal}
