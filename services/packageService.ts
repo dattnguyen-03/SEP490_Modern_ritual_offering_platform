@@ -105,6 +105,9 @@ class PackageService {
         variantName: string;
         description: string;
         price: number;
+        productionWeight?: number;
+        minOrderQuantity?: number;
+        maxOrderQuantity?: number;
         imageUrl?: string;
         variantImageUrls?: string[];
         primaryVariantImageIndex?: number;
@@ -159,6 +162,9 @@ class PackageService {
             variantName: variant.variantName,
             description: variant.description,
             price: variant.price,
+            productionWeight: variant.productionWeight,
+            minOrderQuantity: variant.minOrderQuantity,
+            maxOrderQuantity: variant.maxOrderQuantity,
             swaps: Array.isArray(variant.swaps) ? variant.swaps : [],
             ...(primaryImageUrl ? { imageUrl: primaryImageUrl } : {}),
             ...(primaryImageUrl ? { ImageUrl: primaryImageUrl } : {}),
@@ -170,6 +176,9 @@ class PackageService {
           variantName: variant.variantName,
           description: variant.description,
           price: variant.price,
+          productionWeight: variant.productionWeight,
+          minOrderQuantity: variant.minOrderQuantity,
+          maxOrderQuantity: variant.maxOrderQuantity,
           variantImageUrls: cleanedVariantImages,
           primaryVariantImageIndex: safePrimaryIndex,
           swaps: Array.isArray(variant.swaps) ? variant.swaps : [],
