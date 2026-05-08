@@ -443,7 +443,16 @@ class OrderService {
                         ? raw.items.map((item: any) => {
                             const quantity = Number(item.quantity) || 0;
                             const unitPrice = Number(item.unitPrice ?? item.price) || 0;
-                            const lineTotal = Number(item.lineTotal) || (unitPrice * quantity) || 0;
+                            
+                            const addOnsTotal = Array.isArray(item.addOns) 
+                                ? item.addOns.reduce((sum: number, ao: any) => sum + (Number(ao.lineTotal) || (Number(ao.retailPrice) * Number(ao.quantity)) || 0), 0)
+                                : 0;
+                            const swapsSurcharge = Array.isArray(item.swaps)
+                                ? item.swaps.reduce((sum: number, sw: any) => sum + (Number(sw.surcharge) || 0), 0)
+                                : 0;
+                            
+                            const calculatedLineTotal = (unitPrice * quantity) + addOnsTotal + swapsSurcharge;
+                            const lineTotal = Number(item.lineTotal) > 0 ? Number(item.lineTotal) : calculatedLineTotal;
                             return {
                                 itemId: item.itemId || item.orderItemId || item.id || `item-${Math.random().toString(36).slice(2, 10)}`,
                                 variantId: item.variantId ?? '',
@@ -474,6 +483,14 @@ class OrderService {
                                     item.productImageURL ||
                                     null,
                                 isRequestRefund: !!item.isRequestRefund,
+                                addOns: Array.isArray(item.addOns) ? item.addOns.map((ao: any) => ({
+                                    ...ao,
+                                    addOnName: ao.addOnName || ao.itemName
+                                })) : [],
+                                swaps: Array.isArray(item.swaps) ? item.swaps.map((sw: any) => ({
+                                    ...sw,
+                                    orderItemSwapId: sw.orderItemSwapId || sw.id
+                                })) : [],
                             };
                         })
                         : [];
@@ -508,11 +525,11 @@ class OrderService {
                             deliveryAddress: raw.deliveryAddress || 'N/A',
                             shippingDistanceKm: Number(raw.shippingDistanceKm) || 0,
                         },
-                        pricing: raw.pricing || {
-                            subTotal: raw.subTotal || 0,
-                            shippingFee: raw.shippingFee || 0,
-                            totalAmount: raw.totalAmount || raw.finalAmount || 0,
-                            finalAmount: raw.finalAmount || raw.totalAmount || 0,
+                        pricing: {
+                            subTotal: Number(raw.pricing?.subTotal || raw.subTotal) || items.reduce((sum, item) => sum + item.lineTotal, 0),
+                            shippingFee: Number(raw.pricing?.shippingFee || raw.shippingFee) || 0,
+                            totalAmount: Number(raw.pricing?.totalAmount || raw.pricing?.finalAmount || raw.totalAmount || raw.finalAmount) || 0,
+                            finalAmount: Number(raw.pricing?.finalAmount || raw.pricing?.totalAmount || raw.finalAmount || raw.totalAmount) || 0,
                         },
                         createdAt: raw.createdAt || new Date().toISOString(),
                     } as Order;

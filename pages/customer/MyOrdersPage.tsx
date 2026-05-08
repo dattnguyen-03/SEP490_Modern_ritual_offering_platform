@@ -483,19 +483,29 @@ const MyOrdersPage: React.FC = () => {
                                                         />
                                                     </div>
                                                     <div className="flex-1 min-w-0">
-                                                        <h5
-                                                            className="font-bold text-gray-900 dark:text-zinc-100 text-sm md:text-base cursor-pointer hover:text-primary transition-colors truncate"
-                                                            onClick={() => (item as any).packageId && navigate(`/product/${(item as any).packageId}`)}
-                                                        >
-                                                            {item.packageName}
-                                                        </h5>
-                                                        <div className="flex items-center gap-2 mt-1">
-                                                            <p className="text-[10px] md:text-xs text-black dark:text-zinc-500 font-medium">Gói {item.variantName}</p>
-                                                            <span className="size-1 bg-gray-300 dark:bg-zinc-700 rounded-full"></span>
-                                                            <p className="text-xs font-bold text-gray-700 dark:text-zinc-300">x{item.quantity}</p>
+                                                        <div className="flex flex-col md:flex-row md:items-start justify-between gap-2 mb-2">
+                                                            <div>
+                                                                <h5
+                                                                    className="font-black text-gray-900 dark:text-zinc-100 text-sm md:text-base cursor-pointer hover:text-primary transition-colors leading-tight"
+                                                                    onClick={() => (item as any).packageId && navigate(`/product/${(item as any).packageId}`)}
+                                                                >
+                                                                    {item.packageName}
+                                                                </h5>
+                                                                <div className="flex items-center gap-2 mt-1">
+                                                                    <p className="text-[10px] md:text-xs text-black dark:text-zinc-500 font-medium">Gói {item.variantName}</p>
+                                                                    <span className="size-1 bg-gray-300 dark:bg-zinc-700 rounded-full"></span>
+                                                                    <p className="text-xs font-bold text-gray-700 dark:text-zinc-300">x{item.quantity}</p>
+                                                                </div>
+                                                            </div>
+                                                            <div className="shrink-0">
+                                                                <span className="text-[10px] font-black text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-500/10 px-3 py-1.5 rounded-xl border border-blue-100/50 dark:border-blue-500/20 whitespace-nowrap shadow-sm">
+                                                                    +{(item.price || 0).toLocaleString('vi-VN')}₫
+                                                                </span>
+                                                            </div>
                                                         </div>
+
                                                         {item.isRequestRefund && (
-                                                            <div className="mt-1 flex">
+                                                            <div className="mb-2 flex">
                                                                 <span className="px-2 py-0.5 bg-orange-50 dark:bg-orange-500/10 text-orange-600 dark:text-orange-400 rounded-md text-[9px] font-black uppercase tracking-widest border border-orange-100 dark:border-orange-500/20 flex items-center gap-1">
                                                                     <svg className="w-2 h-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
                                                                         <path strokeLinecap="round" strokeLinejoin="round" d="M16 15v-1a4 4 0 00-4-4H8m0 0l3 3m-3-3l3-3m9 14V5a2 2 0 00-2-2H6a2 2 0 00-2 2v16l4-2 4 2 4-2 4 2z" />
@@ -504,11 +514,46 @@ const MyOrdersPage: React.FC = () => {
                                                                 </span>
                                                             </div>
                                                         )}
-                                                    </div>
-                                                    <div className="text-right">
-                                                        <p className="font-black text-primary dark:text-white text-sm md:text-lg">
-                                                            {(item.lineTotal || (item.price || (item as any).unitPrice || 0) * item.quantity).toLocaleString('vi-VN')}₫
-                                                        </p>
+
+                                                        {item.decorationNote && (
+                                                            <div className="mb-3 bg-slate-50 dark:bg-white/5 p-2 rounded-xl border border-slate-100 dark:border-white/5">
+                                                                <p className="text-[10px] text-gray-500 dark:text-zinc-400 italic">"Ghi chú: {item.decorationNote}"</p>
+                                                            </div>
+                                                        )}
+
+                                                        {/* Customizations */}
+                                                        <div className="space-y-2 mb-4">
+                                                            {item.swaps && item.swaps.length > 0 && item.swaps.map((sw: any, i: number) => (
+                                                                <div key={i} className="flex justify-between items-center bg-amber-50/40 dark:bg-amber-500/5 p-2 rounded-xl border border-amber-100/30 dark:border-amber-500/10">
+                                                                    <div className="flex items-center gap-2 text-[10px] font-bold text-amber-800 dark:text-amber-400 uppercase tracking-tighter">
+                                                                        <span className="material-symbols-outlined text-[14px]">swap_horiz</span>
+                                                                        <span className="truncate max-w-[150px] md:max-w-xs">{sw.replacementItemName || sw.replacementDescription}</span>
+                                                                    </div>
+                                                                    <span className="text-[10px] font-black text-amber-600 bg-white dark:bg-zinc-800 px-2 py-0.5 rounded-lg shadow-sm border border-amber-100/50">
+                                                                        +{((sw as any).surcharge || 0).toLocaleString('vi-VN')}₫
+                                                                    </span>
+                                                                </div>
+                                                            ))}
+
+                                                            {item.addOns && item.addOns.length > 0 && item.addOns.map((ad: any, i: number) => (
+                                                                <div key={i} className="flex justify-between items-center bg-emerald-50/40 dark:bg-emerald-500/5 p-2 rounded-xl border border-emerald-100/30 dark:border-emerald-500/10">
+                                                                    <div className="flex items-center gap-2 text-[10px] font-bold text-emerald-800 dark:text-emerald-400 uppercase tracking-tighter">
+                                                                        <span className="material-symbols-outlined text-[14px]">add_circle</span>
+                                                                        <span className="truncate max-w-[150px] md:max-w-xs">{ad.addOnName} x{ad.quantity}</span>
+                                                                    </div>
+                                                                    <span className="text-[10px] font-black text-emerald-600 bg-white dark:bg-zinc-800 px-2 py-0.5 rounded-lg shadow-sm border border-emerald-100/50">
+                                                                        +{(ad.lineTotal || (ad.retailPrice * ad.quantity)).toLocaleString('vi-VN')}₫
+                                                                    </span>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+
+                                                        <div className="flex justify-between items-center pt-3 border-t border-dashed border-gray-100 dark:border-white/5">
+                                                            <span className="text-[10px] font-black text-black dark:text-zinc-500 uppercase tracking-widest">TỔNG MÓN NÀY:</span>
+                                                            <span className="text-lg font-black text-primary dark:text-white tracking-tight">
+                                                                {(item.lineTotal || 0).toLocaleString('vi-VN')}₫
+                                                            </span>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             ))}
@@ -516,16 +561,13 @@ const MyOrdersPage: React.FC = () => {
                                     </div>
 
                                     <div className="p-5 md:p-8 pt-0 flex flex-col md:flex-row items-center justify-between gap-6 border-t border-gray-50 dark:border-zinc-800 mt-2 bg-white dark:bg-zinc-900">
-                                        <div className="flex flex-col items-center md:items-start w-full md:w-auto">
-                                            <div className="flex items-center gap-2">
-                                                <span className="text-xs font-bold text-black dark:text-zinc-500 uppercase tracking-widest">Tổng cộng</span>
-                                                <span className="text-xl md:text-2xl font-black text-slate-900 dark:text-white">
+                                        <div className="flex flex-col w-full md:w-auto">
+                                            <div className="flex items-center gap-3 pt-3 border-t border-slate-100 dark:border-zinc-800">
+                                                <span className="text-xs font-black text-black dark:text-zinc-500 uppercase tracking-[0.3em]">TỔNG CỘNG</span>
+                                                <span className="text-2xl md:text-4xl font-black text-slate-900 dark:text-white tracking-tighter">
                                                     {(order.pricing?.totalAmount || order.pricing?.finalAmount || 0).toLocaleString('vi-VN')}₫
                                                 </span>
                                             </div>
-                                            <p className="text-[10px] font-bold text-black dark:text-zinc-500 uppercase tracking-tighter mt-1">
-                                                (Đã bao gồm phí vận chuyển)
-                                            </p>
                                         </div>
                                         <div className="flex gap-3 w-full md:w-auto">
                                             {['PENDING', 'PAID'].includes(order.orderStatus.toUpperCase()) && (
