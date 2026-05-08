@@ -628,7 +628,7 @@ export interface UpdateVendorProfileRequest {
   dailyCapacity?: number;
   dailyCapacityWeight?: number;
   taxCode?: string;
-  businessType?: 'Individual' | 'Company' | string;
+  businessType?: 'Individual' | 'HouseholdBusiness' | 'Enterprises' | string;
   shopAvatarFile?: File | null;
 }
 
@@ -673,7 +673,7 @@ export interface RegisterVendorRequest {
   shopAddressText: string;
   shopLatitude: number;
   shopLongitude: number;
-  dailyCapacity: number;
+  dailyCapacityWeight: number;
   documents: VendorDocumentRequest[];
 }
 
@@ -886,12 +886,12 @@ export async function registerVendor(registerData: RegisterVendorRequest): Promi
     formData.append('ShopAddressText', registerData.shopAddressText);
     formData.append('ShopLatitude', registerData.shopLatitude.toString());
     formData.append('ShopLongitude', registerData.shopLongitude.toString());
-    formData.append('DailyCapacity', registerData.dailyCapacity.toString());
+    formData.append('DailyCapacityWeight', registerData.dailyCapacityWeight.toString());
 
     registerData.documents.forEach((doc, index) => {
-      // Using indexed syntax with LOWERCASE properties as shown in Swagger JSON
-      formData.append(`Documents[${index}].documentType`, doc.documentType.toString());
-      formData.append(`Documents[${index}].file`, doc.file);
+      // Using indexed syntax with UPPERCASE properties as shown in the updated API spec
+      formData.append(`Documents[${index}].DocumentType`, doc.documentType.toString());
+      formData.append(`Documents[${index}].File`, doc.file);
     });
 
     // Log FormData keys and total size for debugging
@@ -1014,12 +1014,12 @@ export async function resubmitVendorRegistration(registerData: Partial<RegisterV
     if (registerData.shopAddressText) formData.append('ShopAddressText', registerData.shopAddressText);
     if (registerData.shopLatitude !== undefined) formData.append('ShopLatitude', registerData.shopLatitude.toString());
     if (registerData.shopLongitude !== undefined) formData.append('ShopLongitude', registerData.shopLongitude.toString());
-    if (registerData.dailyCapacity !== undefined) formData.append('DailyCapacity', registerData.dailyCapacity.toString());
+    if (registerData.dailyCapacityWeight !== undefined) formData.append('DailyCapacityWeight', registerData.dailyCapacityWeight.toString());
 
     if (registerData.documents && registerData.documents.length > 0) {
       registerData.documents.forEach((doc, index) => {
-        formData.append(`UpdatedDocuments[${index}].documentType`, doc.documentType.toString());
-        formData.append(`UpdatedDocuments[${index}].file`, doc.file);
+        formData.append(`UpdatedDocuments[${index}].DocumentType`, doc.documentType.toString());
+        formData.append(`UpdatedDocuments[${index}].File`, doc.file);
       });
     }
 

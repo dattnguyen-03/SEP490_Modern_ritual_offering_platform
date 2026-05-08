@@ -156,13 +156,15 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigate }) => {
     shopAddressText: '',
     shopLatitude: 0,
     shopLongitude: 0,
-    dailyCapacity: 5,
+    dailyCapacityWeight: 5,
     documents: [
       { documentType: 1, file: null as File | null, label: 'CMND/CCCD mặt trước', mandatory: true },
       { documentType: 2, file: null as File | null, label: 'CMND/CCCD mặt sau', mandatory: true },
       { documentType: 3, file: null as File | null, label: 'Ảnh selfie cầm CMND/CCCD', mandatory: true },
       { documentType: 4, file: null as File | null, label: 'Giấy chứng nhận đăng ký thuế', mandatory: false },
       { documentType: 5, file: null as File | null, label: 'Giấy phép kinh doanh', mandatory: false },
+      { documentType: 6, file: null as File | null, label: 'Sao kê ngân hàng', mandatory: false },
+      { documentType: 99, file: null as File | null, label: 'Giấy tờ khác', mandatory: false },
     ]
   });
   const [registering, setRegistering] = useState(false);
@@ -760,7 +762,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigate }) => {
 
     setRegisterForm(prev => ({
       ...prev,
-      [name]: (name === 'shopLatitude' || name === 'shopLongitude' || name === 'dailyCapacity') ? Number(value) : value
+      [name]: (name === 'shopLatitude' || name === 'shopLongitude' || name === 'dailyCapacityWeight') ? Number(value) : value
     }));
   };
 
@@ -1106,10 +1108,13 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigate }) => {
   const handleRegisterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Check mandatory documents
-    const missingDocs = registerForm.documents.filter(doc => doc.mandatory && !doc.file);
+    // Validate mandatory documents (1, 2, 3)
+    const missingDocs = registerForm.documents
+      .filter(doc => doc.mandatory && !doc.file)
+      .map(doc => doc.label);
+
     if (missingDocs.length > 0) {
-      toast.error(`Vui lòng tải lên các tài liệu bắt buộc: ${missingDocs.map(d => d.label).join(', ')}`);
+      toast.error(`Vui lòng tải lên các giấy tờ bắt buộc: ${missingDocs.join(', ')}`);
       return;
     }
 
@@ -1191,7 +1196,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigate }) => {
         shopAddressText: registerForm.shopAddressText,
         shopLatitude: currentLat,
         shopLongitude: currentLng,
-        dailyCapacity: registerForm.dailyCapacity,
+        dailyCapacityWeight: registerForm.dailyCapacityWeight,
         documents: compressedDocs
       };
 
@@ -1260,7 +1265,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigate }) => {
         shopAddressText: registerForm.shopAddressText,
         shopLatitude: currentLat,
         shopLongitude: currentLng,
-        dailyCapacity: registerForm.dailyCapacity,
+        dailyCapacityWeight: registerForm.dailyCapacityWeight,
       };
 
       // Only add avatar if it's a new file
@@ -1321,13 +1326,15 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigate }) => {
       shopAddressText: vendorRegistration.shopAddressText,
       shopLatitude: vendorRegistration.shopLatitude,
       shopLongitude: vendorRegistration.shopLongitude,
-      dailyCapacity: vendorRegistration.dailyCapacity,
+      dailyCapacityWeight: vendorRegistration.dailyCapacityWeight || (vendorRegistration as any).dailyCapacity || 5,
       documents: [
-        { documentType: 1, file: null as File | null, label: 'CMND/CCCD mặt trước', mandatory: false }, // Mandatory is false because we already have the old one
+        { documentType: 1, file: null as File | null, label: 'CMND/CCCD mặt trước', mandatory: false },
         { documentType: 2, file: null as File | null, label: 'CMND/CCCD mặt sau', mandatory: false },
         { documentType: 3, file: null as File | null, label: 'Ảnh selfie cầm CMND/CCCD', mandatory: false },
         { documentType: 4, file: null as File | null, label: 'Giấy chứng nhận đăng ký thuế', mandatory: false },
         { documentType: 5, file: null as File | null, label: 'Giấy phép kinh doanh', mandatory: false },
+        { documentType: 6, file: null as File | null, label: 'Sao kê ngân hàng', mandatory: false },
+        { documentType: 99, file: null as File | null, label: 'Giấy tờ khác', mandatory: false },
       ]
     });
 
@@ -2300,11 +2307,11 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigate }) => {
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-xs font-bold uppercase text-black tracking-widest">Đơn Hàng tối đa/1 ngày *</label>
+                    <label className="text-xs font-bold uppercase text-black tracking-widest">Điểm năng lực/ngày (DailyCapacityWeight)</label>
                     <input
                       type="number"
-                      name="dailyCapacity"
-                      value={registerForm.dailyCapacity}
+                      name="dailyCapacityWeight"
+                      value={registerForm.dailyCapacityWeight}
                       onChange={handleRegisterInputChange}
                       required
                       min={1}
@@ -2427,7 +2434,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigate }) => {
                 <h4 className="text-sm font-bold text-slate-900 uppercase tracking-wider">Giấy tờ xác thực</h4>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {registerForm.documents.map((doc, index) => (
                   <div key={doc.documentType} className="flex flex-col">
                     <label className="text-xs font-bold uppercase text-black tracking-tight mb-3">
