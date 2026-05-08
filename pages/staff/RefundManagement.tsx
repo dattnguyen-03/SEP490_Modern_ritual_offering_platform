@@ -54,7 +54,7 @@ const RefundManagement: React.FC<Props> = ({ onNavigate }) => {
     try {
       setLoading(true);
       setError(null);
-      const data = await refundService.getAllRefunds();
+      const data = await refundService.getAllRefunds('Staff', 1, 100);
       setRefunds(data);
     } catch {
       setError('Không thể tải danh sách yêu cầu hoàn tiền. Vui lòng thử lại.');
@@ -133,7 +133,7 @@ const RefundManagement: React.FC<Props> = ({ onNavigate }) => {
         setSuccessMsg('Đã gửi ghi chú cho admin.');
         setActionNote('');
         await fetchRefunds();
-        const updated = await refundService.getRefundById(selected.refundId).catch(() => null);
+        const updated = await refundService.getRefundById(selected.refundId, 'Staff').catch(() => null);
         if (updated) setSelected(updated);
       } else {
         setActionError('Gửi ghi chú thất bại. Vui lòng thử lại.');

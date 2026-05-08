@@ -260,9 +260,10 @@ class RefundService {
      * Lấy tất cả yêu cầu hoàn tiền (staff/admin)
      * GET /api/refunds
      */
-    async getAllRefunds(): Promise<RefundRecord[]> {
+    async getAllRefunds(activeRole: string = 'Staff', pageNumber: number = 1, pageSize: number = 100): Promise<RefundRecord[]> {
         try {
-            const response = await fetchWithAuth(`${API_BASE_URL}/refunds`, {
+            const url = `${API_BASE_URL}/refunds?ActiveRole=${activeRole}&PageNumber=${pageNumber}&PageSize=${pageSize}`;
+            const response = await fetchWithAuth(url, {
                 method: 'GET',
                 headers: this.getJsonHeaders(),
             });
@@ -302,9 +303,10 @@ class RefundService {
      * Lấy chi tiết yêu cầu hoàn tiền
      * GET /api/refunds/:id
      */
-    async getRefundById(refundId: string): Promise<RefundRecord | null> {
+    async getRefundById(refundId: string, activeRole: string = 'Staff'): Promise<RefundRecord | null> {
         try {
-            const response = await fetchWithAuth(`${API_BASE_URL}/refunds/${refundId}`, {
+            const url = `${API_BASE_URL}/refunds/${refundId}?ActiveRole=${activeRole}`;
+            const response = await fetchWithAuth(url, {
                 method: 'GET',
                 headers: this.getJsonHeaders(),
             });
@@ -332,10 +334,10 @@ class RefundService {
      * Customer tra refund theo orderId
      * GET /api/refunds (filter client-side)
      */
-    async getRefundByOrderId(orderId: string): Promise<RefundRecord | null> {
+    async getRefundByOrderId(orderId: string, activeRole: string = 'Staff'): Promise<RefundRecord | null> {
         if (!orderId) return null;
         try {
-            const list = await this.getAllRefunds();
+            const list = await this.getAllRefunds(activeRole);
             const matches = list.filter(item => item.orderId === orderId);
             if (matches.length === 0) return null;
             return matches.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0];

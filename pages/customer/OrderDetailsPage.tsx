@@ -81,7 +81,7 @@ const OrderDetailsPage: React.FC = () => {
         try {
             const urlRefundId = searchParams.get('refundId');
             if (urlRefundId) {
-                const data = await refundService.getRefundById(urlRefundId);
+                const data = await refundService.getRefundById(urlRefundId, 'Customer');
                 if (data) {
                     if (isCancelledRefund(data)) { setRefundInfo(null); return; }
                     setRefundInfo(data);
@@ -93,7 +93,7 @@ const OrderDetailsPage: React.FC = () => {
             const refundId = localStorage.getItem(`refundId:${orderId}`);
             if (refundId) {
                 if (localStorage.getItem(`refundCancelled:${refundId}`)) { setRefundInfo(null); return; }
-                const data = await refundService.getRefundById(refundId);
+                const data = await refundService.getRefundById(refundId, 'Customer');
                 if (data) {
                     if (isCancelledRefund(data)) { setRefundInfo(null); return; }
                     setRefundInfo(data);
@@ -102,7 +102,7 @@ const OrderDetailsPage: React.FC = () => {
                 }
             }
 
-            const fallback = await refundService.getRefundByOrderId(orderId);
+            const fallback = await refundService.getRefundByOrderId(orderId, 'Customer');
             if (fallback?.refundId) {
                 if (isCancelledRefund(fallback)) { setRefundInfo(null); return; }
                 localStorage.setItem(`refundId:${orderId}`, fallback.refundId);

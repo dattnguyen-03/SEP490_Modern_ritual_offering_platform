@@ -85,7 +85,7 @@ const VendorRefundTab: React.FC<Props> = ({ onPendingCount }) => {
   const fetch = useCallback(async () => {
     try {
       setLoading(true);
-      const data = await refundService.getAllRefunds();
+      const data = await refundService.getAllRefunds('Vendor', 1, 100);
       setRefunds(data);
       onPendingCount?.(data.filter(r => r.status === 'Pending').length);
     } catch {
@@ -140,7 +140,7 @@ const VendorRefundTab: React.FC<Props> = ({ onPendingCount }) => {
         setNote('');
         setAction(null);
         await fetch();
-        const updated = await refundService.getRefundById(selected.refundId).catch(() => null);
+        const updated = await refundService.getRefundById(selected.refundId, 'Vendor').catch(() => null);
         if (updated) setSelected(updated);
       } else {
         setActionError('Thao tác thất bại. Vui lòng thử lại.');

@@ -39,7 +39,7 @@ const MyOrdersPage: React.FC = () => {
 
     const fetchRefunds = async (profileId: string) => {
         try {
-            const data = await refundService.getAllRefunds();
+            const data = await refundService.getAllRefunds('Customer', 1, 100);
             // CHỈ lấy những refund thuộc về chính khách hàng này (Bảo mật)
             const myRefunds = profileId
                 ? (data || []).filter(r => r.customerId === profileId)

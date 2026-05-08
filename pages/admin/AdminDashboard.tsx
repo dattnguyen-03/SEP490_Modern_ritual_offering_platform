@@ -108,7 +108,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) => {
     setRefundsError(null);
 
     try {
-      const data = await refundService.getAllRefunds();
+      const data = await refundService.getAllRefunds('Admin', 1, 100);
       setRefundRequests(data);
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Không thể tải danh sách hoàn tiền.';
