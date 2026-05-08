@@ -330,9 +330,12 @@ const RefundManagement: React.FC<Props> = ({ onNavigate }) => {
 
                 {/* Proof Images */}
                 {selected.proofImages.length > 0 && (
-                  <div className="bg-white p-6 rounded-[1.5rem] border border-gray-200 shadow-sm">
-                    <h3 className="text-sm font-bold uppercase tracking-widest text-gray-400 mb-4">Hình ảnh bằng chứng</h3>
-                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
+                  <details className="group bg-white p-6 rounded-[1.5rem] border border-gray-200 shadow-sm" open>
+                    <summary className="flex items-center justify-between cursor-pointer list-none">
+                      <h3 className="text-sm font-bold uppercase tracking-widest text-gray-400">Hình ảnh bằng chứng (Khách hàng)</h3>
+                      <span className="material-symbols-outlined text-slate-300 group-open:rotate-180 transition-transform">expand_more</span>
+                    </summary>
+                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 mt-4">
                       {selected.proofImages.map((url, idx) => (
                         <button
                           key={idx}
@@ -344,7 +347,51 @@ const RefundManagement: React.FC<Props> = ({ onNavigate }) => {
                       ))}
                     </div>
                     <p className="text-xs text-gray-400 mt-3">Nhấn ảnh để xem phóng to</p>
-                  </div>
+                  </details>
+                )}
+
+                {/* Vendor Preparation Images */}
+                {selected.vendorPreparationImages && selected.vendorPreparationImages.length > 0 && (
+                  <details className="group bg-white p-6 rounded-[1.5rem] border border-gray-200 shadow-sm">
+                    <summary className="flex items-center justify-between cursor-pointer list-none">
+                      <h3 className="text-sm font-bold uppercase tracking-widest text-gray-400">Hình ảnh chuẩn bị (Vendor)</h3>
+                      <span className="material-symbols-outlined text-slate-300 group-open:rotate-180 transition-transform">expand_more</span>
+                    </summary>
+                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 mt-4">
+                      {selected.vendorPreparationImages.map((url, idx) => (
+                        <button
+                          key={idx}
+                          onClick={() => setImageModal(url)}
+                          className="aspect-square rounded-2xl overflow-hidden border border-gray-200 hover:ring-2 hover:ring-primary transition group"
+                        >
+                          <img src={url} alt={`Prep ${idx + 1}`} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                        </button>
+                      ))}
+                    </div>
+                    <p className="text-xs text-gray-400 mt-3">Nhấn ảnh để xem phóng to</p>
+                  </details>
+                )}
+
+                {/* Vendor Delivery Images */}
+                {selected.vendorDeliveryImages && selected.vendorDeliveryImages.length > 0 && (
+                  <details className="group bg-white p-6 rounded-[1.5rem] border border-gray-200 shadow-sm">
+                    <summary className="flex items-center justify-between cursor-pointer list-none">
+                      <h3 className="text-sm font-bold uppercase tracking-widest text-gray-400">Hình ảnh giao hàng (Vendor)</h3>
+                      <span className="material-symbols-outlined text-slate-300 group-open:rotate-180 transition-transform">expand_more</span>
+                    </summary>
+                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 mt-4">
+                      {selected.vendorDeliveryImages.map((url, idx) => (
+                        <button
+                          key={idx}
+                          onClick={() => setImageModal(url)}
+                          className="aspect-square rounded-2xl overflow-hidden border border-gray-200 hover:ring-2 hover:ring-primary transition group"
+                        >
+                          <img src={url} alt={`Delivery ${idx + 1}`} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                        </button>
+                      ))}
+                    </div>
+                    <p className="text-xs text-gray-400 mt-3">Nhấn ảnh để xem phóng to</p>
+                  </details>
                 )}
 
                 {/* Items */}

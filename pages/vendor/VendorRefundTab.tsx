@@ -583,9 +583,12 @@ const VendorRefundTab: React.FC<Props> = ({ onPendingCount }) => {
 
               {/* Proof images */}
               {selected.proofImages.length > 0 && (
-                <div className="bg-white p-5 rounded-[1.5rem] border border-gray-200">
-                  <h3 className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Hình ảnh bằng chứng</h3>
-                  <div className="grid grid-cols-4 gap-3">
+                <details className="group bg-white p-5 rounded-[1.5rem] border border-gray-200" open>
+                  <summary className="flex items-center justify-between cursor-pointer list-none">
+                    <h3 className="text-xs font-bold uppercase tracking-widest text-gray-400">Hình ảnh bằng chứng (Khách hàng)</h3>
+                    <span className="material-symbols-outlined text-slate-300 group-open:rotate-180 transition-transform">expand_more</span>
+                  </summary>
+                  <div className="grid grid-cols-4 gap-3 mt-4">
                     {selected.proofImages.map((url, i) => (
                       <button
                         key={i}
@@ -597,7 +600,51 @@ const VendorRefundTab: React.FC<Props> = ({ onPendingCount }) => {
                     ))}
                   </div>
                   <p className="text-xs text-gray-400 mt-2">Nhấn ảnh để xem phóng to</p>
-                </div>
+                </details>
+              )}
+
+              {/* Vendor Preparation Images */}
+              {selected.vendorPreparationImages && selected.vendorPreparationImages.length > 0 && (
+                <details className="group bg-white p-5 rounded-[1.5rem] border border-gray-200">
+                  <summary className="flex items-center justify-between cursor-pointer list-none">
+                    <h3 className="text-xs font-bold uppercase tracking-widest text-gray-400">Hình ảnh chuẩn bị (Vendor)</h3>
+                    <span className="material-symbols-outlined text-slate-300 group-open:rotate-180 transition-transform">expand_more</span>
+                  </summary>
+                  <div className="grid grid-cols-4 gap-3 mt-4">
+                    {selected.vendorPreparationImages.map((url, i) => (
+                      <button
+                        key={i}
+                        onClick={() => setImageModal(url)}
+                        className="aspect-square rounded-xl overflow-hidden border border-gray-200 hover:ring-2 hover:ring-primary transition"
+                      >
+                        <img src={url} alt={`prep-${i}`} className="w-full h-full object-cover" />
+                      </button>
+                    ))}
+                  </div>
+                  <p className="text-xs text-gray-400 mt-2">Nhấn ảnh để xem phóng to</p>
+                </details>
+              )}
+
+              {/* Vendor Delivery Images */}
+              {selected.vendorDeliveryImages && selected.vendorDeliveryImages.length > 0 && (
+                <details className="group bg-white p-5 rounded-[1.5rem] border border-gray-200">
+                  <summary className="flex items-center justify-between cursor-pointer list-none">
+                    <h3 className="text-xs font-bold uppercase tracking-widest text-gray-400">Hình ảnh giao hàng (Vendor)</h3>
+                    <span className="material-symbols-outlined text-slate-300 group-open:rotate-180 transition-transform">expand_more</span>
+                  </summary>
+                  <div className="grid grid-cols-4 gap-3 mt-4">
+                    {selected.vendorDeliveryImages.map((url, i) => (
+                      <button
+                        key={i}
+                        onClick={() => setImageModal(url)}
+                        className="aspect-square rounded-xl overflow-hidden border border-gray-200 hover:ring-2 hover:ring-primary transition"
+                      >
+                        <img src={url} alt={`delivery-${i}`} className="w-full h-full object-cover" />
+                      </button>
+                    ))}
+                  </div>
+                  <p className="text-xs text-gray-400 mt-2">Nhấn ảnh để xem phóng to</p>
+                </details>
               )}
 
               {/* Items */}

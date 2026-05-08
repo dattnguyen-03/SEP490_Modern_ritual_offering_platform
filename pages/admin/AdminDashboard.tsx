@@ -1227,17 +1227,56 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) => {
 
     let imagesHtml = '';
     if (refund.proofImages && refund.proofImages.length > 0) {
-      imagesHtml = `
-        <div class="mt-4 border-t border-gold/10 pt-4 text-left">
-          <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Hình ảnh minh chứng</p>
-          <div class="flex flex-wrap gap-2">
+      imagesHtml += `
+        <details class="group mt-4 border-t border-gold/10 pt-4" open>
+          <summary class="flex items-center justify-between cursor-pointer list-none">
+            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Hình ảnh minh chứng (Khách hàng)</p>
+            <span class="material-symbols-outlined text-slate-300 group-open:rotate-180 transition-transform">expand_more</span>
+          </summary>
+          <div class="flex flex-wrap gap-2 mt-3">
             ${refund.proofImages.map((url: string) => `
               <a href="${url}" target="_blank" rel="noopener noreferrer" class="block w-20 h-20 rounded-lg overflow-hidden border border-gold/10 hover:border-primary transition-all shadow-sm">
                 <img src="${url}" class="w-full h-full object-cover hover:scale-110 transition-transform duration-300" />
               </a>
             `).join('')}
           </div>
-        </div>
+        </details>
+      `;
+    }
+
+    if (refund.vendorPreparationImages && refund.vendorPreparationImages.length > 0) {
+      imagesHtml += `
+        <details class="group mt-4 border-t border-gold/10 pt-4">
+          <summary class="flex items-center justify-between cursor-pointer list-none">
+            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Hình ảnh chuẩn bị (Vendor)</p>
+            <span class="material-symbols-outlined text-slate-300 group-open:rotate-180 transition-transform">expand_more</span>
+          </summary>
+          <div class="flex flex-wrap gap-2 mt-3">
+            ${refund.vendorPreparationImages.map((url: string) => `
+              <a href="${url}" target="_blank" rel="noopener noreferrer" class="block w-20 h-20 rounded-lg overflow-hidden border border-gold/10 hover:border-primary transition-all shadow-sm">
+                <img src="${url}" class="w-full h-full object-cover hover:scale-110 transition-transform duration-300" />
+              </a>
+            `).join('')}
+          </div>
+        </details>
+      `;
+    }
+
+    if (refund.vendorDeliveryImages && refund.vendorDeliveryImages.length > 0) {
+      imagesHtml += `
+        <details class="group mt-4 border-t border-gold/10 pt-4">
+          <summary class="flex items-center justify-between cursor-pointer list-none">
+            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Hình ảnh giao hàng (Vendor)</p>
+            <span class="material-symbols-outlined text-slate-300 group-open:rotate-180 transition-transform">expand_more</span>
+          </summary>
+          <div class="flex flex-wrap gap-2 mt-3">
+            ${refund.vendorDeliveryImages.map((url: string) => `
+              <a href="${url}" target="_blank" rel="noopener noreferrer" class="block w-20 h-20 rounded-lg overflow-hidden border border-gold/10 hover:border-primary transition-all shadow-sm">
+                <img src="${url}" class="w-full h-full object-cover hover:scale-110 transition-transform duration-300" />
+              </a>
+            `).join('')}
+          </div>
+        </details>
       `;
     }
 
