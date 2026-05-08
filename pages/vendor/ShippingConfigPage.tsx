@@ -35,13 +35,17 @@ const ShippingConfigPage: React.FC<ShippingConfigPageProps> = ({ onNavigate }) =
         if (Array.isArray(data)) {
           setConfigs(data);
         } else {
-          setConfigs([data as ShippingConfig]);
+          setConfigs([data]);
         }
       } else {
         setConfigs([]);
       }
-    } catch (error) {
-      toast.error('Không thể tải danh sách cấu hình vận chuyển');
+    } catch (error: any) {
+      console.error('❌ Failed to fetch shipping config:', error);
+      // Only show error if it's not a 404 (which we now handle in the service, but just in case)
+      if (!error.message?.includes('404')) {
+        toast.error(error.message || 'Không thể tải danh sách cấu hình vận chuyển');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -75,8 +79,8 @@ const ShippingConfigPage: React.FC<ShippingConfigPageProps> = ({ onNavigate }) =
       basePrice: config.basePrice,
       pricePerKm: config.pricePerKm,
       maxDistance: config.maxDistance,
-      earliestDeliveryTime: config.earliestDeliveryTime,
-      latestDeliveryTime: config.latestDeliveryTime,
+      earliestDeliveryTime: config.earliestDeliveryTime?.substring(0, 5) || '08:00',
+      latestDeliveryTime: config.latestDeliveryTime?.substring(0, 5) || '20:00',
       minPreparationHours: config.minPreparationHours,
       maxAdvanceBookingDays: config.maxAdvanceBookingDays,
       freeShipThreshold: config.freeShipThreshold,
@@ -94,20 +98,23 @@ const ShippingConfigPage: React.FC<ShippingConfigPageProps> = ({ onNavigate }) =
     }
     setIsSaving(true);
     try {
+      // In a real scenario, we might want the service to return the error message
       const success = await shippingService.updateShippingConfig(formData);
       if (success) {
         toast.success(editingConfig ? 'Cập nhật thành công!' : 'Thêm mới thành công!');
         setShowForm(false);
         await fetchConfigs();
       } else {
-        toast.error('Thao tác thất bại. Vui lòng thử lại.');
+        toast.error('Thao tác thất bại. Vui lòng kiểm tra lại dữ liệu và thử lại.');
       }
-    } catch (error) {
-      toast.error('Lỗi khi lưu cấu hình.');
+    } catch (error: any) {
+      console.error('❌ Save shipping config error:', error);
+      toast.error(error.message || 'Lỗi khi lưu cấu hình.');
     } finally {
       setIsSaving(false);
     }
   };
+
 
   const formatCurrency = (amount: number) => {
     // Custom formatting to keep it clean and matching the screenshot style

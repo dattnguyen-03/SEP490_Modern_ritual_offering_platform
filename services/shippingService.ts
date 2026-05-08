@@ -1,4 +1,5 @@
 import { ApiResponse } from '../types';
+import { fetchWithAuth } from './auth';
 
 const API_BASE_URL = '/api';
 
@@ -30,59 +31,84 @@ export interface UpdateShippingConfigRequest {
 }
 
 class ShippingService {
+  private getHeaders(): HeadersInit {
+    return {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    };
+  }
+
   /**
-   * Lấy cấu hình phí vận chuyển của vendor hiện tại
+   * Lấy cấu hình vận chuyển của vendor hiện tại
+   * GET /api/shipping-config
    */
   async getShippingConfig(): Promise<ShippingConfig | null> {
     try {
-      const token = localStorage.getItem('smart-child-token');
-      const response = await fetch(`${API_BASE_URL}/shipping-config`, {
+      console.log('Fetching shipping config for current vendor...');
+      const response = await fetchWithAuth(`${API_BASE_URL}/shipping-config`, {
         method: 'GET',
-        headers: {
-          'Accept': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
+        headers: this.getHeaders(),
       });
+
+      if (response.status === 404) {
+        console.log('Shipping config not found (404) - this is normal for first-time setup');
+        return null;
+      }
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      const data: ApiResponse<ShippingConfig> = await response.json();
-      
+      const data: ApiResponse<ShippingConfig | ShippingConfig[]> = await response.json();
+      console.log('Shipping config response:', data);
+
       if (data.isSuccess && data.result) {
+        if (Array.isArray(data.result)) {
+          return data.result[0] || null;
+        }
         return data.result;
-      } else {
-        console.error('❌ API Error:', data.errorMessages);
-        return null;
       }
+      return null;
     } catch (error) {
       console.error('❌ Failed to fetch shipping config:', error);
-      return null;
+      throw error;
     }
   }
 
   /**
-   * Cập nhật cấu hình phí vận chuyển
+   * Cập nhật hoặc tạo mới cấu hình vận chuyển
+   * POST /api/shipping-config
    */
   async updateShippingConfig(config: UpdateShippingConfigRequest): Promise<boolean> {
     try {
-      const token = localStorage.getItem('smart-child-token');
-      const response = await fetch(`${API_BASE_URL}/shipping-config`, {
-        method: 'POST', // Assuming POST since it's a config that might be created or updated
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify(config),
+      // Đảm bảo định dạng thời gian là HH:mm:ss
+      const formatTime = (time?: string) => {
+        if (!time) return time;
+        if (time.length === 5) return `${time}:00`;
+        return time;
+      };
+
+      const payload = {
+        ...config,
+        earliestDeliveryTime: formatTime(config.earliestDeliveryTime),
+        latestDeliveryTime: formatTime(config.latestDeliveryTime),
+      };
+
+      console.log('Updating shipping config with payload:', payload);
+
+      const response = await fetchWithAuth(`${API_BASE_URL}/shipping-config`, {
+        method: 'POST',
+        headers: this.getHeaders(),
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorText = await response.text();
+        console.error('❌ Update shipping config error:', response.status, errorText);
+        return false;
       }
 
-      const data: ApiResponse<unknown> = await response.json();
+      const data: ApiResponse<any> = await response.json();
       return data.isSuccess;
     } catch (error) {
       console.error('❌ Failed to update shipping config:', error);
@@ -91,31 +117,23 @@ class ShippingService {
   }
 
   /**
-   * Lấy cấu hình phí vận chuyển của vendor
+   * Lấy cấu hình vận chuyển của một vendor cụ thể (dùng cho customer checkout)
+   * GET /api/shipping-config/vendor?vendorId=...
    */
   async getVendorShippingConfig(vendorId: string): Promise<ShippingConfig | null> {
     try {
-      const token = localStorage.getItem('smart-child-token');
       const response = await fetch(`${API_BASE_URL}/shipping-config/vendor?vendorId=${encodeURIComponent(vendorId)}`, {
         method: 'GET',
         headers: {
           'Accept': 'application/json',
-          'Authorization': `Bearer ${token}`,
         },
       });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
+      if (response.status === 404) return null;
+      if (!response.ok) return null;
 
       const data: ApiResponse<ShippingConfig> = await response.json();
-      
-      if (data.isSuccess && data.result) {
-        return data.result;
-      } else {
-        console.error('❌ API Error:', data.errorMessages);
-        return null;
-      }
+      return data.isSuccess ? data.result : null;
     } catch (error) {
       console.error('❌ Failed to fetch vendor shipping config:', error);
       return null;
