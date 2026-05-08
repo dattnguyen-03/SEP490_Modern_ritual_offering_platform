@@ -244,7 +244,7 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onNavigate }) => 
       originalItemAllocatedPrice: Number(s?.originalItemAllocatedPrice || 0),
       replacementItemName: String(s?.replacementItemName || ''),
       surcharge: Number(s?.surcharge || 0),
-      displayOrder: Number(s?.displayOrder ?? (idx + 1)),
+      displayOrder: Number(s?.displayOrder ?? (index + 1)),
     }));
   };
 
@@ -575,38 +575,37 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onNavigate }) => 
   const loadPackages = async () => {
     setLoadingProducts(true);
     setProductsError(null);
-    setCurrentPage(1);
 
     try {
-      console.log('Loading packages for vendor...', { selectedStatus, vendorProfileId });
-      const packages = await packageService.getPackagesByStatus('', 1, 100);
+      console.log('📡 Fetching packages for vendor...', { selectedStatus, vendorProfileId });
+      
+      // Khôi phục lại việc lấy dữ liệu qua getPackagesByStatus để đảm bảo đầy đủ thông tin variants/price
+      const source = await packageService.getPackagesByStatus('', 1, 100);
 
       const statusFiltered = selectedStatus
-        ? packages.filter((item: any) => {
+        ? source.filter((item: any) => {
           const normalized = normalizeApprovalStatus(item.approvalStatus || item.packageStatus || item.status);
           return normalized === selectedStatus;
         })
-        : packages;
+        : source;
 
-      // Lọc chỉ lấy sản phẩm của vendor hiện tại
-      // Ưu tiên dùng vendorProfileId đã fetch từ profile
-      const source = vendorProfileId
+      // Lọc theo Vendor ID ở Frontend để đảm bảo tính chính xác
+      const vendorFiltered = vendorProfileId
         ? statusFiltered.filter((item: any) => {
           const itemVendorId = String(item.vendorProfileId || item.vendorId || '').trim();
-          const match = itemVendorId === vendorProfileId;
-          return match;
+          return itemVendorId === vendorProfileId;
         })
         : statusFiltered;
 
-      console.log(`📦 Loaded ${source.length} products after filtering (Total from API: ${packages.length})`);
+      console.log(`📦 Loaded ${vendorFiltered.length} products`);
 
-      const mapped: Product[] = source.map((item: any) => {
+      const mapped: Product[] = vendorFiltered.map((item: any) => {
+        // Ưu tiên packageVariants vì đây là cấu trúc chuẩn từ API status
         const variants = Array.isArray(item.packageVariants) ? item.packageVariants : (Array.isArray(item.variants) ? item.variants : []);
-        const activeVariants = variants.filter((variant: any) => Boolean(variant?.isActive));
+        const activeVariants = variants.filter((variant: any) => variant?.isActive !== false);
         const selectedVariant = activeVariants[0] || variants[0];
         const price = Number(selectedVariant?.price || 0);
 
-        // Map images from various possible field names
         const imageUrls = item.imageUrls || item.packageImages || [];
         const primaryIdx = item.primaryImageIndex || 0;
         const imageUrl = item.imageUrl || item.packageAvatarUrl || (Array.isArray(imageUrls) && imageUrls.length > 0 ? imageUrls[primaryIdx] || imageUrls[0] : '');
@@ -617,11 +616,11 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onNavigate }) => 
           categoryId: Number(item.categoryId || 0),
           category: mapCategory(Number(item.categoryId || 0)),
           price: Number.isFinite(price) ? price : 0,
-          stock: activeVariants.length || variants.length,
+          stock: variants.length,
           image: String(imageUrl),
           rating: Number(item.ratingAvg || 0),
           orders: Number(item.totalSold || 0),
-          status: Boolean(item.isActive) ? 'active' : 'inactive',
+          status: (item.isActive === true || item.status === 'active' || item.packageStatus === 'Approved') ? 'active' : 'inactive',
           approvalStatus: normalizeApprovalStatus(item.approvalStatus || item.packageStatus || item.status),
           created: String(item.createdAt || ''),
         };
@@ -788,7 +787,9 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onNavigate }) => 
       toast.success(action === 'Draft' ? 'Lưu nháp thành công!' : 'Gửi phê duyệt thành công!');
       setShowAddForm(false);
       setCreateForm({ packageName: '', description: '', categoryId: 1, packageImageUrls: [], primaryImageIndex: 0, addOnIds: [], variants: [{ variantName: '', description: '', price: 0, productionWeight: 0, minOrderQuantity: 1, maxOrderQuantity: 99, imageUrls: [], swaps: [] }] });
-      loadPackages();
+      
+      // Refresh in background to keep UI responsive
+      setTimeout(() => loadPackages(), 100);
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Lỗi khi tạo sản phẩm';
       toast.error(msg);

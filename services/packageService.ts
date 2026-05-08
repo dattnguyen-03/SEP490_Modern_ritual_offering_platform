@@ -245,11 +245,16 @@ class PackageService {
 
     const mutationMode: 'create' | 'update' = method === 'PUT' ? 'update' : 'create';
     const modernPayload = this.buildPackageMutationPayload(payload, 'modern', mutationMode);
+    
+    console.time(`🚀 [PackageService] ${method} ${endpoint}`);
     let result = await send(modernPayload);
 
     if (method === 'POST' && !result.response.ok && result.response.status === 400) {
+      console.warn('⚠️ Modern payload failed (400), trying legacy fallback...');
       const legacyPayload = this.buildPackageMutationPayload(payload, 'legacy', mutationMode);
       const legacyResult = await send(legacyPayload);
+      console.timeEnd(`🚀 [PackageService] ${method} ${endpoint}`);
+      
       if (legacyResult.response.ok) {
         const data: any = legacyResult.responseText ? JSON.parse(legacyResult.responseText) : {};
         return data;
@@ -258,6 +263,8 @@ class PackageService {
       const extractedLegacy = this.extractBackendErrorMessage(legacyResult.responseText);
       throw new Error(extractedLegacy || legacyResult.responseText || `HTTP error! status: ${legacyResult.response.status}`);
     }
+
+    console.timeEnd(`🚀 [PackageService] ${method} ${endpoint}`);
 
     if (!result.response.ok) {
       const extracted = this.extractBackendErrorMessage(result.responseText);
