@@ -328,6 +328,14 @@ const RefundManagement: React.FC<Props> = ({ onNavigate }) => {
                   <p className="text-gray-700 leading-relaxed">{selected.reason}</p>
                 </div>
 
+                {/* Vendor Response */}
+                {selected.vendorResponse && (
+                  <div className="bg-white p-6 rounded-[1.5rem] border border-gray-200 shadow-sm">
+                    <h3 className="text-sm font-bold uppercase tracking-widest text-gray-400 mb-3">Phản hồi từ Vendor</h3>
+                    <p className="text-blue-700 leading-relaxed italic">"{selected.vendorResponse}"</p>
+                  </div>
+                )}
+
                 {/* Proof Images */}
                 {selected.proofImages.length > 0 && (
                   <details className="group bg-white p-6 rounded-[1.5rem] border border-gray-200 shadow-sm" open>

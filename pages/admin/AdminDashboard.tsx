@@ -1322,6 +1322,15 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) => {
               "${refund.reason || 'Không có mô tả chi tiết'}"
             </div>
           </div>
+
+          ${refund.vendorResponse ? `
+            <div class="mt-4 pt-4 border-t border-gold/10">
+              <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Phản hồi từ Vendor</p>
+              <div class="p-4 bg-blue-50 text-blue-800 rounded-xl text-sm font-medium border border-blue-100">
+                "${refund.vendorResponse}"
+              </div>
+            </div>
+          ` : ''}
           
           ${itemsHtml}
           ${imagesHtml}

@@ -581,6 +581,14 @@ const VendorRefundTab: React.FC<Props> = ({ onPendingCount }) => {
                 <p className="text-gray-700 leading-relaxed">{selected.reason || 'Không có lý do'}</p>
               </div>
 
+              {/* Vendor Response */}
+              {selected.vendorResponse && (
+                <div className="bg-white p-5 rounded-[1.5rem] border border-gray-200">
+                  <h3 className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Phản hồi của bạn</h3>
+                  <p className="text-blue-700 leading-relaxed italic">"{selected.vendorResponse}"</p>
+                </div>
+              )}
+
               {/* Proof images */}
               {selected.proofImages.length > 0 && (
                 <details className="group bg-white p-5 rounded-[1.5rem] border border-gray-200" open>

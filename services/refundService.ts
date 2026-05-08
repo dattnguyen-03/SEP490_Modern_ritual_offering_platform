@@ -47,6 +47,7 @@ export interface RefundRecord {
     shopName?: string;
     vendorPreparationImages?: string[];
     vendorDeliveryImages?: string[];
+    vendorResponse?: string;
     reason: string;
     proofImages: string[];
     status: 'Pending' | 'Approved' | 'Rejected' | 'Cancelled';
@@ -501,7 +502,8 @@ class RefundService {
             shopName: raw.shopName || '',
             vendorPreparationImages: Array.isArray(raw.vendorPreparationImages) ? raw.vendorPreparationImages : [],
             vendorDeliveryImages: Array.isArray(raw.vendorDeliveryImages) ? raw.vendorDeliveryImages : [],
-            reason: raw.reason || '',
+            vendorResponse: raw.vendorResponse || '',
+            reason: raw.reason || raw.customerReason || '',
             proofImages: Array.isArray(raw.proofImages) ? raw.proofImages : [],
             status: this.normalizeRefundStatus(raw.status),
             refundAmount: Number(
