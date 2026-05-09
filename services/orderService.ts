@@ -1132,8 +1132,8 @@ class OrderService {
             const user = getCurrentUser();
             const isVendor = user?.role === 'vendor' || user?.roles?.includes('vendor');
 
-            // Special case for customer completing order
-            if (!isVendor && newStatus === 'Completed') {
+            // Special case for completing order
+            if (newStatus === 'Completed') {
                 const url = `${API_BASE_URL}/orders/customer/${orderId}/completed`;
                 fetchWithAuth(url, {
                     method: 'PUT',
