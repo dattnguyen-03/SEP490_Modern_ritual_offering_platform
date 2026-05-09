@@ -292,7 +292,7 @@ class GeocodingService {
 
     // Prioritize house/building tokens (contains digits) to avoid wrong nearby points.
     const strictKeywords = hasDetailedInput
-      ? this.extractKeywords(detailedAddress)
+      ? this.extractKeywords(detailedAddress ?? '')
           .filter((word) => /\d/.test(word) || word.length >= 4)
           .slice(0, 6)
       : [];

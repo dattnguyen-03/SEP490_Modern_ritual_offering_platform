@@ -168,7 +168,7 @@ class CartService {
 
     // Map vendors and their items
     rawVendors.forEach((v: any) => {
-      const vendorItems = Array.isArray(v.items) ? v.items.map((item: any) => this.mapCartItem(item)) : [];
+      const vendorItems: CartItemApi[] = Array.isArray(v.items) ? v.items.map((item: any) => this.mapCartItem(item)) : [];
       flattenedItems.push(...vendorItems);
       vendorsList.push({
         vendorId: v.vendorId || v.vendorProfileId || '',
@@ -181,7 +181,7 @@ class CartService {
 
     // If we have top-level items but no vendors, or items that aren't in any vendor
     if (rawItems.length > 0 && vendorsList.length === 0) {
-      const mappedItems = rawItems.map((item: any) => this.mapCartItem(item));
+      const mappedItems: CartItemApi[] = rawItems.map((item: any) => this.mapCartItem(item));
       flattenedItems.push(...mappedItems);
       
       // Auto-group items by vendor if info is available in items

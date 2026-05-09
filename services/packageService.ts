@@ -835,7 +835,7 @@ class PackageService {
    */
   mapToProduct(apiPackage: ApiPackage, vendorMap?: Map<string, VendorProfile>): Product {
     // Find default variant for fallback values
-    const variantsSource = apiPackage.packageVariants || (apiPackage as any).variants || [];
+    const variantsSource: PackageVariant[] = apiPackage.packageVariants || ((apiPackage as any).variants as PackageVariant[]) || [];
     const defaultVariant = variantsSource[0];
 
     // Helper to fix dead storage.vietritual.com URLs
@@ -850,7 +850,7 @@ class PackageService {
 
     // Parse variants và chuyển description thành items array
     const packageId = apiPackage.packageId ?? (apiPackage as any).id;
-    const parsedVariants = variantsSource.map((variant: any) => {
+    const parsedVariants = variantsSource.map((variant: PackageVariant) => {
       console.log('🔍 Processing variant:', variant.variantName, 'Description:', variant.description);
 
       const rawVariantId = (variant as any).variantId ?? (variant as any).id ?? (variant as any).packageVariantId;
