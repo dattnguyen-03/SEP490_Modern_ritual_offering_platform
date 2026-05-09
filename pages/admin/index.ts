@@ -12,3 +12,5 @@
  */
 
 export {};
+
+export { default as AdminOrderManagement } from './AdminOrderManagement';

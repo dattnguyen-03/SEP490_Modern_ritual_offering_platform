@@ -924,6 +924,91 @@ class OrderService {
         }
     }
 
+    // Get all vendor orders for admin views
+    async getAllVendorOrders(pageNumber: number = 1, pageSize: number = 100): Promise<VendorOrder[]> {
+        try {
+            const url = `${API_BASE_URL}/orders/all-vendor?PageNumber=${pageNumber}&PageSize=${pageSize}`;
+            const response = await fetchWithAuth(url, {
+                method: 'GET',
+                headers: this.getHeaders(),
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            const isSuccess = data?.isSuccess || data?.isSucceeded || data?.statusCode === 'OK';
+            if (isSuccess && data?.result) {
+                const payload = data.result;
+                const rawItems = Array.isArray(payload) ? payload : (payload.items || []);
+
+                return rawItems.map((raw: VendorOrdersApiItem) => {
+                    const items = Array.isArray(raw.items)
+                        ? raw.items.map((item) => {
+                            const quantity = Number(item.quantity) || 0;
+                            const unitPrice = Number(item.unitPrice ?? item.price) || 0;
+                            const lineTotal = Number(item.lineTotal) || (unitPrice * quantity);
+
+                            return {
+                                itemId: item.itemId || `item-${Math.random().toString(36).slice(2, 10)}`,
+                                variantId: item.variantId ?? '',
+                                variantName: item.variantName || 'N/A',
+                                packageName: item.packageName || 'N/A',
+                                quantity,
+                                price: unitPrice,
+                                lineTotal,
+                                decorationNote: item.decorationNote || '',
+                                imageUrl: item.imageUrl || (item as any).packageAvatarUrl || (item as any).packageImageUrl || (item as any).productImageUrl || '',
+                                isRequestRefund: !!item.isRequestRefund,
+                            };
+                        })
+                        : [];
+
+                    const subTotal = Number(raw.subTotal) || items.reduce((sum, item) => sum + item.lineTotal, 0);
+                    const shippingFee = Number(raw.shippingFee) || 0;
+                    const finalAmountFromApi = Number(raw.finalAmount);
+                    const totalAmount = Number.isFinite(finalAmountFromApi) ? finalAmountFromApi : (subTotal + shippingFee);
+
+                    const commissionRate = this.normalizeCommissionRate(raw.commissionRate);
+                    const platformFee = Number(raw.platformFee) || (totalAmount * commissionRate);
+                    const vendorNetAmount = Number(raw.vendorNetAmount) || (totalAmount - platformFee);
+
+                    return {
+                        orderId: raw.orderId || '',
+                        orderStatus: raw.orderStatus || 'Pending',
+                        customerProfileId: raw.customerProfileId || raw.CustomerProfileId || raw.customer?.profileId || raw.customer?.customerId || raw.customerId || '',
+                        customerName: raw.customerName || raw.CustomerName || raw.customer?.fullName || raw.customer?.customerName || 'N/A',
+                        customerPhone: raw.customerPhone || raw.CustomerPhone || raw.customer?.phoneNumber || raw.customer?.customerPhone || '',
+                        vendorProfileId: raw.vendorId || '',
+                        vendorName: raw.shopName || 'Shop',
+                        deliveryDate: raw.deliveryDate || '',
+                        deliveryTime: raw.deliveryTime || '',
+                        deliveryAddress: raw.deliveryAddress || 'N/A',
+                        items,
+                        subTotal,
+                        shippingDistanceKm: Number(raw.shippingDistanceKm) || 0,
+                        shippingFee,
+                        totalAmount,
+                        commissionRate,
+                        platformFee,
+                        vendorNetAmount,
+                        paymentMethod: raw.paymentMethod || 'N/A',
+                        createdAt: raw.createdAt || new Date().toISOString(),
+                        customerAvatar: (raw.customer as any)?.avatarUrl || (raw as any).customerAvatar || '',
+                        preparationProofImages: raw.preparationProofImages || [],
+                        finalAmount: totalAmount,
+                        deliveredDeadline: raw.deliveredDeadline,
+                    };
+                });
+            }
+            return [];
+        } catch (error) {
+            console.error("Failed to fetch All Vendor Orders:", error);
+            throw error;
+        }
+    }
+
     // Get calendar orders for the current vendor
     async getVendorOrderCalendar(year: number, month: number): Promise<VendorOrderCalendarItem[]> {
         try {

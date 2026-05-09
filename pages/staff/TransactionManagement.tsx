@@ -7,6 +7,7 @@ import {
   AllTransactionFilter,
   WalletType
 } from '../../services/walletService';
+import { orderService, Order, OrderItem } from '../../services/orderService';
 import toast from '../../services/toast';
 
 interface TransactionManagementProps {
@@ -82,6 +83,52 @@ const getTransactionTypeLabel = (type: string, amount: number): string => {
   return mapping[normalized] || type;
 };
 
+const getOrderStatusLabel = (status: string) => {
+  const normalized = String(status || '').trim().toLowerCase();
+  if (!normalized) return 'Chờ xác nhận';
+  if (['paid', 'success', 'succeeded', 'confirmed'].includes(normalized)) return 'Đã thanh toán';
+  if (['processing', 'preparing'].includes(normalized)) return 'Đang chuẩn bị';
+  if (['shipping', 'delivering', 'out_for_delivery'].includes(normalized)) return 'Đang giao';
+  if (['completed', 'delivered', 'done'].includes(normalized)) return 'Hoàn tất';
+  if (['cancelled', 'canceled', 'failed'].includes(normalized)) return 'Đã hủy';
+  return status;
+};
+
+const getOrderStatusChipClass = (status: string) => {
+  const normalized = String(status || '').trim().toLowerCase();
+  if (['cancelled', 'canceled', 'failed'].includes(normalized)) return 'bg-rose-100 text-rose-500';
+  if (['completed', 'delivered', 'done', 'paid', 'success', 'succeeded', 'confirmed'].includes(normalized)) return 'bg-emerald-100 text-emerald-600';
+  if (['shipping', 'delivering', 'out_for_delivery'].includes(normalized)) return 'bg-amber-100 text-amber-600';
+  return 'bg-slate-100 text-slate-500';
+};
+
+const getOrderTimelineStage = (status: string) => {
+  const normalized = String(status || '').trim().toLowerCase();
+  if (['cancelled', 'canceled', 'failed'].includes(normalized)) return 1;
+  if (['completed', 'delivered', 'done'].includes(normalized)) return 4;
+  if (['shipping', 'delivering', 'out_for_delivery'].includes(normalized)) return 3;
+  if (['processing', 'preparing'].includes(normalized)) return 2;
+  return ['paid', 'success', 'succeeded', 'confirmed'].includes(normalized) ? 1 : 0;
+};
+
+const getOrderTimelineLabel = (order: Order, index: number) => {
+  const fromTracking = order.trackingLists?.[index];
+  if (fromTracking?.title) return fromTracking.title;
+  return ['Xác nhận', 'Chuẩn bị', 'Đang giao', 'Hoàn tất'][index] || `Bước ${index + 1}`;
+};
+
+const getOrderTimelineDescription = (order: Order, index: number) => {
+  const fromTracking = order.trackingLists?.[index];
+  if (fromTracking?.description) return fromTracking.description;
+  return ['Tiếp nhận và xác nhận đơn', 'Chuẩn bị hàng và vật phẩm', 'Nhân viên đang giao chuyển', 'Hoàn thành phục vụ và nghỉ lễ'][index] || 'Chưa có mô tả';
+};
+
+const getOrderTimelineTime = (order: Order, index: number) => {
+  const fromTracking = order.trackingLists?.[index];
+  if (fromTracking?.createdAt) return formatDateTimeVi(fromTracking.createdAt);
+  return '';
+};
+
 const formatDescriptionList = (desc: string) => {
   if (!desc) return '';
   try {
@@ -132,6 +179,41 @@ const TransactionManagement: React.FC<TransactionManagementProps> = ({ onNavigat
   const [detailOpen, setDetailOpen] = useState(false);
   const [relatedTxs, setRelatedTxs] = useState<WalletTransaction[]>([]);
   const [detailLoading, setDetailLoading] = useState(false);
+  const [orderDetail, setOrderDetail] = useState<Order | null>(null);
+  const [orderDetailOpen, setOrderDetailOpen] = useState(false);
+  const [orderDetailLoading, setOrderDetailLoading] = useState(false);
+  const [orderDetailError, setOrderDetailError] = useState<string | null>(null);
+
+  const handleOpenOrderDetail = async (orderId?: string) => {
+    const normalizedOrderId = String(orderId || '').trim();
+    if (!normalizedOrderId || normalizedOrderId === 'N/A') return;
+
+    setOrderDetailLoading(true);
+    setOrderDetailError(null);
+    setOrderDetail(null);
+    setOrderDetailOpen(true);
+
+    try {
+      const detail = await orderService.getVendorOrderDetails(normalizedOrderId);
+      if (!detail) {
+        setOrderDetailError('Không tìm thấy đơn hàng.');
+        return;
+      }
+      setOrderDetail(detail);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Không thể tải chi tiết đơn hàng.';
+      setOrderDetailError(message);
+    } finally {
+      setOrderDetailLoading(false);
+    }
+  };
+
+  const closeOrderDetail = () => {
+    setOrderDetailOpen(false);
+    setOrderDetail(null);
+    setOrderDetailError(null);
+    setOrderDetailLoading(false);
+  };
 
   // Grouping logic for Ledger view
   const groupedTransactions = useMemo(() => {
@@ -352,7 +434,14 @@ const TransactionManagement: React.FC<TransactionManagementProps> = ({ onNavigat
                     <div className="flex items-center gap-2">
                       <span className="text-[10px] font-mono bg-slate-200 text-slate-600 px-2 py-0.5 rounded uppercase">GRP: {group.id.slice(0, 8)}</span>
                       {group.orderId !== 'N/A' && (
-                        <span className="text-[10px] font-mono bg-primary/10 text-primary px-2 py-0.5 rounded uppercase">REF: {group.orderId.slice(0, 8)}</span>
+                        <button
+                          type="button"
+                          onClick={() => handleOpenOrderDetail(group.orderId)}
+                          className="text-[10px] font-mono bg-primary/10 text-primary px-2 py-0.5 rounded uppercase hover:bg-primary hover:text-white transition"
+                          title="Mở chi tiết đơn hàng"
+                        >
+                          REF: {group.orderId.slice(0, 8)}
+                        </button>
                       )}
                     </div>
                   </div>
@@ -508,6 +597,22 @@ const TransactionManagement: React.FC<TransactionManagementProps> = ({ onNavigat
                 </div>
               </div>
 
+              {detailTx.orderId && detailTx.orderId !== 'N/A' && (
+                <div className="p-4 rounded-lg border border-primary/10 bg-primary/5 flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-[10px] font-bold text-primary uppercase tracking-wider">Đơn hàng liên quan</p>
+                    <p className="text-sm font-bold text-slate-900 break-all">{detailTx.orderId}</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleOpenOrderDetail(detailTx.orderId)}
+                    className="px-4 py-2 rounded-lg bg-primary text-white text-xs font-black uppercase tracking-widest hover:bg-primary/90 transition-all"
+                  >
+                    Xem đơn
+                  </button>
+                </div>
+              )}
+
               <div>
                 <p className="text-[10px] font-bold text-slate-400 uppercase mb-2">Dữ liệu hệ thống (JSON)</p>
                 <pre className="p-4 bg-slate-900 text-emerald-400 rounded-lg text-[11px] font-mono overflow-x-auto">
@@ -547,6 +652,192 @@ const TransactionManagement: React.FC<TransactionManagementProps> = ({ onNavigat
               >
                 Đóng
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {orderDetailOpen && (
+        <div className="fixed inset-0 z-[250] bg-slate-900/60 backdrop-blur-[2px] flex items-center justify-center p-3 sm:p-4" onClick={closeOrderDetail}>
+          <div
+            className="relative w-full max-w-[980px] max-h-[92vh] overflow-hidden rounded-[28px] bg-white shadow-[0_30px_100px_rgba(15,23,42,0.35)] border border-slate-200 flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between gap-4 px-5 sm:px-6 py-4 border-b border-slate-100 bg-white sticky top-0 z-10">
+              <button
+                type="button"
+                onClick={closeOrderDetail}
+                className="h-10 px-4 rounded-full border border-slate-200 text-slate-600 text-sm font-bold hover:bg-slate-50 transition"
+              >
+                Đóng
+              </button>
+
+              <div className="min-w-0 text-center flex-1">
+                <h3 className="text-[22px] sm:text-[28px] font-black text-slate-950 leading-tight truncate">Chi tiết đơn hàng</h3>
+                <p className="text-xs sm:text-sm text-slate-500 truncate">
+                  Khách: {orderDetail?.customerName || orderDetail?.customer?.fullName || 'N/A'}
+                  <span className="mx-2 text-slate-300">|</span>
+                  {orderDetail?.customerPhone || orderDetail?.customer?.phoneNumber || 'N/A'}
+                </p>
+              </div>
+
+              <span className={`shrink-0 px-4 py-2 rounded-full text-[11px] font-black uppercase tracking-[0.18em] ${getOrderStatusChipClass(orderDetail?.orderStatus || '')}`}>
+                {getOrderStatusLabel(orderDetail?.orderStatus || '')}
+              </span>
+            </div>
+
+            <div className="overflow-y-auto px-5 sm:px-6 py-5 sm:py-6">
+              {orderDetailLoading ? (
+                <div className="py-20 text-center">
+                  <div className="inline-block h-9 w-9 rounded-full border-4 border-slate-200 border-t-primary animate-spin mb-3" />
+                  <p className="text-sm font-bold text-slate-500">Đang tải chi tiết đơn hàng...</p>
+                </div>
+              ) : orderDetailError ? (
+                <div className="rounded-2xl border border-rose-100 bg-rose-50 px-4 py-3 text-rose-600 font-bold">
+                  {orderDetailError}
+                </div>
+              ) : orderDetail ? (
+                <div className="space-y-5 sm:space-y-6">
+                  <section className="rounded-[24px] border border-slate-200 bg-gradient-to-b from-slate-50 to-white p-5 sm:p-6 shadow-sm">
+                    <p className="text-[11px] font-black uppercase tracking-[0.18em] text-slate-400">Trạng thái hiện tại</p>
+                    <div className="mt-1 sm:mt-2 flex flex-col gap-1">
+                      <h4 className="text-3xl sm:text-4xl font-black text-slate-950 leading-tight">
+                        {getOrderStatusLabel(orderDetail.orderStatus)}
+                      </h4>
+                      <p className="text-[11px] font-black uppercase tracking-[0.18em] text-slate-400 mt-2">Theo dõi đơn hàng</p>
+                      <p className="text-sm font-semibold text-slate-600 break-all">{orderDetail.orderId}</p>
+                    </div>
+                  </section>
+
+                  <section className="rounded-[24px] border border-slate-200 bg-white p-4 sm:p-6 shadow-sm">
+                    <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 sm:gap-2">
+                      {Array.from({ length: 4 }).map((_, index) => {
+                        const activeStage = getOrderTimelineStage(orderDetail.orderStatus);
+                        const active = index + 1 <= Math.max(activeStage, 1);
+                        return (
+                          <div key={index} className="text-center px-1 sm:px-2">
+                            <div className={`mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-full border-4 ${active ? 'border-slate-950 bg-slate-950 text-white shadow-md' : 'border-slate-100 bg-slate-50 text-slate-400'}`}>
+                              <span className="text-sm font-black">{index + 1}</span>
+                            </div>
+                            <p className={`text-sm font-black ${active ? 'text-slate-950' : 'text-slate-400'}`}>{getOrderTimelineLabel(orderDetail, index)}</p>
+                            <p className={`mt-1 text-xs leading-5 ${active ? 'text-slate-500' : 'text-slate-300'}`}>
+                              {getOrderTimelineDescription(orderDetail, index)}
+                            </p>
+                            <p className={`mt-1 text-[11px] font-semibold ${active ? 'text-slate-600' : 'text-slate-300'}`}>
+                              {getOrderTimelineTime(orderDetail, index) || 'Chưa có mốc'}
+                            </p>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </section>
+
+                  <section className="grid grid-cols-1 lg:grid-cols-[1.25fr_0.85fr] gap-5 sm:gap-6">
+                    <div className="rounded-[24px] border border-slate-200 bg-white p-5 sm:p-6 shadow-sm">
+                      <p className="text-[11px] font-black uppercase tracking-[0.18em] text-slate-400">Thông tin giao hàng</p>
+                      <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4 text-sm">
+                        <div>
+                          <p className="text-[11px] font-black uppercase tracking-[0.18em] text-slate-400">Ngày giao</p>
+                          <p className="mt-1 text-base font-black text-slate-950">{formatDateTimeVi(orderDetail.delivery?.deliveryDate) || 'N/A'}</p>
+                        </div>
+                        <div>
+                          <p className="text-[11px] font-black uppercase tracking-[0.18em] text-slate-400">Giờ giao</p>
+                          <p className="mt-1 text-base font-black text-slate-950">{orderDetail.delivery?.deliveryTime || 'N/A'}</p>
+                        </div>
+                        <div>
+                          <p className="text-[11px] font-black uppercase tracking-[0.18em] text-slate-400">Phí giao</p>
+                          <p className="mt-1 text-base font-black text-slate-950">{formatCurrency(Number(orderDetail.pricing?.shippingFee || 0))}</p>
+                        </div>
+                        <div>
+                          <p className="text-[11px] font-black uppercase tracking-[0.18em] text-slate-400">Khoảng cách</p>
+                          <p className="mt-1 text-base font-black text-slate-950">{Number(orderDetail.delivery?.shippingDistanceKm || 0).toFixed(1)} km</p>
+                        </div>
+                      </div>
+
+                      <div className="mt-5 rounded-2xl bg-slate-100 px-4 py-3">
+                        <p className="text-[11px] font-black uppercase tracking-[0.18em] text-sky-500">Địa chỉ giao</p>
+                        <p className="mt-1 text-sm sm:text-[15px] font-semibold text-slate-700 leading-6">{orderDetail.delivery?.deliveryAddress || 'N/A'}</p>
+                      </div>
+                    </div>
+
+                    <div className="rounded-[24px] border border-slate-200 bg-white p-5 sm:p-6 shadow-sm">
+                      <p className="text-[11px] font-black uppercase tracking-[0.18em] text-slate-400">Tóm tắt</p>
+                      <div className="mt-4 space-y-3 text-sm">
+                        <div className="flex items-center justify-between gap-4">
+                          <span className="text-slate-500">Số lượng</span>
+                          <span className="text-slate-950 font-black">{orderDetail.items?.length || 0}</span>
+                        </div>
+                        <div className="flex items-center justify-between gap-4">
+                          <span className="text-slate-500">Tạm tính</span>
+                          <span className="text-slate-950 font-black">{formatCurrency(Number(orderDetail.pricing?.subTotal || 0))}</span>
+                        </div>
+                        <div className="flex items-center justify-between gap-4">
+                          <span className="text-slate-500">Phí giao</span>
+                          <span className="text-slate-950 font-black">{formatCurrency(Number(orderDetail.pricing?.shippingFee || 0))}</span>
+                        </div>
+                        <div className="flex items-center justify-between gap-4">
+                          <span className="text-slate-500">Giảm giá</span>
+                          <span className="text-slate-950 font-black">{formatCurrency(Number(orderDetail.pricing?.discountAmount || 0))}</span>
+                        </div>
+                        <div className="flex items-center justify-between gap-4 border-t border-slate-100 pt-3">
+                          <span className="text-slate-500">Tổng đơn hàng</span>
+                          <span className="text-slate-950 font-black">{formatCurrency(Number(orderDetail.pricing?.totalAmount || 0))}</span>
+                        </div>
+                        <div className="flex items-center justify-between gap-4 text-rose-500">
+                          <span className="font-semibold">Hoa hồng sàn</span>
+                          <span className="font-black">-{Math.round(Number(orderDetail.pricing?.commissionRate || 0) * 100)}%</span>
+                        </div>
+                        <div className="flex items-center justify-between gap-4 text-rose-500">
+                          <span className="font-semibold">Phí dịch vụ</span>
+                          <span className="font-black">-{formatCurrency(Number(orderDetail.pricing?.platformFee || 0))}</span>
+                        </div>
+                        <div className="flex items-center justify-between gap-4 rounded-2xl bg-slate-50 px-4 py-3">
+                          <span className="text-slate-500 font-semibold">Thực nhận</span>
+                          <span className="text-2xl font-black text-slate-950">{formatCurrency(Number(orderDetail.pricing?.finalAmount || orderDetail.pricing?.totalAmount || 0))}</span>
+                        </div>
+                        <div className="flex items-center justify-between gap-4 border-t border-slate-100 pt-3 text-xs text-slate-500">
+                          <span className="font-semibold">Trạng thái đối</span>
+                          <span className="font-bold">{getTransactionStatusLabel(orderDetail.orderStatus)}</span>
+                        </div>
+                        <div className="rounded-2xl border border-rose-100 bg-rose-50 px-4 py-3 text-rose-500">
+                          <p className="text-[11px] font-black uppercase tracking-[0.18em]">Lý do hủy</p>
+                          <p className="mt-1 text-sm font-semibold">{orderDetail.cancelReason || 'Không có'}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </section>
+
+                  <section className="rounded-[24px] border border-slate-200 bg-white overflow-hidden shadow-sm">
+                    <div className="px-5 sm:px-6 py-4 border-b border-slate-100 bg-slate-50">
+                      <p className="text-[11px] font-black uppercase tracking-[0.18em] text-slate-400">Danh sách sản phẩm</p>
+                    </div>
+                    <div className="p-5 sm:p-6 space-y-4">
+                      {(orderDetail.items || []).map((item: OrderItem) => (
+                        <div key={item.itemId} className="flex gap-4 items-start pb-4 border-b border-slate-100 last:border-0 last:pb-0">
+                          <div className="h-16 w-16 shrink-0 overflow-hidden rounded-2xl border border-slate-200 bg-slate-50">
+                            <img
+                              src={item.imageUrl || ''}
+                              alt={item.packageName}
+                              className="h-full w-full object-cover"
+                              onError={(e) => {
+                                (e.currentTarget as HTMLImageElement).src = '';
+                              }}
+                            />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <h5 className="text-sm sm:text-base font-black text-slate-950">{item.packageName}</h5>
+                            <p className="mt-1 text-sm text-slate-500">{item.variantName} x {item.quantity}</p>
+                            {item.decorationNote && <p className="mt-2 text-xs italic text-amber-600">{item.decorationNote}</p>}
+                          </div>
+                          <div className="shrink-0 text-right">
+                            <p className="text-sm sm:text-base font-black text-primary">{formatCurrency(Number(item.lineTotal || 0))}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </section>
+                </div>
+              ) : null}
             </div>
           </div>
         </div>

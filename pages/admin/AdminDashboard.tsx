@@ -11,6 +11,7 @@ import TransactionManagement from '../staff/TransactionManagement';
 import AuditLogPage from '../staff/AuditLogPage';
 import StatisticsView from '../../components/StatisticsView';
 import VendorComparePage from '../vendor/VendorComparePage';
+import AdminOrderManagement from './AdminOrderManagement';
 
 interface AdminDashboardProps {
   onNavigate: (path: string) => void;
@@ -1500,6 +1501,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) => {
                   { id: 'statistics', label: 'Thống kê', icon: 'analytics' },
                   { id: 'vendors', label: 'Hạng nhà cung cấp', icon: 'storefront' },
                   { id: 'users', label: 'Người dùng', icon: 'group' },
+                  { id: 'orders', label: 'Đơn hàng', icon: 'receipt_long' },
                   { id: 'disputes', label: 'Khiếu nại', icon: 'warning' },
                   { id: 'withdrawals', label: 'Quản lý rút tiền', icon: 'payments' },
                   { id: 'systemConfigs', label: 'Cấu hình hệ thống', icon: 'settings' },
@@ -1528,7 +1530,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) => {
           </aside>
 
           {/* Main Content Area */}
-          <div className="flex-1 w-full space-y-12">
+          <div className="flex-1 w-full min-w-0 space-y-12 overflow-x-hidden">
 
             {/* Tab Content */}
             
@@ -1812,6 +1814,10 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) => {
                   </div>
                 )}
               </div>
+            )}
+
+            {activeTab === 'orders' && (
+              <AdminOrderManagement onNavigate={onNavigate} />
             )}
 
             {activeTab === 'disputes' && (
