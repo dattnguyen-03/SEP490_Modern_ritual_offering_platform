@@ -7,6 +7,7 @@ import {
   getProvinces,
   getDistrictsByProvince,
   getWardsByDistrict,
+  getWardsByProvince,
   Province,
   District,
   Ward
@@ -95,6 +96,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigate }) => {
   const [selectedProvince, setSelectedProvince] = useState<number | null>(null);
   const [selectedDistrict, setSelectedDistrict] = useState<number | null>(null);
   const [selectedWard, setSelectedWard] = useState<number | null>(null);
+  const [isWardOnlyMode, setIsWardOnlyMode] = useState(false);
   const [detailedAddress, setDetailedAddress] = useState('');
   const [selectedExistingAddressId, setSelectedExistingAddressId] = useState<string | number | null>(null);
 
@@ -180,6 +182,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigate }) => {
   const [regSelectedProvince, setRegSelectedProvince] = useState<number | null>(null);
   const [regSelectedDistrict, setRegSelectedDistrict] = useState<number | null>(null);
   const [regSelectedWard, setRegSelectedWard] = useState<number | null>(null);
+  const [regIsWardOnlyMode, setRegIsWardOnlyMode] = useState(false);
   const [regDetailedAddress, setRegDetailedAddress] = useState('');
   const [regMapPreviewLoading, setRegMapPreviewLoading] = useState(false);
   const [regMapPreviewError, setRegMapPreviewError] = useState<string | null>(null);
@@ -223,6 +226,12 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigate }) => {
       .replace(/[^a-z0-9\s]/g, ' ')
       .replace(/\s+/g, ' ')
       .trim();
+  };
+
+  const matchesAddressSearch = (query: string, values: Array<string | undefined>): boolean => {
+    const normalizedQuery = normalizeAddressText(query);
+    if (!normalizedQuery) return true;
+    return values.some((value) => normalizeAddressText(value).includes(normalizedQuery));
   };
 
   const isNameMatch = (left?: string, right?: string): boolean => {
@@ -468,23 +477,37 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigate }) => {
           setWards([]);
           setSelectedDistrict(null);
           setSelectedWard(null);
+          setIsWardOnlyMode(false);
           const data = await getDistrictsByProvince(selectedProvince);
           setDistricts(data);
+          if (data.length === 0) {
+            setIsWardOnlyMode(true);
+            setLoadingWards(true);
+            const provinceWards = await getWardsByProvince(selectedProvince);
+            setWards(provinceWards);
+            setSelectedWard(null);
+          }
         } catch (err) {
           console.error('Failed to load districts:', err);
         } finally {
           setLoadingDistricts(false);
+          setLoadingWards(false);
         }
       };
       loadDistricts();
     } else {
       setDistricts([]);
       setWards([]);
+      setIsWardOnlyMode(false);
     }
   }, [selectedProvince]);
 
   // Load wards when district changes
   useEffect(() => {
+    if (isWardOnlyMode) {
+      return;
+    }
+
     if (selectedDistrict) {
       const loadWards = async () => {
         try {
@@ -503,7 +526,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigate }) => {
     } else {
       setWards([]);
     }
-  }, [selectedDistrict]);
+  }, [selectedDistrict, isWardOnlyMode]);
 
   // Auto-update addressText when address components change
   useEffect(() => {
@@ -551,7 +574,10 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigate }) => {
     const provinceName = provinces.find(p => p.code === selectedProvince)?.name;
     const districtName = districts.find(d => d.code === selectedDistrict)?.name;
     const wardName = wards.find(w => w.code === selectedWard)?.name;
-    const hasEnoughAddress = !!detailedAddress.trim() && !!provinceName && !!districtName;
+    const hasEnoughAddress =
+      !!detailedAddress.trim() &&
+      !!provinceName &&
+      (!!districtName || isWardOnlyMode);
 
     if (!hasEnoughAddress) {
       setMapPreview(null);
@@ -569,7 +595,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigate }) => {
         const result = await geocodingService.geocodeAddressComponents({
           detailedAddress: detailedAddress.trim(),
           wardName,
-          districtName,
+          districtName: districtName || undefined,
           provinceName,
         });
 
@@ -613,6 +639,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigate }) => {
     provinces,
     districts,
     wards,
+    isWardOnlyMode,
   ]);
 
   // Fetch profile data on component mount
@@ -835,23 +862,37 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigate }) => {
           setRegWards([]);
           setRegSelectedDistrict(null);
           setRegSelectedWard(null);
+          setRegIsWardOnlyMode(false);
           const data = await getDistrictsByProvince(regSelectedProvince);
           setRegDistricts(data);
+          if (data.length === 0) {
+            setRegIsWardOnlyMode(true);
+            setLoadingRegWards(true);
+            const provinceWards = await getWardsByProvince(regSelectedProvince);
+            setRegWards(provinceWards);
+            setRegSelectedWard(null);
+          }
         } catch (err) {
           console.error('Failed to load registration districts:', err);
         } finally {
           setLoadingRegDistricts(false);
+          setLoadingRegWards(false);
         }
       };
       loadDistricts();
     } else {
       setRegDistricts([]);
       setRegWards([]);
+      setRegIsWardOnlyMode(false);
     }
   }, [regSelectedProvince]);
 
   // Load registration wards when district changes
   useEffect(() => {
+    if (regIsWardOnlyMode) {
+      return;
+    }
+
     if (regSelectedDistrict) {
       const loadWards = async () => {
         try {
@@ -870,7 +911,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigate }) => {
     } else {
       setRegWards([]);
     }
-  }, [regSelectedDistrict]);
+  }, [regSelectedDistrict, regIsWardOnlyMode]);
 
   // Auto-update registerForm.shopAddressText when components change
   useEffect(() => {
@@ -896,7 +937,10 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigate }) => {
     const provinceName = provinces.find(p => p.code === regSelectedProvince)?.name;
     const districtName = regDistricts.find(d => d.code === regSelectedDistrict)?.name;
     const wardName = regWards.find(w => w.code === regSelectedWard)?.name;
-    const hasEnoughAddress = !!regDetailedAddress.trim() && !!provinceName && !!districtName;
+    const hasEnoughAddress =
+      !!regDetailedAddress.trim() &&
+      !!provinceName &&
+      (!!districtName || regIsWardOnlyMode);
 
     if (!hasEnoughAddress) {
       setRegMapPreview(null);
@@ -914,7 +958,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigate }) => {
         const result = await geocodingService.geocodeAddressComponents({
           detailedAddress: regDetailedAddress.trim(),
           wardName,
-          districtName,
+          districtName: districtName || undefined,
           provinceName,
         });
 
@@ -956,6 +1000,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigate }) => {
     provinces,
     regDistricts,
     regWards,
+    regIsWardOnlyMode,
   ]);
 
   // Registration address suggestions
@@ -1025,18 +1070,28 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigate }) => {
           setRegSelectedProvince(province.code);
           const districtsData = await getDistrictsByProvince(province.code);
           setRegDistricts(districtsData);
+            if (districtsData.length === 0) {
+              setRegIsWardOnlyMode(true);
+              const provinceWards = await getWardsByProvince(province.code);
+              setRegWards(provinceWards);
+              const ward = provinceWards.find((w) => isNameMatch(w.name, address.wardName));
+              if (ward) {
+                setRegSelectedWard(ward.code);
+              }
+            } else {
+              setRegIsWardOnlyMode(false);
+              const district = districtsData.find((d) => isNameMatch(d.name, address.districtName));
+              if (district) {
+                setRegSelectedDistrict(district.code);
+                const wardsData = await getWardsByDistrict(district.code);
+                setRegWards(wardsData);
 
-          const district = districtsData.find((d) => isNameMatch(d.name, address.districtName));
-          if (district) {
-            setRegSelectedDistrict(district.code);
-            const wardsData = await getWardsByDistrict(district.code);
-            setRegWards(wardsData);
-
-            const ward = wardsData.find((w) => isNameMatch(w.name, address.wardName));
-            if (ward) {
-              setRegSelectedWard(ward.code);
+                const ward = wardsData.find((w) => isNameMatch(w.name, address.wardName));
+                if (ward) {
+                  setRegSelectedWard(ward.code);
+                }
+              }
             }
-          }
         }
 
         if (!isPinnedCoordinateLabel(address.detailedAddress)) {
@@ -1151,12 +1206,12 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigate }) => {
       let currentLat = registerForm.shopLatitude;
       let currentLng = registerForm.shopLongitude;
 
-      if (provinceName && districtName && regDetailedAddress.trim()) {
+      if (provinceName && regDetailedAddress.trim() && (districtName || regIsWardOnlyMode)) {
         try {
           const geoResult = await geocodingService.geocodeAddressComponents({
             detailedAddress: regDetailedAddress.trim(),
             wardName,
-            districtName,
+            districtName: districtName || undefined,
             provinceName,
           });
           if (geoResult) {
@@ -1233,12 +1288,12 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigate }) => {
       let currentLat = registerForm.shopLatitude;
       let currentLng = registerForm.shopLongitude;
 
-      if (provinceName && districtName && regDetailedAddress.trim()) {
+      if (provinceName && regDetailedAddress.trim() && (districtName || regIsWardOnlyMode)) {
         try {
           const geoResult = await geocodingService.geocodeAddressComponents({
             detailedAddress: regDetailedAddress.trim(),
             wardName,
-            districtName,
+            districtName: districtName || undefined,
             provinceName,
           });
           if (geoResult) {
@@ -1420,7 +1475,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigate }) => {
       const selectedDistrictName = districts.find(d => d.code === selectedDistrict)?.name;
       const selectedWardName = wards.find(w => w.code === selectedWard)?.name;
 
-      if (!selectedProvinceName || !selectedDistrictName) {
+      if (!selectedProvinceName || (!selectedDistrictName && !isWardOnlyMode)) {
         setGeoError('Vui lòng chọn đầy đủ Tỉnh/Thành phố và Quận/Huyện');
         return;
       }
@@ -1428,7 +1483,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigate }) => {
       console.log('🗺️ Getting coordinates with components:', {
         detailedAddress,
         wardName: selectedWardName,
-        districtName: selectedDistrictName,
+        districtName: selectedDistrictName || undefined,
         provinceName: selectedProvinceName
       });
 
@@ -1659,16 +1714,26 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigate }) => {
         setSelectedProvince(matchedProvince.code);
         const provinceDistricts = await getDistrictsByProvince(matchedProvince.code);
         setDistricts(provinceDistricts);
-
-        matchedDistrict = findDistrictByReverse(effectiveReverseData, provinceDistricts);
-        if (matchedDistrict) {
-          setSelectedDistrict(matchedDistrict.code);
-          const districtWards = await getWardsByDistrict(matchedDistrict.code);
-          setWards(districtWards);
-
-          matchedWard = findWardByReverse(effectiveReverseData, districtWards);
+        if (provinceDistricts.length === 0) {
+          setIsWardOnlyMode(true);
+          const provinceWards = await getWardsByProvince(matchedProvince.code);
+          setWards(provinceWards);
+          matchedWard = findWardByReverse(effectiveReverseData, provinceWards);
           if (matchedWard) {
             setSelectedWard(matchedWard.code);
+          }
+        } else {
+          setIsWardOnlyMode(false);
+          matchedDistrict = findDistrictByReverse(effectiveReverseData, provinceDistricts);
+          if (matchedDistrict) {
+            setSelectedDistrict(matchedDistrict.code);
+            const districtWards = await getWardsByDistrict(matchedDistrict.code);
+            setWards(districtWards);
+
+            matchedWard = findWardByReverse(effectiveReverseData, districtWards);
+            if (matchedWard) {
+              setSelectedWard(matchedWard.code);
+            }
           }
         }
       }
@@ -1689,7 +1754,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigate }) => {
       if (detailedAddress.trim().length >= 3 && !isPinnedCoordinateLabel(detailedAddress)) {
         const nearbySuggestions = await geocodingService.suggestAddresses(
           detailedAddress.trim(),
-          matchedDistrict?.name || effectiveReverseData.districtName || fallbackDistrictName,
+          matchedDistrict?.name || effectiveReverseData.districtName || fallbackDistrictName || undefined,
           matchedProvince?.name || effectiveReverseData.provinceName || fallbackProvinceName
         );
 
@@ -1758,16 +1823,16 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigate }) => {
       setError(null);
 
       // Auto-fetch coordinates from address before saving
-      if (selectedProvince && selectedDistrict) {
+      if (selectedProvince && (selectedDistrict || isWardOnlyMode)) {
         try {
           const selectedProvinceName = provinces.find(p => p.code === selectedProvince)?.name;
           const selectedDistrictName = districts.find(d => d.code === selectedDistrict)?.name;
           const selectedWardName = wards.find(w => w.code === selectedWard)?.name;
-          if (selectedProvinceName && selectedDistrictName) {
+          if (selectedProvinceName && (selectedDistrictName || isWardOnlyMode)) {
             const geoResult = await geocodingService.geocodeAddressComponents({
               detailedAddress: detailedAddress?.trim() || undefined,
               wardName: selectedWardName,
-              districtName: selectedDistrictName,
+              districtName: selectedDistrictName || undefined,
               provinceName: selectedProvinceName,
             });
             if (geoResult) {
@@ -2322,7 +2387,9 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigate }) => {
 
                 <div className="md:col-span-2 space-y-6">
                   {!regIsMapSelectionLocked ? (
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div
+                      className={`grid grid-cols-1 ${regIsWardOnlyMode ? 'md:grid-cols-2' : 'md:grid-cols-3'} gap-6`}
+                    >
                       <div className="space-y-2">
                         <label className="text-xs font-bold uppercase text-black tracking-widest">Tỉnh/Thành phố *</label>
                         <select
@@ -2340,22 +2407,24 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigate }) => {
                           {provinces.map(p => <option key={p.code} value={p.code}>{p.name}</option>)}
                         </select>
                       </div>
-                      <div className="space-y-2">
-                        <label className="text-xs font-bold uppercase text-black tracking-widest">Quận/Huyện *</label>
-                        <select
-                          value={regSelectedDistrict || ''}
-                          onChange={(e) => {
-                            setRegIsMapSelectionLocked(false);
-                            const code = e.target.value ? Number(e.target.value) : null;
-                            setRegSelectedDistrict(code);
-                          }}
-                          disabled={!regSelectedProvince}
-                          className="w-full px-5 py-4 rounded-2xl bg-gray-50 border border-gray-200 outline-none"
-                        >
-                          <option value="">Chọn Quận/Huyện</option>
-                          {regDistricts.map(d => <option key={d.code} value={d.code}>{d.name}</option>)}
-                        </select>
-                      </div>
+                      {!regIsWardOnlyMode && (
+                        <div className="space-y-2">
+                          <label className="text-xs font-bold uppercase text-black tracking-widest">Quận/Huyện *</label>
+                          <select
+                            value={regSelectedDistrict || ''}
+                            onChange={(e) => {
+                              setRegIsMapSelectionLocked(false);
+                              const code = e.target.value ? Number(e.target.value) : null;
+                              setRegSelectedDistrict(code);
+                            }}
+                            disabled={!regSelectedProvince}
+                            className="w-full px-5 py-4 rounded-2xl bg-gray-50 border border-gray-200 outline-none"
+                          >
+                            <option value="">Chọn Quận/Huyện</option>
+                            {regDistricts.map(d => <option key={d.code} value={d.code}>{d.name}</option>)}
+                          </select>
+                        </div>
+                      )}
                       <div className="space-y-2">
                         <label className="text-xs font-bold uppercase text-black tracking-widest">Phường/Xã *</label>
                         <select
@@ -2365,7 +2434,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigate }) => {
                             const code = e.target.value ? Number(e.target.value) : null;
                             setRegSelectedWard(code);
                           }}
-                          disabled={!regSelectedDistrict}
+                          disabled={(!regIsWardOnlyMode && !regSelectedDistrict) || (regIsWardOnlyMode && !regSelectedProvince)}
                           className="w-full px-5 py-4 rounded-2xl bg-gray-50 border border-gray-200 outline-none"
                         >
                           <option value="">Chọn Phường/Xã</option>
@@ -2966,7 +3035,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigate }) => {
                         )}
 
                         {!isMapSelectionLocked ? (
-                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          <div className={`grid grid-cols-1 ${isWardOnlyMode ? 'md:grid-cols-2' : 'md:grid-cols-3'} gap-4`}>
                             {/* Province */}
                             <div className="space-y-2">
                               <label className="text-xs font-bold uppercase text-black tracking-widest">
@@ -2991,8 +3060,12 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigate }) => {
                               >
                                 <option value="">{loadingProvinces ? 'Đang tải...' : 'Chọn Tỉnh/Thành phố'}</option>
                                 {provinces
-                                  .filter(province =>
-                                    province.name.toLowerCase().includes(provinceSearch.toLowerCase())
+                                  .filter((province) =>
+                                    matchesAddressSearch(provinceSearch, [
+                                      province.name,
+                                      province.full_name,
+                                      province.code_name || province.codename,
+                                    ])
                                   )
                                   .map(province => (
                                     <option key={province.code} value={province.code}>{province.name}</option>
@@ -3010,32 +3083,51 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigate }) => {
                             </div>
 
                             {/* District */}
-                            <div className="space-y-2">
-                              <label className="text-xs font-bold uppercase text-black tracking-widest">
-                                Quận/Huyện <span className="text-red-500">*</span>
-                              </label>
-                              <select
-                                value={selectedDistrict || ''}
-                                onChange={(e) => {
-                                  setSelectedExistingAddressId(null);
-                                  setIsMapSelectionLocked(false);
-                                  const code = e.target.value ? Number(e.target.value) : null;
-                                  setSelectedDistrict(code);
-                                  setSelectedWard(null);
-                                  setWardSearch('');
-                                }}
-                                disabled={!selectedProvince || loadingDistricts}
-                                required={selectedExistingAddressId === null}
-                                className="w-full px-4 py-3 rounded-xl bg-white border border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none disabled:bg-gray-100 disabled:cursor-not-allowed"
-                              >
-                                <option value="">
-                                  {loadingDistricts ? 'Đang tải...' : 'Vui lòng chọn Quận/Huyện'}
-                                </option>
-                                {districts.map(district => (
-                                  <option key={district.code} value={district.code}>{district.name}</option>
-                                ))}
-                              </select>
-                            </div>
+                            {!isWardOnlyMode && (
+                              <div className="space-y-2">
+                                <label className="text-xs font-bold uppercase text-black tracking-widest">
+                                  Quận/Huyện <span className="text-red-500">*</span>
+                                </label>
+                                <select
+                                  value={selectedDistrict || ''}
+                                  onChange={(e) => {
+                                    setSelectedExistingAddressId(null);
+                                    setIsMapSelectionLocked(false);
+                                    const code = e.target.value ? Number(e.target.value) : null;
+                                    setSelectedDistrict(code);
+                                    setSelectedWard(null);
+                                    setWardSearch('');
+                                  }}
+                                  disabled={!selectedProvince || loadingDistricts}
+                                  required={selectedExistingAddressId === null}
+                                  className="w-full px-4 py-3 rounded-xl bg-white border border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none disabled:bg-gray-100 disabled:cursor-not-allowed"
+                                >
+                                  <option value="">
+                                    {loadingDistricts ? 'Đang tải...' : 'Vui lòng chọn Quận/Huyện'}
+                                  </option>
+                                  {districts
+                                    .filter((district) =>
+                                      matchesAddressSearch(districtSearch, [
+                                        district.name,
+                                        district.full_name,
+                                        district.code_name || district.codename,
+                                      ])
+                                    )
+                                    .map((district) => (
+                                      <option key={district.code} value={district.code}>{district.name}</option>
+                                    ))}
+                                </select>
+                                {!loadingDistricts && districts.length > 0 && (
+                                  <input
+                                    type="text"
+                                    placeholder="Nhập quận, huyện để tìm"
+                                    value={districtSearch}
+                                    onChange={(e) => setDistrictSearch(e.target.value)}
+                                    className="w-full mt-2 px-4 py-2 rounded-lg bg-white border border-gray-300 text-sm focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none"
+                                  />
+                                )}
+                              </div>
+                            )}
 
                             {/* Ward */}
                             <div className="space-y-2">
@@ -3050,17 +3142,34 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigate }) => {
                                   const code = e.target.value ? Number(e.target.value) : null;
                                   setSelectedWard(code);
                                 }}
-                                disabled={!selectedDistrict || loadingWards}
+                                disabled={loadingWards || (!isWardOnlyMode && !selectedDistrict) || (isWardOnlyMode && !selectedProvince)}
                                 required={selectedExistingAddressId === null && wards.length > 0}
                                 className="w-full px-4 py-3 rounded-xl bg-white border border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none disabled:bg-gray-100 disabled:cursor-not-allowed"
                               >
                                 <option value="">
                                   {loadingWards ? 'Đang tải...' : 'Chọn Phường/Xã'}
                                 </option>
-                                {wards.map(ward => (
-                                  <option key={ward.code} value={ward.code}>{ward.name}</option>
-                                ))}
+                                {wards
+                                  .filter((ward) =>
+                                    matchesAddressSearch(wardSearch, [
+                                      ward.name,
+                                      ward.full_name,
+                                      ward.code_name || ward.codename,
+                                    ])
+                                  )
+                                  .map((ward) => (
+                                    <option key={ward.code} value={ward.code}>{ward.name}</option>
+                                  ))}
                               </select>
+                              {!loadingWards && wards.length > 0 && (
+                                <input
+                                  type="text"
+                                  placeholder="Nhập phường, xã để tìm"
+                                  value={wardSearch}
+                                  onChange={(e) => setWardSearch(e.target.value)}
+                                  className="w-full mt-2 px-4 py-2 rounded-lg bg-white border border-gray-300 text-sm focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none"
+                                />
+                              )}
                               {selectedDistrict && !loadingWards && wards.length === 0 && (
                                 <p className="text-xs text-amber-600 mt-1">
                                   ⚠️ Chưa có dữ liệu phường/xã cho quận/huyện này. Vui lòng nhập trực tiếp vào "Địa chỉ cụ thể".
@@ -3074,7 +3183,9 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigate }) => {
                               <label className="text-[10px] font-bold uppercase text-black tracking-widest block">Khu vực đã chọn</label>
                               <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
                                 <p><span className="font-semibold text-black">Tỉnh:</span> {provinces.find(p => p.code === selectedProvince)?.name || '---'}</p>
-                                <p><span className="font-semibold text-black">Quận/Huyện:</span> {districts.find(d => d.code === selectedDistrict)?.name || '---'}</p>
+                                {!isWardOnlyMode && (
+                                  <p><span className="font-semibold text-black">Quận/Huyện:</span> {districts.find(d => d.code === selectedDistrict)?.name || '---'}</p>
+                                )}
                                 <p><span className="font-semibold text-black">Phường/Xã:</span> {wards.find(w => w.code === selectedWard)?.name || '---'}</p>
                               </div>
                             </div>

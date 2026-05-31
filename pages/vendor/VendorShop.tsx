@@ -8,6 +8,7 @@ import {
   getProvinces,
   getDistrictsByProvince,
   getWardsByDistrict,
+  getWardsByProvince,
 } from '../../services/vietnamAddressApi';
 import AddressMapPicker from '../../components/AddressMapPicker';
 
@@ -68,6 +69,7 @@ const VendorShop: React.FC<VendorShopProps> = ({ onNavigate }) => {
   const [selectedProvince, setSelectedProvince] = useState<number | null>(null);
   const [selectedDistrict, setSelectedDistrict] = useState<number | null>(null);
   const [selectedWard, setSelectedWard] = useState<number | null>(null);
+  const [isWardOnlyMode, setIsWardOnlyMode] = useState(false);
   const [detailedAddress, setDetailedAddress] = useState('');
   const [mapPreview, setMapPreview] = useState<{ latitude: number; longitude: number } | null>(null);
   const [mapPreviewLoading, setMapPreviewLoading] = useState(false);
@@ -242,6 +244,7 @@ const VendorShop: React.FC<VendorShopProps> = ({ onNavigate }) => {
       setSelectedDistrict(null);
       setWards([]);
       setSelectedWard(null);
+      setIsWardOnlyMode(false);
       return;
     }
 
@@ -250,11 +253,24 @@ const VendorShop: React.FC<VendorShopProps> = ({ onNavigate }) => {
         setLoadingDistricts(true);
         const districtList = await getDistrictsByProvince(selectedProvince);
         setDistricts(districtList);
+        if (districtList.length === 0) {
+          setIsWardOnlyMode(true);
+          setLoadingWards(true);
+          const provinceWards = await getWardsByProvince(selectedProvince);
+          setWards(provinceWards);
+          setSelectedDistrict(null);
+          setSelectedWard(null);
+        } else {
+          setIsWardOnlyMode(false);
+          setWards([]);
+          setSelectedWard(null);
+        }
       } catch (error) {
         console.error('Failed to load districts:', error);
         setDistricts([]);
       } finally {
         setLoadingDistricts(false);
+        setLoadingWards(false);
       }
     };
 
@@ -262,6 +278,10 @@ const VendorShop: React.FC<VendorShopProps> = ({ onNavigate }) => {
   }, [selectedProvince]);
 
   useEffect(() => {
+    if (isWardOnlyMode) {
+      return;
+    }
+
     if (!selectedDistrict) {
       setWards([]);
       setSelectedWard(null);
@@ -282,7 +302,7 @@ const VendorShop: React.FC<VendorShopProps> = ({ onNavigate }) => {
     };
 
     loadWards();
-  }, [selectedDistrict]);
+  }, [selectedDistrict, isWardOnlyMode]);
 
   const displayShopName = (vendorProfile?.shopName || profile?.shopName || '').trim() || 'Chưa có tên cửa hàng';
 
@@ -396,7 +416,7 @@ const VendorShop: React.FC<VendorShopProps> = ({ onNavigate }) => {
     const selectedDistrictName = districts.find((d) => d.code === selectedDistrict)?.name;
     const selectedWardName = wards.find((w) => w.code === selectedWard)?.name;
 
-    if (!selectedProvinceName || !selectedDistrictName) {
+    if (!selectedProvinceName || (!selectedDistrictName && !isWardOnlyMode)) {
       setMapPreviewError('Vui lòng chọn Tỉnh/Thành phố và Quận/Huyện trước khi tìm trên bản đồ.');
       return;
     }
@@ -413,7 +433,7 @@ const VendorShop: React.FC<VendorShopProps> = ({ onNavigate }) => {
       const geoResult = await geocodingService.geocodeAddressComponents({
         detailedAddress: detailedAddress.trim(),
         wardName: selectedWardName,
-        districtName: selectedDistrictName,
+        districtName: selectedDistrictName || undefined,
         provinceName: selectedProvinceName,
       });
 
@@ -457,16 +477,26 @@ const VendorShop: React.FC<VendorShopProps> = ({ onNavigate }) => {
         setSelectedProvince(matchedProvince.code);
         const provinceDistricts = await getDistrictsByProvince(matchedProvince.code);
         setDistricts(provinceDistricts);
-
-        matchedDistrict = findDistrictByReverse(reverseData?.districtName, provinceDistricts);
-        if (matchedDistrict) {
-          setSelectedDistrict(matchedDistrict.code);
-          const districtWards = await getWardsByDistrict(matchedDistrict.code);
-          setWards(districtWards);
-
-          matchedWard = findWardByReverse(reverseData?.wardName, districtWards);
+        if (provinceDistricts.length === 0) {
+          setIsWardOnlyMode(true);
+          const provinceWards = await getWardsByProvince(matchedProvince.code);
+          setWards(provinceWards);
+          matchedWard = findWardByReverse(reverseData?.wardName, provinceWards);
           if (matchedWard) {
             setSelectedWard(matchedWard.code);
+          }
+        } else {
+          setIsWardOnlyMode(false);
+          matchedDistrict = findDistrictByReverse(reverseData?.districtName, provinceDistricts);
+          if (matchedDistrict) {
+            setSelectedDistrict(matchedDistrict.code);
+            const districtWards = await getWardsByDistrict(matchedDistrict.code);
+            setWards(districtWards);
+
+            matchedWard = findWardByReverse(reverseData?.wardName, districtWards);
+            if (matchedWard) {
+              setSelectedWard(matchedWard.code);
+            }
           }
         }
       }
@@ -507,7 +537,7 @@ const VendorShop: React.FC<VendorShopProps> = ({ onNavigate }) => {
     try {
       setUpdateLoading(true);
 
-      if (isCreatingNewAddress && (!selectedProvince || !selectedDistrict || !detailedAddress.trim())) {
+      if (isCreatingNewAddress && (!selectedProvince || (!selectedDistrict && !isWardOnlyMode) || !detailedAddress.trim())) {
         alert('Vui lòng nhập đầy đủ địa chỉ mới (Tỉnh/Thành phố, Quận/Huyện, địa chỉ chi tiết).');
         return;
       }
@@ -520,11 +550,11 @@ const VendorShop: React.FC<VendorShopProps> = ({ onNavigate }) => {
       let finalLatitude = formData.latitude;
       let finalLongitude = formData.longitude;
 
-      if (isCreatingNewAddress && selectedProvinceName && selectedDistrictName) {
+      if (isCreatingNewAddress && selectedProvinceName && (selectedDistrictName || isWardOnlyMode)) {
         const geoResult = await geocodingService.geocodeAddressComponents({
           detailedAddress: detailedAddress?.trim() || undefined,
           wardName: selectedWardName,
-          districtName: selectedDistrictName,
+          districtName: selectedDistrictName || undefined,
           provinceName: selectedProvinceName,
         });
 

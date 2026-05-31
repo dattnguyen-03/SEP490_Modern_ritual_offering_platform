@@ -18,6 +18,7 @@ import {
   getProvinces,
   getDistrictsByProvince,
   getWardsByDistrict,
+  getWardsByProvince,
 } from '../../services/vietnamAddressApi';
 import { vendorService } from '../../services/vendorService';
 import AddressMapPicker from '../../components/AddressMapPicker';
@@ -44,6 +45,12 @@ const isNameMatch = (left?: string, right?: string): boolean => {
   return leftNorm.includes(rightNorm) || rightNorm.includes(leftNorm);
 };
 
+const matchesAddressSearch = (query: string, values: Array<string | undefined>): boolean => {
+  const normalizedQuery = normalizeAddressText(query);
+  if (!normalizedQuery) return true;
+  return values.some((value) => normalizeAddressText(value).includes(normalizedQuery));
+};
+
 interface VendorSettingsProps {
   onNavigate: (path: string) => void;
 }
@@ -64,6 +71,7 @@ const VendorSettings: React.FC<VendorSettingsProps> = ({ onNavigate }) => {
   const [selectedProvince, setSelectedProvince] = useState<number | null>(null);
   const [selectedDistrict, setSelectedDistrict] = useState<number | null>(null);
   const [selectedWard, setSelectedWard] = useState<number | null>(null);
+  const [isWardOnlyMode, setIsWardOnlyMode] = useState(false);
   const [detailedAddress, setDetailedAddress] = useState('');
   const [mapPreview, setMapPreview] = useState<{ latitude: number; longitude: number } | null>(null);
   const [mapPreviewLoading, setMapPreviewLoading] = useState(false);
@@ -266,6 +274,7 @@ const VendorSettings: React.FC<VendorSettingsProps> = ({ onNavigate }) => {
       setSelectedDistrict(null);
       setWards([]);
       setSelectedWard(null);
+      setIsWardOnlyMode(false);
       return;
     }
 
@@ -274,11 +283,24 @@ const VendorSettings: React.FC<VendorSettingsProps> = ({ onNavigate }) => {
         setLoadingDistricts(true);
         const districtList = await getDistrictsByProvince(selectedProvince);
         setDistricts(districtList);
+        if (districtList.length === 0) {
+          setIsWardOnlyMode(true);
+          setLoadingWards(true);
+          const provinceWards = await getWardsByProvince(selectedProvince);
+          setWards(provinceWards);
+          setSelectedDistrict(null);
+          setSelectedWard(null);
+        } else {
+          setIsWardOnlyMode(false);
+          setWards([]);
+          setSelectedWard(null);
+        }
       } catch (error) {
         console.error('Failed to load districts:', error);
         setDistricts([]);
       } finally {
         setLoadingDistricts(false);
+        setLoadingWards(false);
       }
     };
 
@@ -286,6 +308,10 @@ const VendorSettings: React.FC<VendorSettingsProps> = ({ onNavigate }) => {
   }, [selectedProvince]);
 
   useEffect(() => {
+    if (isWardOnlyMode) {
+      return;
+    }
+
     if (!selectedDistrict) {
       setWards([]);
       setSelectedWard(null);
@@ -306,7 +332,7 @@ const VendorSettings: React.FC<VendorSettingsProps> = ({ onNavigate }) => {
     };
 
     loadWards();
-  }, [selectedDistrict]);
+  }, [selectedDistrict, isWardOnlyMode]);
 
   useEffect(() => {
     if (!isEditing || !initialShopInfo || provinces.length === 0 || selectedProvince) return;
@@ -380,7 +406,10 @@ const VendorSettings: React.FC<VendorSettingsProps> = ({ onNavigate }) => {
     const provinceName = provinces.find(p => p.code === selectedProvince)?.name;
     const districtName = districts.find(d => d.code === selectedDistrict)?.name;
     const wardName = wards.find(w => w.code === selectedWard)?.name;
-    const hasEnoughAddress = !!detailedAddress.trim() && !!provinceName && !!districtName;
+    const hasEnoughAddress =
+      !!detailedAddress.trim() &&
+      !!provinceName &&
+      (!!districtName || isWardOnlyMode);
 
     if (!hasEnoughAddress) {
       setMapPreview(null);
@@ -398,7 +427,7 @@ const VendorSettings: React.FC<VendorSettingsProps> = ({ onNavigate }) => {
         const result = await geocodingService.geocodeAddressComponents({
           detailedAddress: detailedAddress.trim(),
           wardName,
-          districtName,
+          districtName: districtName || undefined,
           provinceName,
         });
 
@@ -440,6 +469,7 @@ const VendorSettings: React.FC<VendorSettingsProps> = ({ onNavigate }) => {
     provinces,
     districts,
     wards,
+    isWardOnlyMode,
   ]);
 
   // Address suggestions logic (Like ProfilePage)
@@ -615,15 +645,26 @@ const VendorSettings: React.FC<VendorSettingsProps> = ({ onNavigate }) => {
         const provinceDistricts = await getDistrictsByProvince(matchedProvince.code);
         setDistricts(provinceDistricts);
 
-        matchedDistrict = findDistrictByReverse(effectiveReverseData, provinceDistricts);
-        if (matchedDistrict) {
-          setSelectedDistrict(matchedDistrict.code);
-          const districtWards = await getWardsByDistrict(matchedDistrict.code);
-          setWards(districtWards);
-
-          matchedWard = findWardByReverse(effectiveReverseData, districtWards);
+        if (provinceDistricts.length === 0) {
+          setIsWardOnlyMode(true);
+          const provinceWards = await getWardsByProvince(matchedProvince.code);
+          setWards(provinceWards);
+          matchedWard = findWardByReverse(effectiveReverseData, provinceWards);
           if (matchedWard) {
             setSelectedWard(matchedWard.code);
+          }
+        } else {
+          setIsWardOnlyMode(false);
+          matchedDistrict = findDistrictByReverse(effectiveReverseData, provinceDistricts);
+          if (matchedDistrict) {
+            setSelectedDistrict(matchedDistrict.code);
+            const districtWards = await getWardsByDistrict(matchedDistrict.code);
+            setWards(districtWards);
+
+            matchedWard = findWardByReverse(effectiveReverseData, districtWards);
+            if (matchedWard) {
+              setSelectedWard(matchedWard.code);
+            }
           }
         }
       }
@@ -640,7 +681,7 @@ const VendorSettings: React.FC<VendorSettingsProps> = ({ onNavigate }) => {
       if (detailedAddress.trim().length >= 3) {
         const nearbySuggestions = await geocodingService.suggestAddresses(
           detailedAddress.trim(),
-          matchedDistrict?.name || effectiveReverseData.districtName || fallbackDistrictName,
+          matchedDistrict?.name || effectiveReverseData.districtName || fallbackDistrictName || undefined,
           matchedProvince?.name || effectiveReverseData.provinceName || fallbackProvinceName
         );
 
@@ -722,12 +763,12 @@ const VendorSettings: React.FC<VendorSettingsProps> = ({ onNavigate }) => {
         const districtName = districts.find(d => d.code === selectedDistrict)?.name;
         const wardName = wards.find(w => w.code === selectedWard)?.name;
 
-        if (provinceName && districtName && detailedAddress.trim()) {
+        if (provinceName && detailedAddress.trim() && (districtName || isWardOnlyMode)) {
           try {
             const geoResult = await geocodingService.geocodeAddressComponents({
               detailedAddress: detailedAddress.trim(),
               wardName,
-              districtName,
+              districtName: districtName || undefined,
               provinceName,
             });
             if (geoResult) {
@@ -1095,7 +1136,9 @@ const VendorSettings: React.FC<VendorSettingsProps> = ({ onNavigate }) => {
                   {isEditing && (
                     <div className="space-y-4">
                       {!isMapSelectionLocked ? (
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div
+                          className={`grid grid-cols-1 ${isWardOnlyMode ? 'md:grid-cols-2' : 'md:grid-cols-3'} gap-4`}
+                        >
                           {/* Province */}
                           <div className="space-y-2">
                             <label className="text-xs font-bold uppercase text-slate-400 tracking-widest">
@@ -1118,8 +1161,12 @@ const VendorSettings: React.FC<VendorSettingsProps> = ({ onNavigate }) => {
                             >
                               <option value="">{loadingProvinces ? 'Đang tải...' : 'Chọn Tỉnh/Thành phố'}</option>
                               {provinces
-                                .filter(province =>
-                                  province.name.toLowerCase().includes(provinceSearch.toLowerCase())
+                                .filter((province) =>
+                                  matchesAddressSearch(provinceSearch, [
+                                    province.name,
+                                    province.full_name,
+                                    province.code_name || province.codename,
+                                  ])
                                 )
                                 .map(province => (
                                   <option key={province.code} value={province.code}>{province.name}</option>
@@ -1136,42 +1183,49 @@ const VendorSettings: React.FC<VendorSettingsProps> = ({ onNavigate }) => {
                             )}
                           </div>
 
-                          {/* District */}
-                          <div className="space-y-2">
-                            <label className="text-xs font-bold uppercase text-slate-400 tracking-widest">
-                              Quận/Huyện <span className="text-red-500">*</span>
-                            </label>
-                            <select
-                              value={selectedDistrict || ''}
-                              onChange={(e) => {
-                                setIsMapSelectionLocked(false);
-                                const code = e.target.value ? Number(e.target.value) : null;
-                                setSelectedDistrict(code);
-                                setSelectedWard(null);
-                                setWardSearch('');
-                              }}
-                              disabled={!selectedProvince || loadingDistricts}
-                              className="w-full px-4 py-3 rounded-xl bg-white border border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none disabled:bg-gray-100 disabled:cursor-not-allowed"
-                            >
-                              <option value="">
-                                {loadingDistricts ? 'Đang tải...' : 'Vui lòng chọn Quận/Huyện'}
-                              </option>
-                              {districts
-                                .filter(d => d.name.toLowerCase().includes(districtSearch.toLowerCase()))
-                                .map(district => (
-                                  <option key={district.code} value={district.code}>{district.name}</option>
-                                ))}
-                            </select>
-                            {!loadingDistricts && districts.length > 0 && (
-                              <input
-                                type="text"
-                                placeholder="Nhập quận, huyện để tìm"
-                                value={districtSearch}
-                                onChange={(e) => setDistrictSearch(e.target.value)}
-                                className="w-full mt-2 px-4 py-2 rounded-lg bg-white border border-gray-300 text-sm focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none"
-                              />
-                            )}
-                          </div>
+                          {!isWardOnlyMode && (
+                            <div className="space-y-2">
+                              <label className="text-xs font-bold uppercase text-slate-400 tracking-widest">
+                                Quận/Huyện <span className="text-red-500">*</span>
+                              </label>
+                              <select
+                                value={selectedDistrict || ''}
+                                onChange={(e) => {
+                                  setIsMapSelectionLocked(false);
+                                  const code = e.target.value ? Number(e.target.value) : null;
+                                  setSelectedDistrict(code);
+                                  setSelectedWard(null);
+                                  setWardSearch('');
+                                }}
+                                disabled={!selectedProvince || loadingDistricts}
+                                className="w-full px-4 py-3 rounded-xl bg-white border border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none disabled:bg-gray-100 disabled:cursor-not-allowed"
+                              >
+                                <option value="">
+                                  {loadingDistricts ? 'Đang tải...' : 'Vui lòng chọn Quận/Huyện'}
+                                </option>
+                                {districts
+                                  .filter((district) =>
+                                    matchesAddressSearch(districtSearch, [
+                                      district.name,
+                                      district.full_name,
+                                      district.code_name || district.codename,
+                                    ])
+                                  )
+                                  .map(district => (
+                                    <option key={district.code} value={district.code}>{district.name}</option>
+                                  ))}
+                              </select>
+                              {!loadingDistricts && districts.length > 0 && (
+                                <input
+                                  type="text"
+                                  placeholder="Nhập quận, huyện để tìm"
+                                  value={districtSearch}
+                                  onChange={(e) => setDistrictSearch(e.target.value)}
+                                  className="w-full mt-2 px-4 py-2 rounded-lg bg-white border border-gray-300 text-sm focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none"
+                                />
+                              )}
+                            </div>
+                          )}
 
                           {/* Ward */}
                           <div className="space-y-2">
@@ -1185,14 +1239,20 @@ const VendorSettings: React.FC<VendorSettingsProps> = ({ onNavigate }) => {
                                 const code = e.target.value ? Number(e.target.value) : null;
                                 setSelectedWard(code);
                               }}
-                              disabled={!selectedDistrict || loadingWards}
+                              disabled={loadingWards || (!isWardOnlyMode && !selectedDistrict) || (isWardOnlyMode && !selectedProvince)}
                               className="w-full px-4 py-3 rounded-xl bg-white border border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none disabled:bg-gray-100 disabled:cursor-not-allowed"
                             >
                               <option value="">
                                 {loadingWards ? 'Đang tải...' : 'Chọn Phường/Xã'}
                               </option>
                               {wards
-                                .filter(w => w.name.toLowerCase().includes(wardSearch.toLowerCase()))
+                                .filter((ward) =>
+                                  matchesAddressSearch(wardSearch, [
+                                    ward.name,
+                                    ward.full_name,
+                                    ward.code_name || ward.codename,
+                                  ])
+                                )
                                 .map(ward => (
                                   <option key={ward.code} value={ward.code}>{ward.name}</option>
                                 ))}
@@ -1214,7 +1274,9 @@ const VendorSettings: React.FC<VendorSettingsProps> = ({ onNavigate }) => {
                             <label className="text-[10px] font-bold uppercase text-slate-400 tracking-widest block">Khu vực đã chọn</label>
                             <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
                               <p><span className="font-semibold text-black">Tỉnh:</span> {provinces.find(p => p.code === selectedProvince)?.name || '---'}</p>
-                              <p><span className="font-semibold text-black">Quận/Huyện:</span> {districts.find(d => d.code === selectedDistrict)?.name || '---'}</p>
+                              {!isWardOnlyMode && (
+                                <p><span className="font-semibold text-black">Quận/Huyện:</span> {districts.find(d => d.code === selectedDistrict)?.name || '---'}</p>
+                              )}
                               <p><span className="font-semibold text-black">Phường/Xã:</span> {wards.find(w => w.code === selectedWard)?.name || '---'}</p>
                             </div>
                           </div>
