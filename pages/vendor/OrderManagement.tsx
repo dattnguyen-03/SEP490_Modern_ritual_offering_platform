@@ -134,6 +134,88 @@ const parseDate = (v: unknown): Date | null => {
 const toYmd = (d: Date) =>
   `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 
+const generateEstimatedTimeOptions = (deliveryTimeStr: string) => {
+  if (!deliveryTimeStr) return [];
+  const [hours, minutes] = deliveryTimeStr.split(':').map(Number);
+  const options: { value: string; label: string }[] = [];
+  
+  // Khách nhận lúc HH:mm. Ta sinh các mốc cách nhau 30 phút trong khoảng từ trước 3 tiếng đến trước 1 tiếng.
+  // Tổng cộng có 5 mốc: trước 3.0h, trước 2.5h, trước 2.0h, trước 1.5h, trước 1.0h.
+  const offsets = [3.0, 2.5, 2.0, 1.5, 1.0];
+  
+  offsets.forEach(offset => {
+    const totalMinutes = hours * 60 + (minutes || 0) - offset * 60;
+    if (totalMinutes >= 0) {
+      const h = Math.floor(totalMinutes / 60);
+      const m = totalMinutes % 60;
+      const pad = (num: number) => String(num).padStart(2, '0');
+      const timeStr = `${pad(h)}:${pad(m)}`;
+      options.push({
+        value: timeStr,
+        label: timeStr
+      });
+    }
+  });
+  
+  const uniqueOptions = options.filter((opt, index, self) => 
+    self.findIndex(t => t.value === opt.value) === index
+  ).sort((a, b) => a.value.localeCompare(b.value));
+  
+  return uniqueOptions;
+};
+
+const getAvailableTimeRanges = (deliveryTimeStr: string) => {
+  if (!deliveryTimeStr) return { ampm: [], hour12Map: { AM: [], PM: [] }, minutesMap: {} };
+  
+  const [deliveryHour, deliveryMinute] = deliveryTimeStr.split(':').map(Number);
+  
+  const deliveryMinutes = deliveryHour * 60 + (deliveryMinute || 0);
+  const minMinutes = deliveryMinutes - 3 * 60; // Trước 3 tiếng
+  const maxMinutes = deliveryMinutes - 1 * 60; // Trước 1 tiếng
+  
+  const availableHours24: number[] = [];
+  const minutesMap: Record<number, number[]> = {};
+  
+  for (let h = 0; h < 24; h++) {
+    const minsForThisHour: number[] = [];
+    for (let m = 0; m < 60; m += 5) {
+      const timeInMins = h * 60 + m;
+      if (timeInMins >= minMinutes && timeInMins <= maxMinutes) {
+        minsForThisHour.push(m);
+      }
+    }
+    if (minsForThisHour.length > 0) {
+      availableHours24.push(h);
+      minutesMap[h] = minsForThisHour;
+    }
+  }
+  
+  const availableAMPM = new Set<string>();
+  const hour12Map: Record<string, { hour12Str: string; hour24: number }[]> = {
+    AM: [],
+    PM: []
+  };
+  
+  availableHours24.forEach(h24 => {
+    const period = h24 >= 12 ? 'PM' : 'AM';
+    availableAMPM.add(period);
+    
+    let h12 = h24 % 12;
+    if (h12 === 0) h12 = 12;
+    const hour12Str = String(h12).padStart(2, '0');
+    
+    if (!hour12Map[period].some(x => x.hour12Str === hour12Str)) {
+      hour12Map[period].push({ hour12Str, hour24: h24 });
+    }
+  });
+  
+  return {
+    ampm: Array.from(availableAMPM),
+    hour12Map,
+    minutesMap
+  };
+};
+
 const formatYmdToVi = (ymd: string): string => {
   if (!ymd) return '';
   const [year, month, day] = ymd.split('-');
@@ -344,6 +426,11 @@ const OrderManagement: React.FC<OrderManagementProps> = ({ onNavigate: _onNaviga
   const [statusReason, setStatusReason] = useState('');
   const [statusSuccess, setStatusSuccess] = useState<string | null>(null);
   const [deliveryProofImages, setDeliveryProofImages] = useState<File[]>([]);
+  const [estimatedDelivery, setEstimatedDelivery] = useState('');
+  const [showTimePicker, setShowTimePicker] = useState(false);
+  const [pickerPeriod, setPickerPeriod] = useState<'AM' | 'PM'>('PM');
+  const [pickerHour12, setPickerHour12] = useState('05');
+  const [pickerMinute, setPickerMinute] = useState(0);
   const [pausingOrders, setPausingOrders] = useState(false);
   const [showPauseModal, setShowPauseModal] = useState(false);
   const [pauseDates, setPauseDates] = useState<string[]>([]);
@@ -649,6 +736,20 @@ const OrderManagement: React.FC<OrderManagementProps> = ({ onNavigate: _onNaviga
       return;
     }
 
+    let formattedDeliveryTime: string | undefined;
+    if (newStatus === 'Confirmed') {
+      if (!estimatedDelivery) {
+        setStatusError('Vui lòng chọn thời gian giao hàng dự kiến.');
+        return;
+      }
+      // estimatedDelivery now only holds the time string "HH:mm" (e.g. "17:00")
+      // We combine it with selectedOrder.delivery.deliveryDate (YYYY-MM-DD) to form "YYYY-MM-DDTHH:mm:ss"
+      const datePart = selectedOrder?.delivery?.deliveryDate 
+        ? selectedOrder.delivery.deliveryDate.substring(0, 10) 
+        : toYmd(new Date());
+      formattedDeliveryTime = `${datePart}T${estimatedDelivery}:00`;
+    }
+
     setStatusUpdating(true);
     setStatusError(null);
     setStatusSuccess(null);
@@ -656,7 +757,13 @@ const OrderManagement: React.FC<OrderManagementProps> = ({ onNavigate: _onNaviga
       if (newStatus === 'Cancelled') {
         await orderService.cancelOrder(selectedOrder.orderId, statusReason, 'vendor');
       } else {
-        await orderService.updateOrderStatus(selectedOrder.orderId, newStatus, statusReason, deliveryProofImages);
+        await orderService.updateOrderStatus(
+          selectedOrder.orderId,
+          newStatus,
+          statusReason,
+          deliveryProofImages,
+          formattedDeliveryTime
+        );
       }
       const [detail, list] = await Promise.all([
         orderService.getVendorOrderDetails(selectedOrder.orderId),
@@ -667,6 +774,7 @@ const OrderManagement: React.FC<OrderManagementProps> = ({ onNavigate: _onNaviga
       setNewStatus('');
       setStatusReason('');
       setDeliveryProofImages([]);
+      setEstimatedDelivery('');
       setStatusSuccess(
         newStatus === 'Delivered' ? 'Đơn hàng đã giao thành công. Khách hàng sẽ xác nhận để hoàn thành đơn.' :
           newStatus === 'Cancelled' ? 'Đơn hàng đã được hủy thành công.' :
@@ -706,6 +814,8 @@ const OrderManagement: React.FC<OrderManagementProps> = ({ onNavigate: _onNaviga
     setStatusError(null);
     setStatusSuccess(null);
     setDeliveryProofImages([]);
+    setEstimatedDelivery('');
+    setShowTimePicker(false);
   };
 
   const handlePauseOrders = () => {
@@ -1932,6 +2042,25 @@ const OrderManagement: React.FC<OrderManagementProps> = ({ onNavigate: _onNaviga
                             if (nextValue !== 'Delivered' && nextValue !== 'Delivering') {
                               setDeliveryProofImages([]);
                             }
+
+                            // Tự động chọn ngày giao hàng và tính giờ giao dự kiến mặc định
+                            if (nextValue === 'Confirmed' && selectedOrder?.delivery?.deliveryTime) {
+                              const timePart = selectedOrder.delivery.deliveryTime || '12:00';
+                              const timeSegments = timePart.split(':');
+                              const hours = Number(timeSegments[0]) || 12;
+                              const minutes = Number(timeSegments[1]) || 0;
+
+                              // Mặc định lùi lại 2 tiếng trước giờ khách nhận (nằm trong khoảng 1 - 3 tiếng)
+                              let targetHours = hours - 2;
+                              if (targetHours < 0) targetHours = 0;
+
+                              const pad = (num: number) => String(num).padStart(2, '0');
+                              const defaultTime = `${pad(targetHours)}:${pad(minutes)}`;
+                              setEstimatedDelivery(defaultTime);
+                            } else {
+                              setEstimatedDelivery('');
+                            }
+
                             setStatusError(null);
                             setStatusSuccess(null);
                           }}
@@ -1942,6 +2071,76 @@ const OrderManagement: React.FC<OrderManagementProps> = ({ onNavigate: _onNaviga
                             <option key={s.value} value={s.value}>{s.label}</option>
                           ))}
                         </select>
+                        {newStatus === 'Confirmed' && (
+                          <div className="space-y-3.5 bg-slate-50 p-4 rounded-2xl border border-slate-100 transition-all duration-300">
+                            <div>
+                              <label className="text-[10px] font-black text-slate-400 uppercase ml-2 tracking-wider block mb-1">
+                                Ngày giao hàng (Cố định theo đơn)
+                              </label>
+                              <div className="px-4 py-3 rounded-xl border border-gray-200 text-sm bg-gray-100 text-slate-600 font-bold">
+                                {selectedOrder?.delivery?.deliveryDate ? formatDateVi(selectedOrder.delivery.deliveryDate) : 'N/A'}
+                              </div>
+                            </div>
+
+                            <div>
+                              <label className="text-[10px] font-black text-slate-400 uppercase ml-2 tracking-wider block mb-1">
+                                Giờ giao hàng dự kiến <span className="text-red-500">*</span>
+                              </label>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  let h24 = 17;
+                                  let m = 0;
+                                  if (estimatedDelivery && estimatedDelivery.includes(':')) {
+                                    const parts = estimatedDelivery.split(':');
+                                    h24 = Number(parts[0]) || 17;
+                                    m = Number(parts[1]) || 0;
+                                  }
+                                  const period = h24 >= 12 ? 'PM' : 'AM';
+                                  let h12 = h24 % 12;
+                                  if (h12 === 0) h12 = 12;
+                                  
+                                  setPickerPeriod(period);
+                                  setPickerHour12(String(h12).padStart(2, '0'));
+                                  setPickerMinute(m);
+                                  setShowTimePicker(true);
+                                }}
+                                className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm bg-white text-slate-800 font-bold flex items-center justify-between hover:border-primary hover:ring-2 hover:ring-primary/10 transition"
+                              >
+                                <span>
+                                  {estimatedDelivery ? (() => {
+                                    const [h24Str, mStr] = estimatedDelivery.split(':');
+                                    const h24 = Number(h24Str);
+                                    const period = h24 >= 12 ? 'PM' : 'AM';
+                                    let h12 = h24 % 12;
+                                    if (h12 === 0) h12 = 12;
+                                    return `${String(h12).padStart(2, '0')}:${mStr} ${period}`;
+                                  })() : '-- Chọn giờ giao --'}
+                                </span>
+                                <span className="material-symbols-outlined text-slate-400 text-lg">schedule</span>
+                              </button>
+                            </div>
+
+                            {selectedOrder?.delivery?.deliveryDate && selectedOrder?.delivery?.deliveryTime && (() => {
+                              const timePart = selectedOrder.delivery.deliveryTime || '12:00';
+                              const [hours, minutes] = timePart.split(':').map(Number);
+                              const pad = (num: number) => String(num).padStart(2, '0');
+
+                              let startHours = hours - 3;
+                              if (startHours < 0) startHours = 0;
+
+                              let endHours = hours - 1;
+                              if (endHours < 0) endHours = 0;
+
+                              const rangeStr = `${pad(startHours)}:${pad(minutes || 0)} - ${pad(endHours)}:${pad(minutes || 0)}`;
+                              return (
+                                <p className="text-[11px] text-amber-600 font-semibold mt-1">
+                                  💡 Gợi ý: Giao từ {rangeStr} (trước giờ khách nhận từ 1 - 3 tiếng để chuẩn bị mâm cúng chu đáo). Khách nhận lúc {selectedOrder.delivery.deliveryTime?.slice(0, 5)}.
+                                </p>
+                              );
+                            })()}
+                          </div>
+                        )}
                         {newStatus === 'Cancelled' && (
                           <textarea
                             value={statusReason}
@@ -2156,6 +2355,180 @@ const OrderManagement: React.FC<OrderManagementProps> = ({ onNavigate: _onNaviga
           </div>
         </div>
       )}
+
+      {/* Time Picker Modal */}
+      {showTimePicker && selectedOrder?.delivery?.deliveryTime && (() => {
+        const timeRanges = getAvailableTimeRanges(selectedOrder.delivery.deliveryTime);
+        const hours12List = timeRanges.hour12Map[pickerPeriod] || [];
+        const activeHour24 = hours12List.find(h => h.hour12Str === pickerHour12)?.hour24 ?? (pickerPeriod === 'PM' ? 17 : 5);
+        const minutesList = timeRanges.minutesMap[activeHour24] || [0];
+        
+        return (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[999] flex items-center justify-center p-4 transition-all duration-300">
+            <div className="max-w-2xl w-full bg-white rounded-[2rem] overflow-hidden grid grid-cols-12 shadow-2xl animate-in fade-in zoom-in duration-200 relative border border-gold/10">
+              {/* Close Button */}
+              <button 
+                type="button"
+                onClick={() => setShowTimePicker(false)}
+                className="absolute top-6 right-6 size-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 hover:text-black hover:bg-slate-200 transition-all z-10"
+              >
+                <span className="material-symbols-outlined text-lg">close</span>
+              </button>
+
+              {/* Left Panel - Teal color */}
+              <div className="col-span-12 md:col-span-5 bg-[#14b8a6] p-8 flex flex-col justify-between text-white min-h-[220px] md:min-h-auto">
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/80">Giờ Giao Hàng</p>
+                  <h2 className="text-6xl font-black mt-4 tracking-tight">
+                    {pickerHour12}:{String(pickerMinute).padStart(2, '0')}
+                    <span className="text-2xl font-bold ml-2 uppercase text-white/90">{pickerPeriod}</span>
+                  </h2>
+                </div>
+                <p className="text-[11px] text-white/80 leading-relaxed font-medium">
+                  Chọn giờ theo từng ô để chỉnh nhanh như form đồng hồ.
+                </p>
+              </div>
+
+              {/* Right Panel - Pickers */}
+              <div className="col-span-12 md:col-span-7 p-6 md:p-8 flex flex-col justify-between bg-white">
+                <div>
+                  <h3 className="text-base font-black text-slate-900 uppercase tracking-wide">Chọn Thời Gian</h3>
+                  <p className="text-xs text-slate-400 font-semibold mt-0.5 mb-6">Chọn giờ, phút và sáng / chiều</p>
+                  
+                  <div className="grid grid-cols-3 gap-4 md:gap-6">
+                    {/* GIỜ */}
+                    <div className="space-y-2">
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Giờ</p>
+                      <div className="h-44 overflow-y-auto border border-slate-100 rounded-2xl p-1.5 space-y-1 scrollbar-thin bg-slate-50/50 shadow-inner flex flex-col items-center">
+                        {hours12List.length > 0 ? (
+                          hours12List.map(h => {
+                            const isSelected = h.hour12Str === pickerHour12;
+                            return (
+                              <button
+                                key={h.hour12Str}
+                                type="button"
+                                onClick={() => {
+                                  setPickerHour12(h.hour12Str);
+                                  const newMins = timeRanges.minutesMap[h.hour24] || [0];
+                                  if (!newMins.includes(pickerMinute)) {
+                                    setPickerMinute(newMins[0] || 0);
+                                  }
+                                }}
+                                className={`w-full py-2 text-center text-sm font-black rounded-xl transition-all ${
+                                  isSelected 
+                                    ? 'bg-black text-white shadow-md' 
+                                    : 'text-slate-600 hover:bg-slate-100 hover:text-black'
+                                }`}
+                              >
+                                {h.hour12Str}
+                              </button>
+                            );
+                          })
+                        ) : (
+                          <p className="text-[10px] text-slate-400 font-semibold py-8 text-center">Không có giờ hợp lệ</p>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* PHÚT */}
+                    <div className="space-y-2">
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Phút</p>
+                      <div className="h-44 overflow-y-auto border border-slate-100 rounded-2xl p-1.5 space-y-1 scrollbar-thin bg-slate-50/50 shadow-inner flex flex-col items-center">
+                        {minutesList.map(m => {
+                          const isSelected = m === pickerMinute;
+                          return (
+                            <button
+                              key={m}
+                              type="button"
+                              onClick={() => setPickerMinute(m)}
+                              className={`w-full py-2 text-center text-sm font-black rounded-xl transition-all ${
+                                isSelected 
+                                  ? 'bg-black text-white shadow-md' 
+                                  : 'text-slate-600 hover:bg-slate-100 hover:text-black'
+                              }`}
+                            >
+                              {String(m).padStart(2, '0')}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* BUỔI */}
+                    <div className="space-y-2">
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Buổi</p>
+                      <div className="space-y-2 flex flex-col items-center w-full">
+                        {['AM', 'PM'].map(p => {
+                          const isAvailable = timeRanges.ampm.includes(p);
+                          const isSelected = p === pickerPeriod;
+                          return (
+                            <button
+                              key={p}
+                              type="button"
+                              disabled={!isAvailable}
+                              onClick={() => {
+                                setPickerPeriod(p as any);
+                                const list12 = timeRanges.hour12Map[p as any] || [];
+                                if (list12.length > 0) {
+                                  const firstH = list12[0];
+                                  setPickerHour12(firstH.hour12Str);
+                                  const newMins = timeRanges.minutesMap[firstH.hour24] || [0];
+                                  setPickerMinute(newMins[0] || 0);
+                                }
+                              }}
+                              className={`w-full py-3.5 text-center text-xs font-black rounded-xl border transition-all ${
+                                !isAvailable 
+                                  ? 'bg-slate-100 text-slate-300 border-slate-200 cursor-not-allowed opacity-50' 
+                                  : isSelected 
+                                    ? 'bg-black text-white border-black shadow-md' 
+                                    : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+                              }`}
+                            >
+                              {p}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-8 pt-4 border-t border-slate-100 flex items-center justify-between gap-4">
+                  <p className="text-[9px] text-slate-400 font-semibold max-w-[160px] leading-tight">
+                    Thời gian sẽ được kiểm tra theo hạn chuẩn bị trước khi gửi shipper.
+                  </p>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setShowTimePicker(false)}
+                      className="px-5 py-2.5 rounded-xl border border-slate-200 text-slate-500 font-bold text-xs hover:bg-slate-50 transition-all"
+                    >
+                      Hủy
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        let h24 = Number(pickerHour12);
+                        if (pickerPeriod === 'PM' && h24 < 12) h24 += 12;
+                        if (pickerPeriod === 'AM' && h24 === 12) h24 = 0;
+                        
+                        const pad = (num: number) => String(num).padStart(2, '0');
+                        const finalTime = `${pad(h24)}:${pad(pickerMinute)}`;
+                        setEstimatedDelivery(finalTime);
+                        setShowTimePicker(false);
+                        setStatusError(null);
+                      }}
+                      className="px-5 py-2.5 rounded-xl bg-black text-white font-bold text-xs hover:opacity-90 shadow-md shadow-slate-200 transition-all"
+                    >
+                      Xác nhận
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 };

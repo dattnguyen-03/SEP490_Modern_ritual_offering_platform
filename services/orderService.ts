@@ -1192,13 +1192,22 @@ class OrderService {
     }
 
     // Update order status (vendor)
-    async updateOrderStatus(orderId: string, newStatus: string, reason?: string, deliveryProofImages: File[] = []): Promise<boolean> {
+    async updateOrderStatus(
+        orderId: string,
+        newStatus: string,
+        reason?: string,
+        deliveryProofImages: File[] = [],
+        estimatedDelivery?: string
+    ): Promise<boolean> {
         return new Promise<boolean>((resolve, reject) => {
             const formData = new FormData();
             formData.append('NewStatus', newStatus);
             if (reason) {
                 const normalizedReason = String(reason).trim();
                 formData.append('Reason', normalizedReason);
+            }
+            if (estimatedDelivery) {
+                formData.append('EstimatedDelivery', estimatedDelivery);
             }
             if (newStatus === 'Delivering' || newStatus === 'Delivered') {
                 const targetField = (newStatus === 'Delivering') ? 'PreparationProofImages' : 'DeliveryProofImages';
