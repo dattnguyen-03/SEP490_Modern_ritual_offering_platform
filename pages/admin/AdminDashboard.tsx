@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { approveWithdrawal, getWithdrawalRequests, rejectWithdrawal, WithdrawalListItem } from '../../services/walletService';
+import { approveWithdrawal, getWithdrawalRequests, rejectWithdrawal, WithdrawalListItem, getSystemWallets, SystemWallet } from '../../services/walletService';
 import { refundService, RefundRecord } from '../../services/refundService';
 import toast from '../../services/toast';
 import Swal from 'sweetalert2';
@@ -71,6 +71,31 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) => {
   const [isLoadingConfigs, setIsLoadingConfigs] = useState(false);
   const [configsError, setConfigsError] = useState<string | null>(null);
   const [configGroupFilter, setConfigGroupFilter] = useState<string>('');
+
+  // System Wallets States
+  const [systemWallets, setSystemWallets] = useState<SystemWallet[]>([]);
+  const [isLoadingWallets, setIsLoadingWallets] = useState(false);
+  const [walletsError, setWalletsError] = useState<string | null>(null);
+
+  const loadSystemWallets = async () => {
+    setIsLoadingWallets(true);
+    setWalletsError(null);
+    try {
+      const data = await getSystemWallets();
+      setSystemWallets(data);
+    } catch (error) {
+      console.error('Failed to load system wallets:', error);
+      setWalletsError(error instanceof Error ? error.message : 'Không thể tải thông tin ví hệ thống.');
+    } finally {
+      setIsLoadingWallets(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === 'statistics') {
+      loadSystemWallets();
+    }
+  }, [activeTab]);
 
   // Pagination States
   const [vendorsPage, setVendorsPage] = useState(1);
@@ -1551,6 +1576,103 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) => {
                     </button>
                   ))}
                 </div>
+
+                {statsSubTab === 'overview' && (
+                  <div className="space-y-6">
+                    {/* System Wallets Header */}
+                    <div className="flex justify-between items-center bg-white p-6 rounded-[2rem] border border-gold/10 shadow-sm">
+                      <div>
+                        <h3 className="text-lg font-black text-primary uppercase tracking-tight flex items-center gap-2">
+                          <span className="material-symbols-outlined text-gold">account_balance_wallet</span>
+                          Ví hệ thống
+                        </h3>
+                        <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">
+                          Trạng thái các nguồn quỹ trung gian & doanh thu thực tế
+                        </p>
+                      </div>
+                      <button
+                        onClick={loadSystemWallets}
+                        disabled={isLoadingWallets}
+                        className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-gold/20 text-xs font-black uppercase tracking-widest text-primary hover:bg-ritual-bg transition-all disabled:opacity-50"
+                      >
+                        <span className={`material-symbols-outlined text-sm ${isLoadingWallets ? 'animate-spin' : ''}`}>sync</span>
+                        Làm mới
+                      </button>
+                    </div>
+
+                    {/* Wallets Grid */}
+                    {walletsError ? (
+                      <div className="bg-rose-50 border border-rose-100 p-4 rounded-[1.5rem] text-sm text-rose-700">
+                        {walletsError}
+                      </div>
+                    ) : isLoadingWallets && systemWallets.length === 0 ? (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-pulse">
+                        <div className="h-44 bg-slate-100 rounded-[2rem]"></div>
+                        <div className="h-44 bg-slate-100 rounded-[2rem]"></div>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {(() => {
+                          const revenueWallet = systemWallets.find(w => w.type === 'System_Revenue');
+                          const escrowWallet = systemWallets.find(w => w.type === 'System_Escrow');
+                          
+                          const formatCurrency = (val?: number) => {
+                            if (val === undefined) return '---';
+                            return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val);
+                          };
+
+                          return (
+                            <>
+                              {/* Escrow Wallet Card */}
+                              <div className="bg-white rounded-[2rem] p-8 border border-gold/15 shadow-sm relative overflow-hidden group hover:shadow-lg transition-all flex flex-col justify-between min-h-[180px]">
+                                <div className="absolute right-0 top-0 -translate-y-6 translate-x-6 w-32 h-32 bg-amber-500/5 rounded-full blur-2xl group-hover:scale-125 transition-all"></div>
+                                <div className="flex justify-between items-start">
+                                  <div className="space-y-1">
+                                    <span className="text-[10px] font-black text-amber-600 bg-amber-50 border border-amber-100 px-3 py-1 rounded-full uppercase tracking-wider">Ví tạm giữ (Escrow)</span>
+                                    <h4 className="text-xs font-bold text-slate-400 mt-2">Dòng tiền trung gian mua dịch vụ</h4>
+                                  </div>
+                                  <div className="w-12 h-12 rounded-2xl bg-amber-50 flex items-center justify-center text-amber-600 border border-amber-100">
+                                    <span className="material-symbols-outlined text-2xl">lock</span>
+                                  </div>
+                                </div>
+                                <div className="mt-6">
+                                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Số dư tạm giữ</span>
+                                  <div className="flex items-baseline gap-2">
+                                    <span className={`text-2xl font-black ${escrowWallet?.balance && escrowWallet.balance < 0 ? 'text-rose-600' : 'text-slate-800'}`}>
+                                      {formatCurrency(escrowWallet?.balance)}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Revenue Wallet Card */}
+                              <div className="bg-white rounded-[2rem] p-8 border border-gold/15 shadow-sm relative overflow-hidden group hover:shadow-lg transition-all flex flex-col justify-between min-h-[180px]">
+                                <div className="absolute right-0 top-0 -translate-y-6 translate-x-6 w-32 h-32 bg-primary/5 rounded-full blur-2xl group-hover:scale-125 transition-all"></div>
+                                <div className="flex justify-between items-start">
+                                  <div className="space-y-1">
+                                    <span className="text-[10px] font-black text-primary bg-gold/5 border border-primary/10 px-3 py-1 rounded-full uppercase tracking-wider">Ví doanh thu (Reserve)</span>
+                                    <h4 className="text-xs font-bold text-slate-400 mt-2">Doanh thu tích lũy hệ thống</h4>
+                                  </div>
+                                  <div className="w-12 h-12 rounded-2xl bg-ritual-bg flex items-center justify-center text-primary border border-gold/10">
+                                    <span className="material-symbols-outlined text-2xl">account_balance</span>
+                                  </div>
+                                </div>
+                                <div className="mt-6">
+                                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Lợi nhuận khả dụng</span>
+                                  <div className="flex items-baseline gap-2">
+                                    <span className="text-2xl font-black text-primary">
+                                      {formatCurrency(revenueWallet?.balance)}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                            </>
+                          );
+                        })()}
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 {statsSubTab === 'overview' ? (
                   <div className="bg-white rounded-[2rem] border border-gold/10 shadow-sm p-8">

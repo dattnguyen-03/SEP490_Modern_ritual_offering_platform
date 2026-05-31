@@ -956,6 +956,48 @@ function groupCreatedAt(item: any): string {
   return item.createdAt || item.createdDate || item.timestamp || '';
 }
 
+export interface SystemWallet {
+  walletId: string;
+  type: string;
+  balance: number;
+}
+
+export async function getSystemWallets(): Promise<SystemWallet[]> {
+  const token = getAuthToken();
+  if (!token) {
+    throw new Error('Bạn chưa đăng nhập.');
+  }
+
+  const response = await fetchWithAuth('/api/wallets/system-wallets', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+    },
+    body: JSON.stringify({}),
+  });
+
+  const payload = await response.json().catch(() => null);
+
+  if (!response.ok || payload?.isSuccess === false) {
+    const message =
+      payload?.errorMessages?.join?.(', ') ||
+      payload?.message ||
+      `Không thể lấy danh sách ví hệ thống (${response.status}).`;
+    throw new Error(message);
+  }
+
+  if (Array.isArray(payload?.result)) {
+    return payload.result as SystemWallet[];
+  }
+
+  if (Array.isArray(payload)) {
+    return payload as SystemWallet[];
+  }
+
+  return [];
+}
+
 export const walletService = {
   getMyWallet,
   createTopupLink,
@@ -968,5 +1010,6 @@ export const walletService = {
   getMyTransactions,
   getTransactionById,
   getRelatedTransactions,
-  getAllTransactions
+  getAllTransactions,
+  getSystemWallets
 };
