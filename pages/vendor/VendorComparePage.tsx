@@ -62,9 +62,7 @@ function defaultPeriod(groupBy: GroupBy, offset: number): PeriodCfg {
   };
 }
 
-function calcDiff(a: number, b: number) { return b === 0 ? 0 : ((a - b) / b) * 100; }
-
-const StatCard: React.FC<{ label: string; va: string; vb: string; icon: string; diff: number }> = ({ label, va, vb, icon, diff }) => (
+const StatCard: React.FC<{ label: string; va: string; vb: string; icon: string }> = ({ label, va, vb, icon }) => (
   <div className="bg-white rounded-[1.75rem] p-5 border border-gold/10 shadow-sm">
     <div className="flex items-center gap-2 mb-3">
       <div className="w-9 h-9 rounded-xl bg-ritual-bg flex items-center justify-center">
@@ -81,9 +79,6 @@ const StatCard: React.FC<{ label: string; va: string; vb: string; icon: string; 
         <p className="text-[8px] font-black text-blue-500 uppercase tracking-widest mb-1">Kỳ B</p>
         <p className="text-sm font-black text-primary leading-tight">{vb}</p>
       </div>
-    </div>
-    <div className={`mt-2 text-[10px] font-black px-2 py-0.5 rounded-lg inline-block ${diff >= 0 ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'}`}>
-      {diff >= 0 ? '▲' : '▼'} {Math.abs(diff).toFixed(1)}%
     </div>
   </div>
 );
@@ -260,9 +255,9 @@ const VendorComparePage: React.FC<VendorComparePageProps> = ({ onNavigate: _, is
 
       {/* KPI cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <StatCard label="Doanh thu" icon="payments" va={fmt(revA)} vb={fmt(revB)} diff={calcDiff(revA, revB)} />
-        <StatCard label="Đơn hàng" icon="receipt_long" va={fmtN(ordA)} vb={fmtN(ordB)} diff={calcDiff(ordA, ordB)} />
-        <StatCard label="Giá trị TB / đơn" icon="trending_up" va={fmt(avgA)} vb={fmt(avgB)} diff={calcDiff(avgA, avgB)} />
+        <StatCard label="Doanh thu" icon="payments" va={fmt(revA)} vb={fmt(revB)} />
+        <StatCard label="Đơn hàng" icon="receipt_long" va={fmtN(ordA)} vb={fmtN(ordB)} />
+        <StatCard label="Giá trị TB / đơn" icon="trending_up" va={fmt(avgA)} vb={fmt(avgB)} />
       </div>
 
       {/* Revenue line chart */}
@@ -308,25 +303,19 @@ const VendorComparePage: React.FC<VendorComparePageProps> = ({ onNavigate: _, is
               <th className="text-left py-3 px-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Chỉ số</th>
               <th className="text-right py-3 px-4 text-[9px] font-black text-amber-500 uppercase tracking-widest">🟡 {cfgA.label}</th>
               <th className="text-right py-3 px-4 text-[9px] font-black text-blue-500 uppercase tracking-widest">🔵 {cfgB.label}</th>
-              <th className="text-right py-3 px-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Chênh lệch</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gold/5">
             {[
-              { lbl: 'Tổng doanh thu', va: fmt(revA), vb: fmt(revB), d: calcDiff(revA, revB) },
-              { lbl: 'Số đơn hàng', va: fmtN(ordA), vb: fmtN(ordB), d: calcDiff(ordA, ordB) },
-              { lbl: 'Giá trị TB / đơn', va: fmt(avgA), vb: fmt(avgB), d: calcDiff(avgA, avgB) },
-              { lbl: 'Tổng sản phẩm', va: fmtN(dataA?.totalProducts ?? 0), vb: fmtN(dataB?.totalProducts ?? 0), d: calcDiff(dataA?.totalProducts ?? 0, dataB?.totalProducts ?? 0) },
+              { lbl: 'Tổng doanh thu', va: fmt(revA), vb: fmt(revB) },
+              { lbl: 'Số đơn hàng', va: fmtN(ordA), vb: fmtN(ordB) },
+              { lbl: 'Giá trị TB / đơn', va: fmt(avgA), vb: fmt(avgB) },
+              { lbl: 'Tổng sản phẩm', va: fmtN(dataA?.totalProducts ?? 0), vb: fmtN(dataB?.totalProducts ?? 0) },
             ].map((r, i) => (
               <tr key={i} className="hover:bg-ritual-bg/20 transition-colors">
                 <td className="py-4 px-4 font-bold text-primary">{r.lbl}</td>
                 <td className="py-4 px-4 text-right font-black text-primary">{r.va}</td>
                 <td className="py-4 px-4 text-right font-black text-primary">{r.vb}</td>
-                <td className="py-4 px-4 text-right">
-                  <span className={`text-[10px] font-black px-2 py-1 rounded-lg ${r.d >= 0 ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'}`}>
-                    {r.d >= 0 ? '▲' : '▼'} {Math.abs(r.d).toFixed(1)}%
-                  </span>
-                </td>
               </tr>
             ))}
           </tbody>

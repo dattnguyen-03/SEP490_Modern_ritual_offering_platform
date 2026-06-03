@@ -68,6 +68,7 @@ export interface Order {
     customerName?: string;
     customerAvatar?: string;
     customerPhone?: string;
+    vendorName?: string;
     vendor: {
         profileId: string | null;
         shopName: string;
@@ -1132,6 +1133,7 @@ class OrderService {
                     },
                     customerName: raw.customer?.customerName || raw.customer?.fullName || 'Khách hàng',
                     customerPhone: raw.customer?.customerPhone || raw.customer?.phoneNumber || '',
+                    vendorName: raw.vendor?.shopName || raw.shopName || raw.vendorName || 'Shop',
                     vendor: {
                         profileId: raw.vendor?.profileId || null,
                         shopName: raw.vendor?.shopName || 'Shop',

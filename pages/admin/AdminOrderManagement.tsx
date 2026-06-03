@@ -451,7 +451,7 @@ const AdminOrderManagement: React.FC<AdminOrderManagementProps> = ({ onNavigate 
                       <div>
                         <p className="text-[10px] font-black uppercase tracking-[0.15em] text-slate-400 mb-1.5">Cửa hàng</p>
                         <h4 className="text-base font-bold text-slate-700 leading-tight">{order.vendorName || 'N/A'}</h4>
-                        <p className="text-[12px] font-medium text-slate-400">Shop ID: {order.vendorId?.slice(-6).toUpperCase()}</p>
+                        <p className="text-[12px] font-medium text-slate-400">Shop ID: {order.vendorProfileId?.slice(-6).toUpperCase()}</p>
                       </div>
 
                       <div className="hidden md:block w-px h-8 bg-slate-200" />
