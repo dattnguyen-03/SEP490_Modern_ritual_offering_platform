@@ -71,7 +71,7 @@ const VendorSettings: React.FC<VendorSettingsProps> = ({ onNavigate }) => {
   const [selectedProvince, setSelectedProvince] = useState<number | null>(null);
   const [selectedDistrict, setSelectedDistrict] = useState<number | null>(null);
   const [selectedWard, setSelectedWard] = useState<number | null>(null);
-  const [isWardOnlyMode, setIsWardOnlyMode] = useState(false);
+  const [isWardOnlyMode, setIsWardOnlyMode] = useState(true);
   const [detailedAddress, setDetailedAddress] = useState('');
   const [mapPreview, setMapPreview] = useState<{ latitude: number; longitude: number } | null>(null);
   const [mapPreviewLoading, setMapPreviewLoading] = useState(false);
@@ -269,42 +269,28 @@ const VendorSettings: React.FC<VendorSettingsProps> = ({ onNavigate }) => {
   }, []);
 
   useEffect(() => {
-    if (!selectedProvince) {
-      setDistricts([]);
-      setSelectedDistrict(null);
-      setWards([]);
-      setSelectedWard(null);
-      setIsWardOnlyMode(false);
-      return;
-    }
-
-    const loadDistricts = async () => {
-      try {
-        setLoadingDistricts(true);
-        const districtList = await getDistrictsByProvince(selectedProvince);
-        setDistricts(districtList);
-        if (districtList.length === 0) {
-          setIsWardOnlyMode(true);
+    if (selectedProvince) {
+      const loadWards = async () => {
+        try {
           setLoadingWards(true);
-          const provinceWards = await getWardsByProvince(selectedProvince);
-          setWards(provinceWards);
+          setWards([]);
           setSelectedDistrict(null);
           setSelectedWard(null);
-        } else {
-          setIsWardOnlyMode(false);
-          setWards([]);
-          setSelectedWard(null);
+          setIsWardOnlyMode(true);
+          const provinceWards = await getWardsByProvince(selectedProvince);
+          setWards(provinceWards);
+        } catch (err) {
+          console.error('Failed to load wards:', err);
+        } finally {
+          setLoadingWards(false);
         }
-      } catch (error) {
-        console.error('Failed to load districts:', error);
-        setDistricts([]);
-      } finally {
-        setLoadingDistricts(false);
-        setLoadingWards(false);
-      }
-    };
-
-    loadDistricts();
+      };
+      loadWards();
+    } else {
+      setDistricts([]);
+      setWards([]);
+      setIsWardOnlyMode(true);
+    }
   }, [selectedProvince]);
 
   useEffect(() => {
@@ -366,17 +352,8 @@ const VendorSettings: React.FC<VendorSettingsProps> = ({ onNavigate }) => {
       if (!matchedProvince) return;
 
       setSelectedProvince(matchedProvince.code);
-      const districtList = await getDistrictsByProvince(matchedProvince.code);
-      setDistricts(districtList);
-
-      const matchedDistrict = findDistrictByReverse({
-        districtName: resolvedDistrictName,
-        formattedAddress: resolvedDistrictName || '',
-      }, districtList);
-      if (!matchedDistrict) return;
-
-      setSelectedDistrict(matchedDistrict.code);
-      const wardList = await getWardsByDistrict(matchedDistrict.code);
+      setIsWardOnlyMode(true);
+      const wardList = await getWardsByProvince(matchedProvince.code);
       setWards(wardList);
 
       const matchedWard = findWardByReverse({
@@ -532,19 +509,13 @@ const VendorSettings: React.FC<VendorSettingsProps> = ({ onNavigate }) => {
         const matchedProvince = findProvinceByReverse(reverseData);
         if (matchedProvince) {
           setSelectedProvince(matchedProvince.code);
-          const provinceDistricts = await getDistrictsByProvince(matchedProvince.code);
-          setDistricts(provinceDistricts);
+          setIsWardOnlyMode(true);
+          const provinceWards = await getWardsByProvince(matchedProvince.code);
+          setWards(provinceWards);
 
-          const matchedDistrict = findDistrictByReverse(reverseData, provinceDistricts);
-          if (matchedDistrict) {
-            setSelectedDistrict(matchedDistrict.code);
-            const districtWards = await getWardsByDistrict(matchedDistrict.code);
-            setWards(districtWards);
-
-            const matchedWard = findWardByReverse(reverseData, districtWards);
-            if (matchedWard) {
-              setSelectedWard(matchedWard.code);
-            }
+          const matchedWard = findWardByReverse(reverseData, provinceWards);
+          if (matchedWard) {
+            setSelectedWard(matchedWard.code);
           }
         }
       }
@@ -642,30 +613,12 @@ const VendorSettings: React.FC<VendorSettingsProps> = ({ onNavigate }) => {
 
       if (matchedProvince) {
         setSelectedProvince(matchedProvince.code);
-        const provinceDistricts = await getDistrictsByProvince(matchedProvince.code);
-        setDistricts(provinceDistricts);
-
-        if (provinceDistricts.length === 0) {
-          setIsWardOnlyMode(true);
-          const provinceWards = await getWardsByProvince(matchedProvince.code);
-          setWards(provinceWards);
-          matchedWard = findWardByReverse(effectiveReverseData, provinceWards);
-          if (matchedWard) {
-            setSelectedWard(matchedWard.code);
-          }
-        } else {
-          setIsWardOnlyMode(false);
-          matchedDistrict = findDistrictByReverse(effectiveReverseData, provinceDistricts);
-          if (matchedDistrict) {
-            setSelectedDistrict(matchedDistrict.code);
-            const districtWards = await getWardsByDistrict(matchedDistrict.code);
-            setWards(districtWards);
-
-            matchedWard = findWardByReverse(effectiveReverseData, districtWards);
-            if (matchedWard) {
-              setSelectedWard(matchedWard.code);
-            }
-          }
+        setIsWardOnlyMode(true);
+        const provinceWards = await getWardsByProvince(matchedProvince.code);
+        setWards(provinceWards);
+        matchedWard = findWardByReverse(effectiveReverseData, provinceWards);
+        if (matchedWard) {
+          setSelectedWard(matchedWard.code);
         }
       }
 
