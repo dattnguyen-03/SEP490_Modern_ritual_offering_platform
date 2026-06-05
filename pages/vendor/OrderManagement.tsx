@@ -138,11 +138,11 @@ const generateEstimatedTimeOptions = (deliveryTimeStr: string) => {
   if (!deliveryTimeStr) return [];
   const [hours, minutes] = deliveryTimeStr.split(':').map(Number);
   const options: { value: string; label: string }[] = [];
-  
+
   // Khách nhận lúc HH:mm. Ta sinh các mốc cách nhau 30 phút trong khoảng từ trước 3 tiếng đến trước 1 tiếng.
   // Tổng cộng có 5 mốc: trước 3.0h, trước 2.5h, trước 2.0h, trước 1.5h, trước 1.0h.
   const offsets = [3.0, 2.5, 2.0, 1.5, 1.0];
-  
+
   offsets.forEach(offset => {
     const totalMinutes = hours * 60 + (minutes || 0) - offset * 60;
     if (totalMinutes >= 0) {
@@ -156,26 +156,26 @@ const generateEstimatedTimeOptions = (deliveryTimeStr: string) => {
       });
     }
   });
-  
-  const uniqueOptions = options.filter((opt, index, self) => 
+
+  const uniqueOptions = options.filter((opt, index, self) =>
     self.findIndex(t => t.value === opt.value) === index
   ).sort((a, b) => a.value.localeCompare(b.value));
-  
+
   return uniqueOptions;
 };
 
 const getAvailableTimeRanges = (deliveryTimeStr: string) => {
   if (!deliveryTimeStr) return { ampm: [], hour12Map: { AM: [], PM: [] }, minutesMap: {} };
-  
+
   const [deliveryHour, deliveryMinute] = deliveryTimeStr.split(':').map(Number);
-  
+
   const deliveryMinutes = deliveryHour * 60 + (deliveryMinute || 0);
   const minMinutes = deliveryMinutes - 3 * 60; // Trước 3 tiếng
   const maxMinutes = deliveryMinutes - 1 * 60; // Trước 1 tiếng
-  
+
   const availableHours24: number[] = [];
   const minutesMap: Record<number, number[]> = {};
-  
+
   for (let h = 0; h < 24; h++) {
     const minsForThisHour: number[] = [];
     for (let m = 0; m < 60; m += 5) {
@@ -189,26 +189,26 @@ const getAvailableTimeRanges = (deliveryTimeStr: string) => {
       minutesMap[h] = minsForThisHour;
     }
   }
-  
+
   const availableAMPM = new Set<string>();
   const hour12Map: Record<string, { hour12Str: string; hour24: number }[]> = {
     AM: [],
     PM: []
   };
-  
+
   availableHours24.forEach(h24 => {
     const period = h24 >= 12 ? 'PM' : 'AM';
     availableAMPM.add(period);
-    
+
     let h12 = h24 % 12;
     if (h12 === 0) h12 = 12;
     const hour12Str = String(h12).padStart(2, '0');
-    
+
     if (!hour12Map[period].some(x => x.hour12Str === hour12Str)) {
       hour12Map[period].push({ hour12Str, hour24: h24 });
     }
   });
-  
+
   return {
     ampm: Array.from(availableAMPM),
     hour12Map,
@@ -744,8 +744,8 @@ const OrderManagement: React.FC<OrderManagementProps> = ({ onNavigate: _onNaviga
       }
       // estimatedDelivery now only holds the time string "HH:mm" (e.g. "17:00")
       // We combine it with selectedOrder.delivery.deliveryDate (YYYY-MM-DD) to form "YYYY-MM-DDTHH:mm:ss"
-      const datePart = selectedOrder?.delivery?.deliveryDate 
-        ? selectedOrder.delivery.deliveryDate.substring(0, 10) 
+      const datePart = selectedOrder?.delivery?.deliveryDate
+        ? selectedOrder.delivery.deliveryDate.substring(0, 10)
         : toYmd(new Date());
       formattedDeliveryTime = `${datePart}T${estimatedDelivery}:00`;
     }
@@ -857,7 +857,7 @@ const OrderManagement: React.FC<OrderManagementProps> = ({ onNavigate: _onNaviga
     });
 
     if (!result.isConfirmed) return;
-    
+
     const reason = result.value || 'Tạm dừng thủ công';
 
     setPausingOrders(true);
@@ -1087,8 +1087,8 @@ const OrderManagement: React.FC<OrderManagementProps> = ({ onNavigate: _onNaviga
             onClick={handlePauseOrders}
             disabled={pausingOrders}
             className={`flex items-center gap-2 px-6 py-3 rounded-2xl font-bold text-sm transition-all shadow-sm border ${pausingOrders
-                ? 'bg-gray-100 text-gray-400 cursor-not-allowed border-gray-200'
-                : 'bg-white text-red-600 border-red-100 hover:bg-red-50 hover:border-red-200'
+              ? 'bg-gray-100 text-gray-400 cursor-not-allowed border-gray-200'
+              : 'bg-white text-red-600 border-red-100 hover:bg-red-50 hover:border-red-200'
               }`}
           >
             <span className="material-symbols-outlined text-xl">
@@ -1196,14 +1196,14 @@ const OrderManagement: React.FC<OrderManagementProps> = ({ onNavigate: _onNaviga
                               type="button"
                               onClick={() => setSelectedCalendarDate(ymd)}
                               className={`group h-28 rounded-2xl border text-left p-2.5 transition-all relative overflow-hidden ${isSelected
-                                  ? daySummary?.isClosed
-                                    ? 'border-red-500 bg-red-100/50 shadow-md ring-2 ring-red-500/20'
-                                    : 'border-primary bg-primary/5 shadow-md ring-2 ring-primary/10'
-                                  : daySummary?.isClosed
-                                    ? 'border-red-300 bg-red-50 shadow-sm'
-                                    : daySummary?.capacityStatus?.toLowerCase() === 'warning'
-                                      ? 'border-amber-400 bg-amber-50/30'
-                                      : 'border-gray-100 bg-white hover:bg-slate-50 hover:border-slate-300'
+                                ? daySummary?.isClosed
+                                  ? 'border-red-500 bg-red-100/50 shadow-md ring-2 ring-red-500/20'
+                                  : 'border-primary bg-primary/5 shadow-md ring-2 ring-primary/10'
+                                : daySummary?.isClosed
+                                  ? 'border-red-300 bg-red-50 shadow-sm'
+                                  : daySummary?.capacityStatus?.toLowerCase() === 'warning'
+                                    ? 'border-amber-400 bg-amber-50/30'
+                                    : 'border-gray-100 bg-white hover:bg-slate-50 hover:border-slate-300'
                                 }`}
                             >
                               <div className="flex flex-col h-full">
@@ -1221,8 +1221,8 @@ const OrderManagement: React.FC<OrderManagementProps> = ({ onNavigate: _onNaviga
                                         {totalOrders} đơn hàng
                                       </span>
                                       <span className="text-[9px] font-bold text-slate-900 mt-1 leading-none truncate">
-                                        {daySummary?.totalRevenue && daySummary.totalRevenue >= 1000000 
-                                          ? `${(daySummary.totalRevenue / 1000000).toFixed(1).replace('.0', '')}Mđ` 
+                                        {daySummary?.totalRevenue && daySummary.totalRevenue >= 1000000
+                                          ? `${(daySummary.totalRevenue / 1000000).toFixed(1).replace('.0', '')}Mđ`
                                           : formatVnd(daySummary?.totalRevenue || 0)}
                                       </span>
                                     </div>
@@ -2099,7 +2099,7 @@ const OrderManagement: React.FC<OrderManagementProps> = ({ onNavigate: _onNaviga
                                   const period = h24 >= 12 ? 'PM' : 'AM';
                                   let h12 = h24 % 12;
                                   if (h12 === 0) h12 = 12;
-                                  
+
                                   setPickerPeriod(period);
                                   setPickerHour12(String(h12).padStart(2, '0'));
                                   setPickerMinute(m);
@@ -2225,41 +2225,7 @@ const OrderManagement: React.FC<OrderManagementProps> = ({ onNavigate: _onNaviga
                   </div>
 
                   {/* Customer & Settlement */}
-                  <div className="bg-white rounded-[1.25rem] border border-gray-200 p-4 md:p-5 shadow-sm">
-                    <h3 className="text-sm font-bold uppercase tracking-widest text-gray-400 mb-4">Khách hàng & đối soát</h3>
-                    <div className="text-sm divide-y divide-gray-100 border border-gray-100 rounded-xl overflow-hidden">
-                      <div className="flex justify-between items-center gap-3 px-4 py-3 bg-white">
-                        <span className="text-gray-500">Khách hàng</span>
-                        <div className="flex items-center gap-2">
-                          <span className="font-semibold text-gray-800 text-right">
-                            {(hasMeaningfulText(selectedOrder.customer?.fullName) ? selectedOrder.customer?.fullName : '')
-                              || (hasMeaningfulText(selectedOrder.customerName) ? selectedOrder.customerName : '')
-                              || 'N/A'}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="flex justify-between gap-3 px-4 py-2.5 bg-white">
-                        <span className="text-gray-500">Số điện thoại</span>
-                        <span className="font-semibold text-gray-800 text-right">
-                          {(hasMeaningfulText(selectedOrder.customer?.phoneNumber) ? selectedOrder.customer?.phoneNumber : '')
-                            || (hasMeaningfulText(selectedOrder.customerPhone) ? selectedOrder.customerPhone : '')
-                            || 'N/A'}
-                        </span>
-                      </div>
-                      <div className="flex justify-between gap-3 px-4 py-2.5 bg-white">
-                        <span className="text-gray-500">Hoa hồng</span>
-                        <span className="font-semibold text-gray-800">{formatPercent(selectedOrder.vendorPricingDetails?.commissionRate)}</span>
-                      </div>
-                      <div className="flex justify-between gap-3 px-4 py-2.5 bg-white">
-                        <span className="text-gray-500">Phí nền tảng</span>
-                        <span className="font-semibold text-gray-800">{formatVnd(selectedOrder.vendorPricingDetails?.platformFee)}</span>
-                      </div>
-                      <div className="flex justify-between gap-3 px-4 py-2.5 bg-white">
-                        <span className="text-gray-500">Thực nhận</span>
-                        <span className="font-semibold text-green-600">{formatVnd(selectedOrder.vendorPricingDetails?.vendorNetAmount)}</span>
-                      </div>
-                    </div>
-                  </div>
+
                 </div>
               </div>
 
@@ -2362,12 +2328,12 @@ const OrderManagement: React.FC<OrderManagementProps> = ({ onNavigate: _onNaviga
         const hours12List = timeRanges.hour12Map[pickerPeriod] || [];
         const activeHour24 = hours12List.find(h => h.hour12Str === pickerHour12)?.hour24 ?? (pickerPeriod === 'PM' ? 17 : 5);
         const minutesList = timeRanges.minutesMap[activeHour24] || [0];
-        
+
         return (
           <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[999] flex items-center justify-center p-4 transition-all duration-300">
             <div className="max-w-2xl w-full bg-white rounded-[2rem] overflow-hidden grid grid-cols-12 shadow-2xl animate-in fade-in zoom-in duration-200 relative border border-gold/10">
               {/* Close Button */}
-              <button 
+              <button
                 type="button"
                 onClick={() => setShowTimePicker(false)}
                 className="absolute top-6 right-6 size-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 hover:text-black hover:bg-slate-200 transition-all z-10"
@@ -2394,7 +2360,7 @@ const OrderManagement: React.FC<OrderManagementProps> = ({ onNavigate: _onNaviga
                 <div>
                   <h3 className="text-base font-black text-slate-900 uppercase tracking-wide">Chọn Thời Gian</h3>
                   <p className="text-xs text-slate-400 font-semibold mt-0.5 mb-6">Chọn giờ, phút và sáng / chiều</p>
-                  
+
                   <div className="grid grid-cols-3 gap-4 md:gap-6">
                     {/* GIỜ */}
                     <div className="space-y-2">
@@ -2414,11 +2380,10 @@ const OrderManagement: React.FC<OrderManagementProps> = ({ onNavigate: _onNaviga
                                     setPickerMinute(newMins[0] || 0);
                                   }
                                 }}
-                                className={`w-full py-2 text-center text-sm font-black rounded-xl transition-all ${
-                                  isSelected 
-                                    ? 'bg-black text-white shadow-md' 
+                                className={`w-full py-2 text-center text-sm font-black rounded-xl transition-all ${isSelected
+                                    ? 'bg-black text-white shadow-md'
                                     : 'text-slate-600 hover:bg-slate-100 hover:text-black'
-                                }`}
+                                  }`}
                               >
                                 {h.hour12Str}
                               </button>
@@ -2441,11 +2406,10 @@ const OrderManagement: React.FC<OrderManagementProps> = ({ onNavigate: _onNaviga
                               key={m}
                               type="button"
                               onClick={() => setPickerMinute(m)}
-                              className={`w-full py-2 text-center text-sm font-black rounded-xl transition-all ${
-                                isSelected 
-                                  ? 'bg-black text-white shadow-md' 
+                              className={`w-full py-2 text-center text-sm font-black rounded-xl transition-all ${isSelected
+                                  ? 'bg-black text-white shadow-md'
                                   : 'text-slate-600 hover:bg-slate-100 hover:text-black'
-                              }`}
+                                }`}
                             >
                               {String(m).padStart(2, '0')}
                             </button>
@@ -2476,13 +2440,12 @@ const OrderManagement: React.FC<OrderManagementProps> = ({ onNavigate: _onNaviga
                                   setPickerMinute(newMins[0] || 0);
                                 }
                               }}
-                              className={`w-full py-3.5 text-center text-xs font-black rounded-xl border transition-all ${
-                                !isAvailable 
-                                  ? 'bg-slate-100 text-slate-300 border-slate-200 cursor-not-allowed opacity-50' 
-                                  : isSelected 
-                                    ? 'bg-black text-white border-black shadow-md' 
+                              className={`w-full py-3.5 text-center text-xs font-black rounded-xl border transition-all ${!isAvailable
+                                  ? 'bg-slate-100 text-slate-300 border-slate-200 cursor-not-allowed opacity-50'
+                                  : isSelected
+                                    ? 'bg-black text-white border-black shadow-md'
                                     : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
-                              }`}
+                                }`}
                             >
                               {p}
                             </button>
@@ -2511,7 +2474,7 @@ const OrderManagement: React.FC<OrderManagementProps> = ({ onNavigate: _onNaviga
                         let h24 = Number(pickerHour12);
                         if (pickerPeriod === 'PM' && h24 < 12) h24 += 12;
                         if (pickerPeriod === 'AM' && h24 === 12) h24 = 0;
-                        
+
                         const pad = (num: number) => String(num).padStart(2, '0');
                         const finalTime = `${pad(h24)}:${pad(pickerMinute)}`;
                         setEstimatedDelivery(finalTime);
