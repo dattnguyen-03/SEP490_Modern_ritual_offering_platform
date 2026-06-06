@@ -43,6 +43,7 @@ export interface PackageAddOn {
   maxQtyPerOrder?: number;
   displayOrder?: number;
   isActive: boolean;
+  imageUrl?: string;
 }
 
 export interface AvailableSwap {

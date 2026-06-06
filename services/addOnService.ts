@@ -57,16 +57,31 @@ class AddOnService {
     }
   }
 
-  async createAddOn(addOn: Omit<PackageAddOn, 'addOnId'>): Promise<PackageAddOn | null> {
+  async createAddOn(
+    addOn: Omit<PackageAddOn, 'addOnId'>,
+    imageFile: File | null = null
+  ): Promise<PackageAddOn | null> {
     try {
       const token = getAuthToken();
-      const response = await fetchWithAuth(`${API_BASE_URL}/add-ons`, {
+      const queryParams = new URLSearchParams();
+      if (addOn.addOnName) queryParams.append('AddOnName', addOn.addOnName);
+      if (addOn.description) queryParams.append('Description', addOn.description);
+      if (addOn.itemType) queryParams.append('ItemType', addOn.itemType);
+      if (addOn.retailPrice !== undefined) queryParams.append('RetailPrice', addOn.retailPrice.toString());
+      if (addOn.maxQtyPerOrder !== undefined) queryParams.append('MaxQtyPerOrder', addOn.maxQtyPerOrder.toString());
+
+      const url = `${API_BASE_URL}/add-ons?${queryParams.toString()}`;
+      const formData = new FormData();
+      if (imageFile) {
+        formData.append('ImageUrl', imageFile);
+      }
+
+      const response = await fetchWithAuth(url, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
           'Accept': 'application/json',
         },
-        body: JSON.stringify(addOn),
+        body: formData,
       });
 
       if (!response.ok) {
@@ -84,16 +99,33 @@ class AddOnService {
     }
   }
 
-  async updateAddOn(id: number, addOn: Partial<PackageAddOn>): Promise<boolean> {
+  async updateAddOn(
+    id: number,
+    addOn: Partial<PackageAddOn>,
+    imageFile: File | null = null
+  ): Promise<boolean> {
     try {
       const token = getAuthToken();
-      const response = await fetchWithAuth(`${API_BASE_URL}/add-ons/${id}`, {
+      const queryParams = new URLSearchParams();
+      if (addOn.addOnName) queryParams.append('AddOnName', addOn.addOnName);
+      if (addOn.description !== undefined) queryParams.append('Description', addOn.description || '');
+      if (addOn.itemType) queryParams.append('ItemType', addOn.itemType);
+      if (addOn.retailPrice !== undefined) queryParams.append('RetailPrice', addOn.retailPrice.toString());
+      if (addOn.maxQtyPerOrder !== undefined) queryParams.append('MaxQtyPerOrder', addOn.maxQtyPerOrder.toString());
+      if (addOn.isActive !== undefined) queryParams.append('IsActive', addOn.isActive.toString());
+
+      const url = `${API_BASE_URL}/add-ons/${id}?${queryParams.toString()}`;
+      const formData = new FormData();
+      if (imageFile) {
+        formData.append('ImageUrl', imageFile);
+      }
+
+      const response = await fetchWithAuth(url, {
         method: 'PUT',
         headers: {
-          'Content-Type': 'application/json',
           'Accept': 'application/json',
         },
-        body: JSON.stringify(addOn),
+        body: formData,
       });
 
       if (!response.ok) {

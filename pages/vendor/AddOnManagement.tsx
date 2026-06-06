@@ -18,7 +18,7 @@ const AddOnManagement: React.FC<AddOnManagementProps> = ({ onNavigate }) => {
     addOnName: '',
     description: '',
     retailPrice: 0,
-    itemType: 'Product',
+    itemType: 'Food',
     maxQuantity: 1,
     maxQtyPerOrder: 1,
     displayOrder: 0,
@@ -74,7 +74,7 @@ const AddOnManagement: React.FC<AddOnManagementProps> = ({ onNavigate }) => {
           addOnName: source.addOnName,
           description: source.description || '',
           retailPrice: source.retailPrice,
-          itemType: source.itemType,
+          itemType: source.itemType || 'Food',
           maxQuantity: source.maxQuantity,
           maxQtyPerOrder: (source as any).maxQtyPerOrder || 1,
           displayOrder: source.displayOrder,
@@ -89,7 +89,7 @@ const AddOnManagement: React.FC<AddOnManagementProps> = ({ onNavigate }) => {
         addOnName: '',
         description: '',
         retailPrice: 0,
-        itemType: 'Product',
+        itemType: 'Food',
         maxQuantity: 1,
         maxQtyPerOrder: 1,
         displayOrder: 0,
@@ -238,9 +238,9 @@ const AddOnManagement: React.FC<AddOnManagementProps> = ({ onNavigate }) => {
                     <tr key={addOn.addOnId} className="hover:bg-slate-50/50 transition-colors group">
                       <td className="px-8 py-6">
                         <div className="flex items-center gap-4">
-                          {/* <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center text-xl">
+                          <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center text-xl flex-shrink-0">
                             {addOn.itemType === 'Service' ? '🛠️' : '📦'}
-                          </div> */}
+                          </div>
                           <div className="min-w-0">
                             <span className="font-bold text-slate-800 block truncate">{addOn.addOnName}</span>
                             {addOn.description && (
@@ -261,7 +261,7 @@ const AddOnManagement: React.FC<AddOnManagementProps> = ({ onNavigate }) => {
                         {addOn.retailPrice.toLocaleString()}đ
                       </td>
                       <td className="px-8 py-6 font-bold text-slate-600">
-                        {(addOn as any).maxQtyPerOrder || 1}
+                        {addOn.maxQtyPerOrder || 1}
                       </td>
 
                       <td className="px-8 py-6">
@@ -325,6 +325,7 @@ const AddOnManagement: React.FC<AddOnManagementProps> = ({ onNavigate }) => {
                 </div>
               )}
 
+
               <div>
                 <label className="text-xs font-black text-gray-400 uppercase tracking-widest block mb-1.5">Tên món thêm <span className="text-red-500">*</span></label>
                 <input
@@ -379,7 +380,7 @@ const AddOnManagement: React.FC<AddOnManagementProps> = ({ onNavigate }) => {
                 <input
                   type="number"
                   min="1"
-                  value={(formData as any).maxQtyPerOrder}
+                  value={formData.maxQtyPerOrder}
                   onChange={(e) => setFormData({ ...formData, maxQtyPerOrder: Math.max(1, parseInt(e.target.value) || 1) })}
                   className="w-full px-4 py-3 border-2 border-gray-200 rounded-2xl text-sm text-gray-900 focus:border-primary focus:outline-none transition font-semibold"
                   placeholder="Ví dụ: 1, 2, 5..."
