@@ -711,7 +711,7 @@ const VendorShop: React.FC<VendorShopProps> = ({ onNavigate }) => {
                   <div className="flex items-center gap-1">
                     <span className="text-gold text-lg">★</span>
                     <span className="font-bold text-primary">{vendorProfile?.ratingAvg ?? profile?.ratingAvg ?? 0}</span>
-                    <span className="text-sm text-gray-500">(256 đánh giá)</span>
+
                   </div>
                   {/* <div className="flex items-center gap-1 text-gray-600">
                     <span className="text-sm">👥</span>
