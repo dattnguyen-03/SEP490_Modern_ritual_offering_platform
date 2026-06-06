@@ -572,6 +572,61 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onNavigate }) => 
     }
   };
 
+  const handleApprove = async (id: string) => {
+    try {
+      const confirmResult = await toast.confirm({
+        title: 'Xác nhận phê duyệt',
+        text: 'Bạn có chắc chắn muốn duyệt mâm cúng này?',
+        icon: 'question',
+        confirmButtonText: 'Phê duyệt',
+        cancelButtonText: 'Hủy',
+      });
+      if (!confirmResult.isConfirmed) return;
+
+      const success = await packageService.approvePackage(id);
+      if (success) {
+        toast.success('Đã duyệt sản phẩm thành công!');
+        closeViewProductModal();
+        loadPackages();
+      } else {
+        toast.error('Có lỗi xảy ra khi phê duyệt sản phẩm!');
+      }
+    } catch (e) {
+      toast.error('Lỗi khi phê duyệt.');
+    }
+  };
+
+  const handleReject = async (id: string) => {
+    const promptResult = await toast.prompt({
+      title: 'Từ chối mâm cúng',
+      text: 'Vui lòng nhập lý do từ chối (bắt buộc):',
+      inputPlaceholder: 'Nhập lý do tại đây...',
+      confirmButtonText: 'Từ chối',
+      cancelButtonText: 'Hủy'
+    });
+
+    if (!promptResult.isConfirmed) return;
+
+    const reason = promptResult.value;
+    if (!reason || !reason.trim()) {
+      toast.error('Vui lòng nhập lý do hợp lệ.');
+      return;
+    }
+
+    try {
+      const success = await packageService.rejectPackage(id, reason.trim());
+      if (success) {
+        toast.success('Đã từ chối sản phẩm.');
+        closeViewProductModal();
+        loadPackages();
+      } else {
+        toast.error('Có lỗi xảy ra khi từ chối sản phẩm!');
+      }
+    } catch (e) {
+      toast.error('Lỗi khi từ chối.');
+    }
+  };
+
   const loadPackages = async () => {
     setLoadingProducts(true);
     setProductsError(null);
@@ -1449,6 +1504,10 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onNavigate }) => 
                         </td>
                         <td className="px-2 md:px-3 py-4">
                           {(() => {
+                            const rawApproval = product.approvalStatus || '';
+                            if (rawApproval === 'VendorActionRequired') {
+                              return <span className="inline-flex px-2 py-1 rounded-full text-xs font-bold whitespace-nowrap bg-amber-100 text-amber-700">Chờ Vendor Sửa</span>;
+                            }
                             const approval = normalizeApprovalStatus(product.approvalStatus);
                             if (approval === 'Pending') {
                               return <span className="inline-flex px-2 py-1 rounded-full text-xs font-bold whitespace-nowrap bg-yellow-100 text-yellow-700">Chờ Duyệt</span>;
@@ -1580,13 +1639,15 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onNavigate }) => 
                     const approval = viewProductDetails.approvalStatus || viewProductDetails.packageStatus || viewProductDetails.status || '';
                     const isApproved = approval === 'Approved';
                     const isRejected = approval === 'Rejected';
+                    const isVendorActionRequired = approval === 'VendorActionRequired';
                     return (
                       <>
                         <span className={`px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest flex-shrink-0 ${isApproved ? 'bg-green-100 text-green-700 border border-green-200' :
                           isRejected ? 'bg-red-100 text-red-700 border border-red-200' :
-                            'bg-yellow-100 text-yellow-700 border border-yellow-200'
+                            isVendorActionRequired ? 'bg-amber-100 text-amber-700 border border-amber-200' :
+                              'bg-yellow-100 text-yellow-700 border border-yellow-200'
                           }`}>
-                          {isApproved ? 'Đã Duyệt' : isRejected ? 'Từ Chối' : 'Chờ Duyệt'}
+                          {isApproved ? 'Đã Duyệt' : isRejected ? 'Từ Chối' : isVendorActionRequired ? 'Chờ Vendor Sửa' : 'Chờ Duyệt'}
                         </span>
                         {!isApproved && (
                           <span className={`px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest flex-shrink-0 ${viewProductDetails.isActive ? 'bg-blue-100 text-blue-700 border border-blue-200' : 'bg-gray-100 text-gray-700 border border-gray-200'}`}>
@@ -1596,6 +1657,27 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onNavigate }) => 
                       </>
                     );
                   })()}
+
+                  {!editProductOpen && (() => {
+                    const approval = viewProductDetails.approvalStatus || viewProductDetails.packageStatus || viewProductDetails.status || '';
+                    return approval === 'VendorActionRequired' || approval === 'StaffActionRequired' || approval === 'Pending' || approval === 'WaitingStaffApproval';
+                  })() && (
+                    <>
+                      <button
+                        onClick={() => handleApprove(String(viewProductDetails.packageId || viewProductDetails.id))}
+                        className="px-5 py-2 rounded-full text-xs font-black uppercase tracking-widest text-white bg-green-600 hover:bg-green-700 transition-all shadow-sm flex-shrink-0"
+                      >
+                        Phê Duyệt
+                      </button>
+                      <button
+                        onClick={() => handleReject(String(viewProductDetails.packageId || viewProductDetails.id))}
+                        className="px-5 py-2 rounded-full text-xs font-black uppercase tracking-widest text-red-600 bg-red-50 hover:bg-red-100 border border-red-200 transition-all shadow-sm flex-shrink-0"
+                      >
+                        Từ Chối
+                      </button>
+                    </>
+                  )}
+
                   {editProductOpen ? (
                     <>
                       <button

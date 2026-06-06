@@ -21,9 +21,9 @@ export interface Product {
   description: string;
   rating: number;
   reviews: number;
-  orders: number;
+  orders?: number;
   totalSold?: number;
-  status: 'active' | 'inactive' | 'draft';
+  status?: 'active' | 'inactive' | 'draft';
   tag?: string;
   variants?: ProductVariant[]; // UI variants
   vendorId?: string;
