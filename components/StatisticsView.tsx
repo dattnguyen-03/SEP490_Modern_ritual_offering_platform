@@ -312,6 +312,17 @@ const StatisticsView: React.FC<StatisticsViewProps> = ({
     };
   }, [orderData]);
 
+  const sortedVendors = useMemo(() => {
+    const list = (
+      revenueData?.revenueByVendor ||
+      overviewData?.topVendors ||
+      overviewData?.topPerformingVendors ||
+      vendorStatData?.topPerformingVendors ||
+      []
+    );
+    return [...list].sort((a, b) => (b.revenue || 0) - (a.revenue || 0));
+  }, [revenueData, overviewData, vendorStatData]);
+
   const chartOptions = {
     responsive: true,
     maintainAspectRatio: false,
@@ -624,8 +635,8 @@ const StatisticsView: React.FC<StatisticsViewProps> = ({
           </div>
           {isStaff && !vendorId ? (
             <div className="space-y-4">
-              {(revenueData?.revenueByVendor || overviewData?.topVendors || overviewData?.topPerformingVendors || vendorStatData?.topPerformingVendors || []).slice(0, 5).length > 0 ? (
-                (revenueData?.revenueByVendor || overviewData?.topVendors || overviewData?.topPerformingVendors || vendorStatData?.topPerformingVendors || []).slice(0, 5).map((vendor: any, i) => (
+              {sortedVendors.slice(0, 5).length > 0 ? (
+                sortedVendors.slice(0, 5).map((vendor: any, i) => (
                   <div key={vendor.vendorId} className="flex items-center justify-between p-4 bg-ritual-bg/30 rounded-[1.25rem] border border-gold/5">
                     <div className="flex items-center gap-4 min-w-0">
                       <div className="w-10 h-10 rounded-xl bg-white border border-gold/10 flex items-center justify-center text-gold font-black text-sm shrink-0">
