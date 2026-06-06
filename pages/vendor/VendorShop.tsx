@@ -708,10 +708,14 @@ const VendorShop: React.FC<VendorShopProps> = ({ onNavigate }) => {
                 </div>
                 <p className="text-gray-600 mb-4">Chủ cửa hàng: <span className="font-bold text-primary">{profile?.fullName || 'Chưa có tên'}</span></p>
                 <div className="flex items-center gap-4 mb-4">
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-2">
                     <span className="text-gold text-lg">★</span>
                     <span className="font-bold text-primary">{vendorProfile?.ratingAvg ?? profile?.ratingAvg ?? 0}</span>
-
+                    {typeof vendorProfile?.totalReviews === 'number' && (
+                      <span className="text-xs text-gray-500 font-semibold">
+                        ({vendorProfile.totalReviews} đánh giá)
+                      </span>
+                    )}
                   </div>
                   {/* <div className="flex items-center gap-1 text-gray-600">
                     <span className="text-sm">👥</span>

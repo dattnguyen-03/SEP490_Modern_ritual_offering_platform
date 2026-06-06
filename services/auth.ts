@@ -611,6 +611,7 @@ export interface VendorCurrentProfile {
   dailyCapacity: number | null;
   dailyCapacityWeight: number | null;
   ratingAvg: number;
+  totalReviews?: number | null;
   tierId: number | null;
   tierName: string | null;
   tierAssignedAt: string | null;
