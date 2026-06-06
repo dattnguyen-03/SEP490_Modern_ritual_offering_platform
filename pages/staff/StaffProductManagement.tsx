@@ -669,10 +669,10 @@ const StaffProductManagement: React.FC<StaffProductManagementProps> = ({ onNavig
                   );
                 })()}
               </div>
-              {/* Actions for Staff - Only show if Pending */}
+              {/* Actions for Staff/Admin - Show if Pending or VendorActionRequired */}
               {(() => {
                 const approval = normalizeApprovalStatus(viewProductDetails.approvalStatus || viewProductDetails.packageStatus || viewProductDetails.status || '');
-                return approval !== 'Approved' && approval !== 'Rejected' && approval !== 'VendorActionRequired' && approval !== 'AdminActionRequired';
+                return approval === 'StaffActionRequired' || approval === 'VendorActionRequired';
               })() && (
                   <div className="flex gap-2 items-center">
                     <button
