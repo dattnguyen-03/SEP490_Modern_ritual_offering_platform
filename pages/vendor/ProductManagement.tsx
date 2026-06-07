@@ -572,60 +572,7 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onNavigate }) => 
     }
   };
 
-  const handleApprove = async (id: string) => {
-    try {
-      const confirmResult = await toast.confirm({
-        title: 'Xác nhận phê duyệt',
-        text: 'Bạn có chắc chắn muốn duyệt mâm cúng này?',
-        icon: 'question',
-        confirmButtonText: 'Phê duyệt',
-        cancelButtonText: 'Hủy',
-      });
-      if (!confirmResult.isConfirmed) return;
 
-      const success = await packageService.approvePackage(id);
-      if (success) {
-        toast.success('Đã duyệt sản phẩm thành công!');
-        closeViewProductModal();
-        loadPackages();
-      } else {
-        toast.error('Có lỗi xảy ra khi phê duyệt sản phẩm!');
-      }
-    } catch (e) {
-      toast.error('Lỗi khi phê duyệt.');
-    }
-  };
-
-  const handleReject = async (id: string) => {
-    const promptResult = await toast.prompt({
-      title: 'Từ chối mâm cúng',
-      text: 'Vui lòng nhập lý do từ chối (bắt buộc):',
-      inputPlaceholder: 'Nhập lý do tại đây...',
-      confirmButtonText: 'Từ chối',
-      cancelButtonText: 'Hủy'
-    });
-
-    if (!promptResult.isConfirmed) return;
-
-    const reason = promptResult.value;
-    if (!reason || !reason.trim()) {
-      toast.error('Vui lòng nhập lý do hợp lệ.');
-      return;
-    }
-
-    try {
-      const success = await packageService.rejectPackage(id, reason.trim());
-      if (success) {
-        toast.success('Đã từ chối sản phẩm.');
-        closeViewProductModal();
-        loadPackages();
-      } else {
-        toast.error('Có lỗi xảy ra khi từ chối sản phẩm!');
-      }
-    } catch (e) {
-      toast.error('Lỗi khi từ chối.');
-    }
-  };
 
   const loadPackages = async () => {
     setLoadingProducts(true);
@@ -1658,25 +1605,7 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onNavigate }) => 
                     );
                   })()}
 
-                  {!editProductOpen && (() => {
-                    const approval = viewProductDetails.approvalStatus || viewProductDetails.packageStatus || viewProductDetails.status || '';
-                    return approval === 'VendorActionRequired' || approval === 'StaffActionRequired' || approval === 'Pending' || approval === 'WaitingStaffApproval';
-                  })() && (
-                    <>
-                      <button
-                        onClick={() => handleApprove(String(viewProductDetails.packageId || viewProductDetails.id))}
-                        className="px-5 py-2 rounded-full text-xs font-black uppercase tracking-widest text-white bg-green-600 hover:bg-green-700 transition-all shadow-sm flex-shrink-0"
-                      >
-                        Phê Duyệt
-                      </button>
-                      <button
-                        onClick={() => handleReject(String(viewProductDetails.packageId || viewProductDetails.id))}
-                        className="px-5 py-2 rounded-full text-xs font-black uppercase tracking-widest text-red-600 bg-red-50 hover:bg-red-100 border border-red-200 transition-all shadow-sm flex-shrink-0"
-                      >
-                        Từ Chối
-                      </button>
-                    </>
-                  )}
+
 
                   {editProductOpen ? (
                     <>
