@@ -482,9 +482,6 @@ const CheckoutPage: React.FC<{ onNavigate: (path: string) => void }> = ({ onNavi
                   returnPath: `${window.location.pathname}${window.location.search}`
                 }));
 
-                // Set a flag to show success toast after returning from top-up
-                sessionStorage.setItem(TOPUP_SUCCESS_TOAST_KEY, '1');
-
                 window.location.href = redirectUrl;
                 return;
               } else {
