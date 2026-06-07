@@ -283,6 +283,7 @@ const CheckoutPage: React.FC<{ onNavigate: (path: string) => void }> = ({ onNavi
           try {
             const profile = await getProfile();
             if (profile?.phoneNumber) {
+                sessionStorage.removeItem(TOPUP_SUCCESS_TOAST_KEY);
               setPhoneNumber(profile.phoneNumber);
             }
             if (profile?.fullName) {
@@ -292,6 +293,7 @@ const CheckoutPage: React.FC<{ onNavigate: (path: string) => void }> = ({ onNavi
               if (user?.name) {
                 // Check if the name looks like an email and we have a better name
                 if (user.name.includes('@') && user.email === user.name) {
+                sessionStorage.removeItem(TOPUP_CANCEL_TOAST_KEY);
                   // Try to extract name from email
                   const namePart = user.email.split('@')[0];
                   setFullName(namePart);
@@ -479,9 +481,6 @@ const CheckoutPage: React.FC<{ onNavigate: (path: string) => void }> = ({ onNavi
                   createdAt: Date.now(),
                   returnPath: `${window.location.pathname}${window.location.search}`
                 }));
-
-                // Set a flag to show success toast after returning from top-up
-                sessionStorage.setItem(TOPUP_SUCCESS_TOAST_KEY, '1');
 
                 window.location.href = redirectUrl;
                 return;
